@@ -28,7 +28,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
       {
         name: 'primary'
         properties: {
-          image: 'mcr.microsoft.com/azuredocs/aci-helloworld:${empty(tag) ? 'latest': tag}'
+          image: 'mcr.microsoft.com/acc/samples/aci/helloworld:${empty(tag) ? 'latest': tag}'
           resources: {
             requests: {
               memoryInGB: memoryInGb
