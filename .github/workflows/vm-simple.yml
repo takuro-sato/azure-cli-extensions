@@ -6,13 +6,9 @@ permissions:
 
 on:
   pull_request:
-    paths:
-      - .github/workflows/vm-simple.yml
   push:
     branches:
       - main
-    paths:
-      - .github/workflows/vm-simple.yml
   workflow_dispatch:
     inputs:
       id:
@@ -101,12 +97,12 @@ env:
   CPLAT_BLOB_NAME: ${{ inputs.cplatBlobName || vars.CPLAT_6_1_BLOB_NAME }}
   WIN_FLAVOR: ${{ inputs.winFlavor || 'ws2025' }}
   VM_ZONE: ${{ inputs.zone || '' }}
+  TAG: "2.7"
 
 jobs:
   vm-simple:
     name: ${{ inputs.id || 'vm-simple' }}
     runs-on: ubuntu-latest
-    continue-on-error: true # This only works because historical results tracks per job and failing jobs are still red
     steps:
 
       - name: Checkout
@@ -191,6 +187,11 @@ jobs:
             echo "No dmesg output found"
             exit 1
           fi
+
+      - name: Container output
+        if: always()
+        run: |
+          c-aci-testing vm cat --deployment-name $DEPLOYMENT_NAME "C:\\lcow\\container_log_*.log"
 
       - name: Remove VM
         run: |

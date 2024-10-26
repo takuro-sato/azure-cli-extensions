@@ -1,5 +1,5 @@
 #!/bin/bash
-# workload_fio.sh and workload_cpu.sh together
+# workload_fio.sh and workload_cpu.sh together, with changes
 
 python3 server.py &
 SERVER_PID=$!

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="1.0.12"
+version="1.0.13"
 curl -sL "$(\
     curl -s "https://api.github.com/repos/microsoft/confidential-aci-testing/releases/tags/$version" \
         | jq -r '.assets[] | select(.name | endswith(".tar.gz")) | .browser_download_url')" \

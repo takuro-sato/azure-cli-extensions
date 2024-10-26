@@ -216,7 +216,7 @@ jobs:
             'C:\vm_helpers' \
             'C:\vm_helpers\start_check_loop.ps1 -checkArgs "-checkInterval 30 -additionalChecksScript check_stress_tests_http.ps1"'
 
-      - name: Pull VM for check results
+      - name: Poll VM for check results
         run: |
           set +e
           consecutive_fail_count=0
@@ -224,7 +224,7 @@ jobs:
             sleep 120
             c-aci-testing vm cat --deployment-name $DEPLOYMENT_NAME 'C:\check_loop.log' > check.log
             if [ $? -ne 0 ]; then
-              echo Error: Failed to pull VM for check log
+              echo Error: Failed to poll VM for check log
               consecutive_fail_count=$((consecutive_fail_count+1))
               if [ $consecutive_fail_count -gt 3 ]; then
                 exit 1
@@ -289,6 +289,14 @@ jobs:
             echo "No dmesg output found"
             exit 1
           fi
+
+      - name: Container output (workload)
+        if: always()
+        run: |
+          for lcow_dir in lcow_cpu_fio lcow_exec; do
+            echo "Container output for $lcow_dir:"
+            c-aci-testing vm cat --deployment-name $DEPLOYMENT_NAME "C:\\$lcow_dir\\container_log_stress_tests_workload.log"
+          done
 
       - name: Remove VM
         run: |
