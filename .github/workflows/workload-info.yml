@@ -6,7 +6,15 @@ permissions:
 
 on:
   pull_request:
+    paths:
+      - workloads/info
+      - .github/workflows/workload-info.yml
+      - scripts/install-c-aci-testing.sh
   push:
+    paths:
+      - workloads/info
+      - .github/workflows/workload-info.yml
+      - scripts/install-c-aci-testing.sh
     branches:
       - main
   workflow_dispatch:

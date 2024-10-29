@@ -6,7 +6,15 @@ permissions:
 
 on:
   pull_request:
+    paths:
+      - workloads/long_lived
+      - .github/workflows/workload-long-lived.yml
+      - scripts/install-c-aci-testing.sh
   push:
+    paths:
+      - workloads/long_lived
+      - .github/workflows/workload-long-lived.yml
+      - scripts/install-c-aci-testing.sh
     branches:
       - main
   workflow_dispatch:

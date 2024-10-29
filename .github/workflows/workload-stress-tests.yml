@@ -6,7 +6,15 @@ permissions:
 
 on:
   pull_request:
+    paths:
+      - workloads/stress_tests
+      - .github/workflows/workload-stress-tests.yml
+      - scripts/install-c-aci-testing.sh
   push:
+    paths:
+      - workloads/stress_tests
+      - .github/workflows/workload-stress-tests.yml
+      - scripts/install-c-aci-testing.sh
     branches:
       - main
   workflow_dispatch:

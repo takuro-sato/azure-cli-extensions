@@ -6,7 +6,15 @@ permissions:
 
 on:
   pull_request:
+    paths:
+      - workloads/attestation
+      - .github/workflows/workload-attestation-with-wait.yml
+      - scripts/install-c-aci-testing.sh
   push:
+    paths:
+      - workloads/attestation
+      - .github/workflows/workload-attestation-with-wait.yml
+      - scripts/install-c-aci-testing.sh
     branches:
       - main
   workflow_dispatch:

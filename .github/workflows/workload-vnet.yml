@@ -6,7 +6,15 @@ permissions:
 
 on:
   pull_request:
+    paths:
+      - workloads/vnet
+      - .github/workflows/workload-vnet.yml
+      - scripts/install-c-aci-testing.sh
   push:
+    paths:
+      - workloads/vnet
+      - .github/workflows/workload-vnet.yml
+      - scripts/install-c-aci-testing.sh
     branches:
       - main
   workflow_dispatch:
