@@ -84,7 +84,7 @@ jobs:
       - name: Cleanup VNETs
         run: |
           for VNET in $(az network vnet list -g c-aci-dashboard --query "[].name" -o tsv); do
-              az network vnet delete --no-wait -g c-aci-dashboard -n $VNET
+              az network vnet delete --no-wait -g c-aci-dashboard -n $VNET || true
           done
 
   cleanup-nsgs:
@@ -102,5 +102,5 @@ jobs:
       - name: Cleanup NSGs
         run: |
           for NSG in $(az network nsg list -g c-aci-dashboard --query "[].name" -o tsv); do
-              az network nsg delete --no-wait -g c-aci-dashboard -n $NSG
+              az network nsg delete --no-wait -g c-aci-dashboard -n $NSG || true
           done
