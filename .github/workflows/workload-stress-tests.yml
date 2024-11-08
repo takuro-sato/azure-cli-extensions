@@ -207,6 +207,7 @@ jobs:
           done
 
       - name: Check dmesg
+        if: always()
         run: |
             dmesg_file="dmesg.log"
 
