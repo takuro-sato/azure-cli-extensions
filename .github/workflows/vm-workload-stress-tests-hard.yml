@@ -8,11 +8,13 @@ on:
   pull_request:
     paths:
       - .github/workflows/vm-workload-stress-tests-hard.yml
+      - scripts/install-c-aci-testing.sh
   push:
     branches:
       - main
     paths:
       - .github/workflows/vm-workload-stress-tests-hard.yml
+      - scripts/install-c-aci-testing.sh
   workflow_dispatch:
     inputs:
       id:

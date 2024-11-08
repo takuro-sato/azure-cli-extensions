@@ -1,4 +1,4 @@
-name: Region - West Europe
+name: Region - Central US EUAP
 
 permissions:
   id-token: write
@@ -10,33 +10,31 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
-      - .github/workflows/region-westeurope.yml
+      - .github/workflows/region-centraluseuap.yml
 
 jobs:
-  westeurope:
-    secrets: inherit
-    uses: ./.github/workflows/region.yml
-    with:
-      location: westeurope
+  # centraluseuap:
+  #   secrets: inherit
+  #   uses: ./.github/workflows/region.yml
+  #   with:
+  #     location: centraluseuap
 
-  genoa-weuz3-new-igvmfile:
+  genoa-cuseuap-regular:
     secrets: inherit
     uses: ./.github/workflows/vm-workload-stress-tests.yml
     with:
-      id: vm-genoa-weuz3-ws2025-6.1
-      location: westeurope
+      id: vm-genoa-cuseuap-regular-ws2025-6.1
+      location: centraluseuap
       vmSize: Standard_DC8as_cc_v5
-      zone: 3
-      cplatBlobName: ${{ vars.CPLAT_6_1_IGVMFILE_BLOB_NAME }}
+      cplatBlobName: ${{ vars.CPLAT_6_1_BLOB_NAME }}
       winFlavor: ws2025
 
-  milan-new-igvmfile:
+  genoa-cuseuap-new-igvmfile:
     secrets: inherit
     uses: ./.github/workflows/vm-workload-stress-tests.yml
     with:
-      id: vm-milan-weuz1-ws2025-6.1
-      location: westeurope
+      id: vm-genoa-cuseuap-nigvmf-ws2025-6.1
+      location: centraluseuap
       vmSize: Standard_DC8as_cc_v5
-      zone: 1
       cplatBlobName: ${{ vars.CPLAT_6_1_IGVMFILE_BLOB_NAME }}
       winFlavor: ws2025
