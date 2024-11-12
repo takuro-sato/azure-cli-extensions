@@ -28,13 +28,3 @@ jobs:
       vmSize: Standard_DC8as_cc_v5
       cplatBlobName: ${{ vars.CPLAT_6_1_BLOB_NAME }}
       winFlavor: ws2025
-
-  genoa-cuseuap-new-igvmfile:
-    secrets: inherit
-    uses: ./.github/workflows/vm-workload-stress-tests.yml
-    with:
-      id: vm-genoa-cuseuap-nigvmf-ws2025-6.1
-      location: centraluseuap
-      vmSize: Standard_DC8as_cc_v5
-      cplatBlobName: ${{ vars.CPLAT_6_1_IGVMFILE_BLOB_NAME }}
-      winFlavor: ws2025
