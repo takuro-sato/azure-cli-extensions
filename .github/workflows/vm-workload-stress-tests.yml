@@ -132,7 +132,7 @@ jobs:
           AZ_CLI_VERSION: 2.61.0
         run: |
           ./scripts/install-az-cli.sh
-          az extension add -n confcom --version 1.0.1 --upgrade
+          az extension add -n confcom --version 1.1.1 --upgrade
 
       - name: Deploy VM with containerplat
         run: c-aci-testing vm create --deployment-name $DEPLOYMENT_NAME
