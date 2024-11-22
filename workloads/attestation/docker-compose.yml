@@ -1,6 +1,27 @@
 version: '3'
 services:
-  proxy:
-    image: cacidashboard.azurecr.io/nginx:1.26
+  primary:
+    image: quay.io/curl/curl:8.11.0
+    command: >
+      sh -c "
+        timeout 30 sh -c 'until curl -s http://localhost:8080/status > /dev/null 2>&1; do sleep 1; done'
+        curl "http://localhost:8080/attest/maa" \
+          -s \
+          -X POST \
+          -H "Content-Type: application/json" \
+          -d '{
+            "maa_endpoint": "cacidashboard.weu.attest.azure.net",
+            "runtime_data": "'$(echo '{
+              "keys": [
+                {
+                  "key_ops": ["encrypt"],
+                  "kid": "example-key",
+                  "kty": "oct-HSM",
+                  "k": "example"
+                }
+              ]
+            }' | base64 -w 0)'"
+          }'
+      "
   attestation:
     image: mcr.microsoft.com/aci/skr:$TAG

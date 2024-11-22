@@ -123,37 +123,14 @@ jobs:
       - name: Deploy Container Group
         run: c-aci-testing aci deploy workloads/attestation --deployment-name $DEPLOYMENT_NAME
 
-      - name: Wait for IP address
-        run: |
-          ip_address=""
-          elapsed=0
-          while [[ -z "$ip_address" && elapsed -lt 60 ]]; do
-            ip_address=$(c-aci-testing aci get ips --deployment-name $DEPLOYMENT_NAME | sed "s/\['\([^']*\)'\]/\1/")
-            echo "IP Address: $ip_address"
-            sleep 5
-            elapsed=$((elapsed + 5))
-          done
-
       - name: Get MAA Token
         run: |
-          template_ip_address=$(c-aci-testing aci get ips --deployment-name $DEPLOYMENT_NAME | sed "s/\['\([^']*\)'\]/\1/")
-          echo "IP Address from template output: $template_ip_address"
-          az_cli_ip_address=$(\
-            az container show \
+          container_logs=$(az container logs \
             --resource-group $RESOURCE_GROUP \
             --name $DEPLOYMENT_NAME \
-            --query ipAddress.ip --output tsv \
-          )
-          echo "IP Address from az cli: $az_cli_ip_address"
+            --container-name primary)
 
-          # Select the IP address which is not empty
-          ip_address="${template_ip_address:-${az_cli_ip_address}}"
-
-          result=$(curl -X POST "http://$ip_address:8000/attest/maa" \
-            -H "Content-Type: application/json" \
-            -d '{"maa_endpoint": "cacidashboard.weu.attest.azure.net", "runtime_data": "'$(echo '{"keys": [{"key_ops": ["encrypt"], "kid": "example-key", "kty": "oct-HSM", "k": "example"}]}' | base64 -w 0)'"}')
-
-          token=$(echo $result | jq -r '.token')
+          token=$(echo $container_logs | jq -r '.token')
           if [ -z "$token" ] || [ "$token" == null ]; then
             echo "Token field is empty, null or missing in the response"
             exit 1

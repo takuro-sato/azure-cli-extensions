@@ -1,9 +1,6 @@
 param location string
-param registry string
 param tag string
 param ccePolicies object
-param managedIDGroup string = resourceGroup().name
-param managedIDName string
 
 param cpu int = 1
 param memoryInGb int = 4
@@ -11,51 +8,18 @@ param memoryInGb int = 4
 resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01' = {
   name: deployment().name
   location: location
-  identity: {
-    type: 'UserAssigned'
-    userAssignedIdentities: {
-      '${resourceId(managedIDGroup, 'Microsoft.ManagedIdentity/userAssignedIdentities', managedIDName)}': {}
-    }
-  }
   properties: {
     osType: 'Linux'
     sku: 'Confidential'
     restartPolicy: 'Never'
-    ipAddress: {
-      ports: [
-        {
-          protocol: 'TCP'
-          port: 8000
-        }
-      ]
-      type: 'Public'
-    }
-    imageRegistryCredentials: [
-      {
-        server: registry
-        identity: resourceId(managedIDGroup, 'Microsoft.ManagedIdentity/userAssignedIdentities', managedIDName)
-      }
-    ]
     confidentialComputeProperties: {
       ccePolicy: ccePolicies.attestation
     }
     containers: [
       {
-        name: 'proxy'
+        name: 'primary'
         properties: {
-          image: '${registry}/nginx:1.26'
-          ports: [
-            {
-              protocol: 'TCP'
-              port: 8000
-            }
-          ]
-          environmentVariables: [
-            {
-              name: 'NGINX_PORT'
-              value: '8000'
-            }
-          ]
+          image: 'quay.io/curl/curl:8.11.0'
           resources: {
             requests: {
               memoryInGB: memoryInGb
@@ -63,8 +27,28 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
             }
           }
           command: [
-            '/bin/sh', '-c'
-            'echo "server { listen 8000; location / { proxy_pass http://localhost:8080; } }" > /etc/nginx/conf.d/default.conf && nginx -g "daemon off;"'
+            'sh'
+            '-c'
+            '''
+            timeout 30 sh -c 'until curl -s http://localhost:8080/status > /dev/null 2>&1; do sleep 1; done'
+            curl "http://localhost:8080/attest/maa" \
+              -s \
+              -X POST \
+              -H "Content-Type: application/json" \
+              -d '{
+                "maa_endpoint": "cacidashboard.weu.attest.azure.net",
+                "runtime_data": "'$(echo '{
+                  "keys": [
+                    {
+                      "key_ops": ["encrypt"],
+                      "kid": "example-key",
+                      "kty": "oct-HSM",
+                      "k": "example"
+                    }
+                  ]
+                }' | base64 -w 0)'"
+              }'
+            '''
           ]
         }
       }

@@ -56,19 +56,6 @@ jobs:
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
 
-  attestation-with-wait:
-    name: attestation-with-wait
-    secrets: inherit
-    uses: ./.github/workflows/workload-attestation-with-wait.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        policy_type: ['generated', 'debug', 'allow_all']
-    with:
-      id: attestation-with-wait-${{ matrix.policy_type }}
-      location: ${{ inputs.location }}
-      policy_type: ${{ matrix.policy_type }}
-
   many-layers:
     name: many-layers
     secrets: inherit

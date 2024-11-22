@@ -13,7 +13,7 @@ on:
     inputs:
       workloads:
         type: string
-        default: '["minimal", "managed-identity", "attestation", "attestation-with-wait", "many-layers", "server", "server-with-wait", "non-confidential", "stress-tests", "info", "vnet", "common_images"]'
+        default: '["minimal", "managed-identity", "attestation", "many-layers", "server", "server-with-wait", "non-confidential", "stress-tests", "info", "vnet", "common_images"]'
       regions:
         type: string
         default: '["eastus", "westus", "westeurope", "northeurope", "centralindia", "eastus2euap", "uaenorth"]'
@@ -29,7 +29,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        workload: ${{ fromJSON(github.event.inputs.workloads || '["server-with-wait", "attestation-with-wait"]') }}
+        workload: ${{ fromJSON(github.event.inputs.workloads || '["attestation", "server-with-wait"]') }}
         region: ${{ fromJSON(github.event.inputs.regions || '["eastus", "westus", "westeurope", "northeurope", "centralindia", "eastus2euap", "uaenorth"]') }}
 
     steps:
