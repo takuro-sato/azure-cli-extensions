@@ -138,6 +138,28 @@ jobs:
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
 
+      
+  perf:
+    name: perf
+    secrets: inherit
+    uses: ./.github/workflows/workload-perf.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        policy_type: ['generated', 'debug', 'allow_all']
+    with:
+      id: perf-${{ matrix.policy_type }}
+      location: ${{ inputs.location }}
+      policy_type: ${{ matrix.policy_type }}
+
+  perf-nonconf:
+    name: perf-nonconf
+    secrets: inherit
+    uses: ./.github/workflows/workload-perf-nonconf.yml
+    with:
+      id: perf-nonconf-${{ matrix.policy_type }}
+      location: ${{ inputs.location }}
+
   vnet:
     name: vnet
     secrets: inherit

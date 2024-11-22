@@ -1,0 +1,130 @@
+name: Workload - perf-nonconf
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - workloads/perf-nonconf
+      - .github/workflows/workload-perf-nonconf.yml
+      - scripts/install-c-aci-testing.sh
+  push:
+    paths:
+      - workloads/perf-nonconf
+      - .github/workflows/workload-perf-nonconf.yml
+      - scripts/install-c-aci-testing.sh
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      id:
+        type: string
+        description: ID of the run
+      location:
+        type: string
+        description: Where to deploy to
+        required: true
+      cpu:
+        type: number
+        description: The number of CPU cores in container
+        default: 4
+      memory_in_gb:
+        type: number
+        description: The memory in container in Gb
+        default: 8
+      cleanup:
+        type: boolean
+        description: Whether to cleanup the container group after testing
+        default: true
+  workflow_call:
+    inputs:
+      id:
+        type: string
+        description: ID of the run
+      location:
+        type: string
+        description: Where to deploy to
+        required: true
+      cpu:
+        type: number
+        description: The number of CPU cores in container
+        default: 4
+      memory_in_gb:
+        type: number
+        description: The memory in container in Gb
+        default: 8
+      cleanup:
+        type: boolean
+        description: Whether to cleanup the container group after testing
+        default: true
+
+env:
+  DEPLOYMENT_NAME: ${{ inputs.id || 'perf-nonconf' }}-${{ inputs.location }}-${{ github.run_number }}
+  SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
+  RESOURCE_GROUP: c-aci-dashboard
+  REGISTRY: cacidashboard.azurecr.io
+  MANAGED_IDENTITY: cacidashboard
+  LOCATION: ${{ inputs.location || 'westeurope' }}
+  CPU: ${{ inputs.cpu || 2 }}
+  MEMORY_IN_GB: ${{ inputs.memory_in_gb || 4 }}
+  CLEANUP: ${{ inputs.cleanup }}
+
+jobs:
+  perf-nonconf:
+    name: ${{ inputs.id || 'perf-nonconf' }}
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log into Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION }}
+
+      - name: Install c_aci_testing package
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/install-c-aci-testing.sh
+
+      - name: Setup Docker
+        run: sudo usermod -aG docker $USER
+
+      - name: Set Parameters
+        run: |
+          c-aci-testing aci param_set workloads/perf-nonconf --parameter cpu=$CPU
+          c-aci-testing aci param_set workloads/perf-nonconf --parameter memoryInGb=$MEMORY_IN_GB
+          c-aci-testing aci param_set workloads/perf-nonconf --parameter registry=$REGISTRY
+
+      - name: Deploy Container Group
+        run: c-aci-testing aci deploy workloads/perf-nonconf --deployment-name $DEPLOYMENT_NAME
+
+      - name: Monitor Container Group
+        if: always()
+        continue-on-error: true
+        # sleep to give the workload time to do the perf testing instead of --follow
+        run: sleep 120; c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME
+
+      - name: Get Container States
+        if: always()
+        continue-on-error: true
+        run: |
+          az container show \
+            --resource-group $RESOURCE_GROUP \
+            --name $DEPLOYMENT_NAME \
+          | jq -c '.containers[]' | while read -r container; do
+            container_name=$(echo "$container" | jq -r '.name')
+            echo "Events for container $container_name:"
+            echo "$container" | jq -r '.instanceView | .events[]'
+          done
+
+      - name: Remove Container Group
+        run: |
+          if [ "$CLEANUP" != false ]; then
+            c-aci-testing aci remove --deployment-name $DEPLOYMENT_NAME
+          fi
