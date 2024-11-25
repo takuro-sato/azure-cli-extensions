@@ -30,21 +30,3 @@ jobs:
       location: westus
       cpu: 4
       memory_in_gb: 16
-
-  minimal-16cpu-16gb:
-    secrets: inherit
-    uses: ./.github/workflows/workload-minimal.yml
-    with:
-      id: 16cpu-16gb
-      location: westus
-      cpu: 16
-      memory_in_gb: 16
-
-  minimal-32cpu-32gb:
-    secrets: inherit
-    uses: ./.github/workflows/workload-minimal.yml
-    with:
-      id: 32cpu-32gb
-      location: westus
-      cpu: 32
-      memory_in_gb: 32
