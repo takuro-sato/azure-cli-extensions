@@ -70,6 +70,8 @@ jobs:
       policy_type: ${{ matrix.policy_type }}
 
   server:
+    # public IP doesn't work here for now
+    if: ${{ inputs.location != 'eastus2euap' }}
     name: server
     secrets: inherit
     uses: ./.github/workflows/workload-server.yml
@@ -83,6 +85,8 @@ jobs:
       policy_type: ${{ matrix.policy_type }}
 
   server-with-wait:
+    # public IP doesn't work here for now
+    if: ${{ inputs.location != 'eastus2euap' }}
     name: server-with-wait
     secrets: inherit
     uses: ./.github/workflows/workload-server-with-wait.yml
@@ -109,6 +113,7 @@ jobs:
       policy_type: ${{ matrix.policy_type }}
 
   stress-tests:
+    if: ${{ inputs.location != 'eastus2euap' }}
     name: stress-tests
     secrets: inherit
     uses: ./.github/workflows/workload-stress-tests.yml
@@ -138,7 +143,7 @@ jobs:
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
 
-      
+
   perf:
     name: perf
     secrets: inherit

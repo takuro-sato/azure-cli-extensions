@@ -1,4 +1,4 @@
-name: Workload - Stress Tests
+name: Workload - Stress Tests (No server)
 
 permissions:
   id-token: write
@@ -7,16 +7,17 @@ permissions:
 on:
   pull_request:
     paths:
-      - workloads/stress_tests
-      - .github/workflows/workload-stress-tests.yml
+      - workloads/stress_tests_noserver
+      - .github/workflows/workload-stress-tests-noserver.yml
       - scripts/install-c-aci-testing.sh
   push:
     paths:
-      - workloads/stress_tests
-      - .github/workflows/workload-stress-tests.yml
+      - workloads/stress_tests_noserver
+      - .github/workflows/workload-stress-tests-noserver.yml
       - scripts/install-c-aci-testing.sh
     branches:
       - main
+      - tingmao/stress-test-nocurl
   workflow_dispatch:
     inputs:
       id:
@@ -39,9 +40,13 @@ on:
         description: Whether to cleanup the container group after testing
         default: true
       policy_type:
-        type: string
+        type: choice
         description: The type of policy to use
-        default: generated
+        default: allow_all
+        options:
+          - generated
+          - debug
+          - allow_all
       script:
         type: choice
         description: The script to run
@@ -80,7 +85,7 @@ on:
       policy_type:
         type: string
         description: The type of policy to use
-        default: generated
+        default: allow_all
       script:
         type: string
         description: The script to run
@@ -90,7 +95,7 @@ on:
         default: true
 
 env:
-  DEPLOYMENT_NAME: ${{ inputs.id || 'stress-tests' }}-${{ inputs.location }}-${{ github.run_number }}
+  DEPLOYMENT_NAME: ${{ inputs.id || 'stress-noserver' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
   RESOURCE_GROUP: c-aci-dashboard
   REGISTRY: cacidashboard.azurecr.io
@@ -99,16 +104,15 @@ env:
   CPU: ${{ inputs.cpu || 4 }}
   MEMORY_IN_GB: ${{ inputs.memory_in_gb || 4 }}
   CLEANUP: ${{ inputs.cleanup }}
-  POLICY_TYPE: ${{ inputs.policy_type || 'generated' }}
+  POLICY_TYPE: ${{ inputs.policy_type || 'allow_all' }}
   SCRIPT: ${{ inputs.script || 'workload_fio' }}
-  REPO_BASE: stress_tests
+  REPO_BASE: stress_tests_noserver
   USE_NORMAL_SIDECAR: ${{ inputs.useNormalSidecar || true }}
 
 jobs:
-  stress-tests:
-    name: ${{ inputs.id || 'stress-tests' }}
+  stress-tests-noserver:
+    name: ${{ inputs.id || 'stress-tests-noserver' }}
     runs-on: ubuntu-latest
-    continue-on-error: true # This only works because historical results tracks per job and failing jobs are still red
     steps:
 
       - name: Checkout
@@ -139,59 +143,40 @@ jobs:
           echo "TAG=$TAG" >> $GITHUB_ENV
 
       - name: Build image
-        run: c-aci-testing images build workloads/stress_tests
+        run: c-aci-testing images build workloads/stress_tests_noserver
 
       - name: Push image
-        run: c-aci-testing images push workloads/stress_tests
+        run: c-aci-testing images push workloads/stress_tests_noserver
 
       - name: Set Parameters
         run: |
-          c-aci-testing aci param_set workloads/stress_tests --parameter cpu=$CPU
-          c-aci-testing aci param_set workloads/stress_tests --parameter memoryInGb=$MEMORY_IN_GB
-          c-aci-testing aci param_set workloads/stress_tests --parameter "script='$SCRIPT'"
-          c-aci-testing aci param_set workloads/stress_tests --parameter "repo_base='$REPO_BASE'"
-          c-aci-testing aci param_set workloads/stress_tests --parameter "useNormalSidecar=$USE_NORMAL_SIDECAR"
+          c-aci-testing aci param_set workloads/stress_tests_noserver --parameter cpu=$CPU
+          c-aci-testing aci param_set workloads/stress_tests_noserver --parameter memoryInGb=$MEMORY_IN_GB
+          c-aci-testing aci param_set workloads/stress_tests_noserver --parameter "script='$SCRIPT'"
+          c-aci-testing aci param_set workloads/stress_tests_noserver --parameter "repo_base='$REPO_BASE'"
+          c-aci-testing aci param_set workloads/stress_tests_noserver --parameter "useNormalSidecar=$USE_NORMAL_SIDECAR"
           echo stress_tests.bicepparam:
-          cat workloads/stress_tests/stress_tests.bicepparam
+          cat workloads/stress_tests_noserver/stress_tests.bicepparam
 
       - name: Generate Security Policy
         run: |
-          c-aci-testing policies gen workloads/stress_tests --deployment-name $DEPLOYMENT_NAME
-          cat workloads/stress_tests/policy_stress_tests.rego
+          c-aci-testing policies gen workloads/stress_tests_noserver --deployment-name $DEPLOYMENT_NAME
+          cat workloads/stress_tests_noserver/policy_stress_tests.rego
 
       - name: Deploy Container Group
-        run: c-aci-testing aci deploy workloads/stress_tests --deployment-name $DEPLOYMENT_NAME
+        run: c-aci-testing aci deploy workloads/stress_tests_noserver --deployment-name $DEPLOYMENT_NAME
 
-      - name: Wait for IP address
-        run: |
-          ip_address=""
-          elapsed=0
-          while [[ -z "$ip_address" && elapsed -lt 60 ]]; do
-            ip_address=$(c-aci-testing aci get ips --deployment-name $DEPLOYMENT_NAME | sed "s/\['\([^']*\)'\]/\1/")
-            echo "IP Address: $ip_address"
-            sleep 5
-            elapsed=$((elapsed + 5))
-          done
-          echo "ip_address=$ip_address" >> $GITHUB_ENV
+      - name: Monitor output
+        run: c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME
 
-      - name: Curl Server
-        run: |
-          sleep 1
-          echo "Attempting to send a request..."
-          # We want to limit the total amount of time this curl command can run for,
-          # rather than just connect time, so that if the server accepts the request
-          # but then hangs we also exit. This necessitates the use of `timeout`.
-          timeout -s INT 1m curl --fail-with-body http://$ip_address:8000/index.txt || exit 1
-
-      - name: Let container run for 1min and test again
-        run: |
-          sleep 100
-          timeout -s INT 1m curl --fail-with-body http://$ip_address:8000/index.txt || exit 1
+      - name: Let container run for some time
+        run: sleep 100
 
       - name: Monitor Container Group
         if: always()
         continue-on-error: true
-        run: c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME
+        run: |
+          c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME | tee output.log
 
       - name: Get Container States
         if: always()
@@ -206,17 +191,15 @@ jobs:
             echo "$container" | jq -r '.instanceView | .events[]'
           done
 
-      - name: Check dmesg
+      - name: Check output and dmesg
         if: always()
         run: |
-            dmesg_file="dmesg.log"
-
-            timeout -s INT 1m curl --fail-with-body http://$ip_address:8000/dmesg.log -o $dmesg_file
-            if [ $? -ne 0 ]; then
-              echo "Failed to get dmesg:"
-              cat $dmesg_file
+            grep -q -F 'Stress test container alive' output.log || no_alive_output=true
+            if [ -n "$no_alive_output" ]; then
+              echo "No 'Stress test container alive' message found in output.log"
               exit 1
             fi
+            dmesg_file="output.log"
 
             found_sus_message=""
             grep -F '] hv_storvsc' $dmesg_file && found_sus_message="hv_storvsc"
@@ -225,15 +208,8 @@ jobs:
             grep 'BUG:' $dmesg_file && found_sus_message="kernel-bug"
             grep 'RIP:' $dmesg_file && found_sus_message="kernel-backtrace"
 
-            cat $dmesg_file
-
             if [ -n "$found_sus_message" ]; then
               echo "Found suspicious message in dmesg: $found_sus_message"
-              exit 1
-            fi
-
-            if [ ! -s $dmesg_file ]; then
-              echo "No dmesg output found"
               exit 1
             fi
 

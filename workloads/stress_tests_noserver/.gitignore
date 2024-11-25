@@ -1,0 +1,3 @@
+loop.log
+dmesg*.log
+*.env

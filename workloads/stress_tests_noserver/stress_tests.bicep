@@ -1,6 +1,6 @@
 param location string
 param registry string
-param repo_base string = 'stress_tests'
+param repo_base string = 'stress_tests_noserver'
 param tag string
 param managedIDGroup string = resourceGroup().name
 param managedIDName string
@@ -26,15 +26,6 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
     osType: 'Linux'
     sku: 'Confidential'
     restartPolicy: 'Never' // Detect container crashes
-    ipAddress: {
-      ports: [
-        {
-          protocol: 'TCP'
-          port: 8000
-        }
-      ]
-      type: 'Public'
-    }
     imageRegistryCredentials: [
       {
         server: registry
@@ -49,18 +40,6 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
         name: 'workload'
         properties: {
           image: '${registry}/${repo_base}/workload:${tag}'
-          ports: [
-            {
-              protocol: 'TCP'
-              port: 8000
-            }
-          ]
-          environmentVariables: [
-            {
-              name: 'PORT'
-              value: '8000'
-            }
-          ]
           resources: {
             requests: {
               memoryInGB: memoryInGb
