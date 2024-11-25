@@ -23,7 +23,6 @@ Deploys to many regions to gather data about region health
 [![Region - South East Asia](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-southeastasia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-southeastasia.yml)
 [![Region - West Europe](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-westeurope.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-westeurope.yml)
 [![Region - West US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-westus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-westus.yml)
-[![Region - Central India](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-centralindia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-centralindia.yml)
 
 ### Canary
 [![Region - East US 2 EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-eastus2euap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-eastus2euap.yml)
@@ -45,7 +44,6 @@ Deploys with container with high specification (varies by region)
 [![High Spec - South East Asia](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-southeastasia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-southeastasia.yml)
 [![High Spec - West Europe](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-westeurope.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-westeurope.yml)
 [![High Spec - West US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-westus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-westus.yml)
-[![High Spec - Central India](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-centralindia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-centralindia.yml)
 
 ### Canary
 
@@ -79,7 +77,6 @@ Deploys but doesn't remove, checks that containers live at least 48 hours withou
 [![Uptime - South East Asia](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-southeastasia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-southeastasia.yml)
 [![Uptime - West Europe](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-westeurope.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-westeurope.yml)
 [![Uptime - West US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-westus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-westus.yml)
-[![Uptime - Central India](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-centralindia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-centralindia.yml)
 
 ### Canary
 
