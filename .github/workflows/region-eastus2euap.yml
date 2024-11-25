@@ -19,8 +19,8 @@ jobs:
     with:
       location: eastus2euap
 
-  stress-tests-nocurl-allow-all:
-    name: stress-tests-nocurl
+  stress-tests-noserver-allow-all:
+    name: stress-tests-noserver
     secrets: inherit
     uses: ./.github/workflows/workload-stress-tests-noserver.yml
     strategy:
@@ -28,15 +28,15 @@ jobs:
       matrix:
         script: ['workload_fio', 'workload_tar', 'workload_cpu', 'workload_exec', 'workload_cpu_fio', 'workload_multicpu_fio']
     with:
-      id: stress-nocurl-aa-${{ matrix.script }}
+      id: stress-noserv-aa-${{ matrix.script }}
       location: eastus2euap
       policy_type: allow_all
       script: ${{ matrix.script }}
       useNormalSidecar: true
       cpu: 2
 
-  stress-tests-nocurl-debug:
-    name: stress-tests-nocurl
+  stress-tests-noserver-debug:
+    name: stress-tests-noserver
     secrets: inherit
     uses: ./.github/workflows/workload-stress-tests-noserver.yml
     strategy:
@@ -44,9 +44,25 @@ jobs:
       matrix:
         script: ['workload_fio', 'workload_tar', 'workload_cpu', 'workload_exec', 'workload_cpu_fio', 'workload_multicpu_fio']
     with:
-      id: stress-nocurl-dbg-${{ matrix.script }}
+      id: stress-noserv-dbg-${{ matrix.script }}
       location: eastus2euap
       policy_type: debug
+      script: ${{ matrix.script }}
+      useNormalSidecar: true
+      cpu: 2
+
+  stress-test-noserver-generated:
+    name: stress-tests-noserver
+    secrets: inherit
+    uses: ./.github/workflows/workload-stress-tests-noserver.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        script: ['workload_fio', 'workload_tar', 'workload_cpu', 'workload_exec', 'workload_cpu_fio', 'workload_multicpu_fio']
+    with:
+      id: stress-noserv-gen-${{ matrix.script }}
+      location: eastus2euap
+      policy_type: generated
       script: ${{ matrix.script }}
       useNormalSidecar: true
       cpu: 2

@@ -48,7 +48,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
       {
         name: 'workload'
         properties: {
-          image: '${registry}/${repo_base}/workload:${tag}'
+          image: '${registry}/${empty(repo_base) ? 'stress_tests' : repo_base}/workload:${tag}'
           ports: [
             {
               protocol: 'TCP'
