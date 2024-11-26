@@ -70,6 +70,7 @@ jobs:
         run: |
           az acr run --registry cacidashboard --cmd 'acr purge --filter "^stress_tests/.+:.*" --ago 0d --keep 1 --untagged' /dev/null
           az acr run --registry cacidashboard --cmd 'acr purge --filter "^stress_tests_noserver/.+:.*" --ago 0d --keep 1 --untagged' /dev/null
+          az acr run --registry cacidashboard --cmd 'acr purge --filter "^workload-sidecar-with-fragments/.+:.*" --ago 0d --keep 1 --untagged' /dev/null
 
   cleanup-vnets:
     name: Cleanup Virtual Networks

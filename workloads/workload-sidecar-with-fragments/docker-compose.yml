@@ -1,0 +1,12 @@
+version: '3'
+services:
+  primary:
+    image: $IMAGE
+    build:
+      context: .
+      dockerfile: primary.Dockerfile
+  sidecar:
+    image: $SIDECAR_IMAGE
+    build:
+      context: .
+      dockerfile: sidecar.Dockerfile

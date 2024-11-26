@@ -190,3 +190,16 @@ jobs:
       id: common-images-${{ matrix.policy_type }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
+
+  workload-sidecar-with-fragments:
+    name: workload-sidecar-with-fragments
+    secrets: inherit
+    uses: ./.github/workflows/workload-sidecar-with-fragments.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        policy_type: ['generated', 'debug', 'allow_all']
+    with:
+      id: sidecar-fragment-${{ matrix.policy_type }}
+      location: ${{ inputs.location }}
+      policy_type: ${{ matrix.policy_type }}

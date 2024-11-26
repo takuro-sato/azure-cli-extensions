@@ -1,0 +1,22 @@
+{
+    "containers": [
+        {
+            "name": "sidecarcontainer",
+            "properties": {
+                "image": "<IMAGE>",
+                "ports": [
+                    {
+                        "protocol": "TCP",
+                        "port": 8000
+                    }
+                ],
+                "resources": {
+                    "requests": {
+                        "memoryInGB": 1,
+                        "cpu": 1
+                    }
+                }
+            }
+        }
+    ]
+}
