@@ -19,7 +19,7 @@ jobs:
     with:
       location: westeurope
 
-  genoa-weuz3-new-igvmfile:
+  vm-genoa-weuz3-new-igvmfile:
     secrets: inherit
     uses: ./.github/workflows/vm-workload-stress-tests.yml
     with:
@@ -30,7 +30,7 @@ jobs:
       cplatBlobName: ${{ vars.CPLAT_6_1_IGVMFILE_BLOB_NAME }}
       winFlavor: ws2025
 
-  milan-new-igvmfile:
+  vm-milan-new-igvmfile:
     secrets: inherit
     uses: ./.github/workflows/vm-workload-stress-tests.yml
     with:

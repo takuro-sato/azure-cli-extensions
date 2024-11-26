@@ -109,7 +109,6 @@ jobs:
   vm-stress-tests:
     name: ${{ inputs.id || 'vm-stress-tests' }}
     runs-on: ubuntu-latest
-    continue-on-error: true # This only works because historical results tracks per job and failing jobs are still red
     steps:
 
       - name: Checkout
@@ -130,6 +129,7 @@ jobs:
       - name: Set Confcom Version
         run: az extension add -n confcom --version 1.1.1 --upgrade
 
+      # TOOD: split this into vm create_noinit and vm_create
       - name: Deploy VM with containerplat
         run: c-aci-testing vm create --deployment-name $DEPLOYMENT_NAME
 

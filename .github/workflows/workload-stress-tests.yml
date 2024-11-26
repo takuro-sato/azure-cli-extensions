@@ -108,7 +108,6 @@ jobs:
   stress-tests:
     name: ${{ inputs.id || 'stress-tests' }}
     runs-on: ubuntu-latest
-    continue-on-error: true # This only works because historical results tracks per job and failing jobs are still red
     steps:
 
       - name: Checkout
@@ -178,10 +177,30 @@ jobs:
         run: |
           sleep 1
           echo "Attempting to send a request..."
-          # We want to limit the total amount of time this curl command can run for,
-          # rather than just connect time, so that if the server accepts the request
-          # but then hangs we also exit. This necessitates the use of `timeout`.
-          timeout -s INT 1m curl --fail-with-body http://$ip_address:8000/index.txt || exit 1
+
+          set +e
+          attempts=0
+          while [ $attempts -lt 5 ]; do
+            # We want to limit the total amount of time this curl command can run for,
+            # rather than just connect time, so that if the server accepts the request
+            # but then hangs we also exit. This necessitates the use of `timeout`.
+            timeout -s INT 20 curl --fail-with-body http://$ip_address:8000/index.txt
+            status=$?
+            if [ $status -eq 0 ]; then
+              break
+            fi
+            attempts=$((attempts + 1))
+            echo "Attempt $attempts failed"
+            if [ $attempts -lt 5 ]; then
+              echo "Retrying in 5 seconds..."
+              sleep 5
+            fi
+          done
+          if [ $attempts -ne 0 ]; then
+            echo "curl failed $attempts times"
+            exit 1
+          fi
+          exit 0
 
       - name: Let container run for 1min and test again
         run: |

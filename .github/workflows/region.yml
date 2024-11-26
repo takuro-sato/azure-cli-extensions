@@ -162,7 +162,7 @@ jobs:
     secrets: inherit
     uses: ./.github/workflows/workload-perf-nonconf.yml
     with:
-      id: perf-nonconf-${{ matrix.policy_type }}
+      id: perf-nonconf
       location: ${{ inputs.location }}
 
   vnet:
@@ -203,3 +203,43 @@ jobs:
       id: sidecar-fragment-${{ matrix.policy_type }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
+
+  vm-stress-curr-ws2025:
+    if: ${{ inputs.location == 'uaenorth' }}
+    secrets: inherit
+    uses: ./.github/workflows/vm-workload-stress-tests.yml
+    with:
+      id: vm-stress-curr-ws2025-6.1
+      location: ${{ inputs.location }}
+      cplatBlobName: ${{ vars.CPLAT_CURR_BLOB_NAME }}
+      winFlavor: ws2025
+
+  vm-stress-curr-ws2022:
+    if: ${{ inputs.location == 'uaenorth' }}
+    secrets: inherit
+    uses: ./.github/workflows/vm-workload-stress-tests.yml
+    with:
+      id: vm-stress-curr-ws2022-6.1
+      location: ${{ inputs.location }}
+      cplatBlobName: ${{ vars.CPLAT_CURR_BLOB_NAME }}
+      winFlavor: ws2022
+
+  vm-stress-next-6-1-ws2025:
+    if: ${{ inputs.location == 'eastus2euap' || inputs.location == 'uaenorth' }}
+    secrets: inherit
+    uses: ./.github/workflows/vm-workload-stress-tests.yml
+    with:
+      id: vm-stress-next-ws2025-6.1
+      location: ${{ inputs.location }}
+      cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
+      winFlavor: ws2025
+
+  vm-stress-next-hard-6-1-ws2025:
+    if: ${{ inputs.location == 'eastus2euap' || inputs.location == 'uaenorth' }}
+    secrets: inherit
+    uses: ./.github/workflows/vm-workload-stress-tests-hard.yml
+    with:
+      id: vm-stress-next-hard-ws2025-6.1
+      location: ${{ inputs.location }}
+      cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
+      winFlavor: ws2025

@@ -20,7 +20,6 @@ jobs:
       location: eastus2euap
 
   stress-tests-noserver-allow-all:
-    name: stress-tests-noserver
     secrets: inherit
     uses: ./.github/workflows/workload-stress-tests-noserver.yml
     strategy:
@@ -36,7 +35,6 @@ jobs:
       cpu: 2
 
   stress-tests-noserver-debug:
-    name: stress-tests-noserver
     secrets: inherit
     uses: ./.github/workflows/workload-stress-tests-noserver.yml
     strategy:
@@ -52,7 +50,6 @@ jobs:
       cpu: 2
 
   stress-test-noserver-generated:
-    name: stress-tests-noserver
     secrets: inherit
     uses: ./.github/workflows/workload-stress-tests-noserver.yml
     strategy:
@@ -66,16 +63,3 @@ jobs:
       script: ${{ matrix.script }}
       useNormalSidecar: true
       cpu: 2
-
-  vm-stress-tests:
-    secrets: inherit
-    uses: ./.github/workflows/vm-workload-stress-tests.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        winFlavor: ['ws2022', 'ws2025']
-    with:
-      id: vm-stress-tests-${{ matrix.winFlavor }}-6.1
-      location: eastus2euap
-      cplatBlobName: ${{ vars.CPLAT_6_1_BLOB_NAME }}
-      winFlavor: ${{ matrix.winFlavor }}

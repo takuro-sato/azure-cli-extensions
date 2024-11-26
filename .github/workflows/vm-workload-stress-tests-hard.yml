@@ -116,7 +116,6 @@ jobs:
   vm-stress-tests-hard:
     name: ${{ inputs.id || 'vm-stress-tests-hard' }}
     runs-on: ubuntu-latest
-    continue-on-error: true # This only works because historical results tracks per job and failing jobs are still red
     steps:
 
       - name: Checkout
