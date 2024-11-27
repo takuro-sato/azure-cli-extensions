@@ -242,3 +242,29 @@ jobs:
       location: ${{ inputs.location }}
       cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
       winFlavor: ws2025
+
+  perf-cvm:
+    if: ${{ inputs.location == 'uaenorth' }}
+    secrets: inherit
+    uses: ./.github/workflows/workload-perf-cvm.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        vmSize: ['DC4as_v5', 'DC8as_v5']
+    with:
+      id: perf-cvm-${{ matrix.vmSize }}
+      location: ${{ inputs.location }}
+      vmSize: Standard_${{ matrix.vmSize }}
+
+  perf-regular-vm:
+    if: ${{ inputs.location == 'uaenorth' }}
+    secrets: inherit
+    uses: ./.github/workflows/workload-perf-regular-vm.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        vmSize: ['D4as_v5', 'D8as_v5']
+    with:
+      id: perf-regular-vm-${{ matrix.vmSize }}
+      location: ${{ inputs.location }}
+      vmSize: Standard_${{ matrix.vmSize }}
