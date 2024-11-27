@@ -95,7 +95,7 @@ on:
         default: true
 
 env:
-  DEPLOYMENT_NAME: ${{ inputs.id || 'stress-noserver' }}-${{ inputs.location }}-${{ github.run_number }}
+  DEPLOYMENT_NAME: ${{ inputs.id || 'stress-nosrv' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
   RESOURCE_GROUP: c-aci-dashboard
   REGISTRY: cacidashboard.azurecr.io

@@ -25,12 +25,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        script: ['workload_fio', 'workload_tar', 'workload_cpu', 'workload_exec', 'workload_cpu_fio', 'workload_multicpu_fio']
+        script: ['fio', 'tar', 'cpu', 'exec', 'cpu_fio', 'multicpu_fio']
     with:
       id: stress-noserv-aa-${{ matrix.script }}
       location: eastus2euap
       policy_type: allow_all
-      script: ${{ matrix.script }}
+      script: workload_${{ matrix.script }}
       useNormalSidecar: true
       cpu: 2
 
@@ -40,12 +40,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        script: ['workload_fio', 'workload_tar', 'workload_cpu', 'workload_exec', 'workload_cpu_fio', 'workload_multicpu_fio']
+        script: ['fio', 'tar', 'cpu', 'exec', 'cpu_fio', 'multicpu_fio']
     with:
       id: stress-noserv-dbg-${{ matrix.script }}
       location: eastus2euap
       policy_type: debug
-      script: ${{ matrix.script }}
+      script: workload_${{ matrix.script }}
       useNormalSidecar: true
       cpu: 2
 
@@ -55,11 +55,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        script: ['workload_fio', 'workload_tar', 'workload_cpu', 'workload_exec', 'workload_cpu_fio', 'workload_multicpu_fio']
+        script: ['fio', 'tar', 'cpu', 'exec', 'cpu_fio', 'multicpu_fio']
     with:
       id: stress-noserv-gen-${{ matrix.script }}
       location: eastus2euap
       policy_type: generated
-      script: ${{ matrix.script }}
+      script: workload_${{ matrix.script }}
       useNormalSidecar: true
       cpu: 2

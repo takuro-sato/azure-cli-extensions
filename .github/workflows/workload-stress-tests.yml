@@ -90,7 +90,7 @@ on:
         default: true
 
 env:
-  DEPLOYMENT_NAME: ${{ inputs.id || 'stress-tests' }}-${{ inputs.location }}-${{ github.run_number }}
+  DEPLOYMENT_NAME: ${{ inputs.id || 'stress' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
   RESOURCE_GROUP: c-aci-dashboard
   REGISTRY: cacidashboard.azurecr.io
@@ -194,12 +194,11 @@ jobs:
             if [ $attempts -lt 5 ]; then
               echo "Retrying in 5 seconds..."
               sleep 5
+            else
+              echo "curl failed $attempts times"
+              exit 1
             fi
           done
-          if [ $attempts -ne 0 ]; then
-            echo "curl failed $attempts times"
-            exit 1
-          fi
           exit 0
 
       - name: Let container run for 1min and test again
