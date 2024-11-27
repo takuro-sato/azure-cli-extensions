@@ -1,12 +1,12 @@
 version: '3'
 services:
   workload:
-    image: cacidashboard.azurecr.io/${REPO_BASE:-stress_tests_noserver}/workload:${TAG:-latest}
+    image: ${REGISTRY:-cacidashboard.azurecr.io}/${REPO_BASE:-stress_tests_noserver}/workload:${TAG:-latest}
     build:
       context: .
       dockerfile: workload.Dockerfile
   sidecar:
-    image: cacidashboard.azurecr.io/${REPO_BASE:-stress_tests_noserver}/sidecar:${TAG:-latest}
+    image: ${REGISTRY:-cacidashboard.azurecr.io}/${REPO_BASE:-stress_tests_noserver}/sidecar:${TAG:-latest}
     build:
       context: .
       dockerfile: sidecar.Dockerfile
