@@ -127,7 +127,8 @@ jobs:
         if: always()
         continue-on-error: true
         # sleep to give the workload time to do the perf testing instead of --follow
-        run: sleep 120; c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME
+        # today there are 6 10 second CPU tests and one fio test
+        run: sleep 180; c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME
 
       - name: Get Container States
         if: always()

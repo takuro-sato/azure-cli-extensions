@@ -143,7 +143,6 @@ jobs:
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
 
-
   perf:
     name: perf
     secrets: inherit
