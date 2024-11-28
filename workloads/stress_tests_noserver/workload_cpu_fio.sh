@@ -4,6 +4,8 @@
 ./dump_to_output.sh &
 SERVER_PID=$!
 
+uname -a
+
 echo ------------- payload start sysbench --------------- | tee /dev/kmsg
 
 {

@@ -2,6 +2,8 @@
 
 ./dump_to_output.sh &
 
+uname -a
+
 echo ------------- payload start taring --------------- | tee /dev/kmsg
 
 cd /

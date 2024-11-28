@@ -28,11 +28,11 @@ on:
         required: true
       cpu:
         type: number
-        description: The number of CPU cores in each container
+        description: The total number of CPU cores
         default: 4
       memory_in_gb:
         type: number
-        description: The memory in container in Gb
+        description: The total amount of memory in GB
         default: 4
       cleanup:
         type: boolean
@@ -67,11 +67,11 @@ on:
         required: true
       cpu:
         type: number
-        description: The number of CPU cores in each container
+        description: The total number of CPU cores
         default: 4
       memory_in_gb:
         type: number
-        description: The memory in container in Gb
+        description: The total amount of memory in GB
         default: 4
       cleanup:
         type: boolean
@@ -103,6 +103,7 @@ env:
   SCRIPT: ${{ inputs.script || 'workload_fio' }}
   REPO_BASE: stress_tests
   USE_NORMAL_SIDECAR: ${{ inputs.useNormalSidecar || true }}
+  ACI_EXPECTED_KERNEL_DATE: ${{ vars.ACI_EXPECTED_KERNEL_DATE }}
 
 jobs:
   stress-tests:
@@ -145,8 +146,8 @@ jobs:
 
       - name: Set Parameters
         run: |
-          c-aci-testing aci param_set workloads/stress_tests --parameter cpu=$CPU
-          c-aci-testing aci param_set workloads/stress_tests --parameter memoryInGb=$MEMORY_IN_GB
+          c-aci-testing aci param_set workloads/stress_tests --parameter totalCpus=$CPU
+          c-aci-testing aci param_set workloads/stress_tests --parameter totalMemoryGB=$MEMORY_IN_GB
           c-aci-testing aci param_set workloads/stress_tests --parameter "script='$SCRIPT'"
           c-aci-testing aci param_set workloads/stress_tests --parameter "repo_base='$REPO_BASE'"
           c-aci-testing aci param_set workloads/stress_tests --parameter "useNormalSidecar=$USE_NORMAL_SIDECAR"
@@ -209,7 +210,12 @@ jobs:
       - name: Monitor Container Group
         if: always()
         continue-on-error: true
-        run: c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME
+        run: |
+          rm -f output.log
+          c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME | tee output.log
+
+      - name: Check correct kernel version
+        run: scripts/check_uname_in_output.sh output.log
 
       - name: Get Container States
         if: always()

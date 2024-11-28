@@ -24,14 +24,6 @@ on:
         type: string
         description: Where to deploy to
         required: true
-      cpu:
-        type: number
-        description: The number of CPU cores per container
-        default: 4
-      memory_in_gb:
-        type: number
-        description: Memory in GB for the container
-        default: 4
       vmImage:
         type: string
         description: The Atlas image to use for the VM
@@ -65,14 +57,6 @@ on:
         type: string
         description: Where to deploy to
         required: true
-      cpu:
-        type: number
-        description: The number of CPU cores per container
-        default: 4
-      memory_in_gb:
-        type: number
-        description: Memory in GB for the container
-        default: 4
       vmImage:
         type: string
         description: The Atlas image to use for the VM
@@ -103,8 +87,6 @@ env:
   MANAGED_IDENTITY: cacidashboard
   STORAGE_ACCOUNT: cacitestingstorage
   LOCATION: ${{ inputs.location || 'uaenorth' }}
-  CPU: ${{ inputs.cpu || 4 }}
-  MEMORY_IN_GB: ${{ inputs.memory_in_gb || 4 }}
   CLEANUP: ${{ inputs.cleanup }}
   USE_NORMAL_SIDECAR: true
   VM_SIZE: ${{ inputs.vmSize || 'Standard_DC8as_cc_v5' }}
@@ -156,8 +138,8 @@ jobs:
 
       - name: Set parameters
         run: |
-          c-aci-testing aci param_set workloads/stress_tests --parameter cpu=$CPU
-          c-aci-testing aci param_set workloads/stress_tests --parameter memoryInGb=$MEMORY_IN_GB
+          c-aci-testing aci param_set workloads/stress_tests --parameter totalCpus=4
+          c-aci-testing aci param_set workloads/stress_tests --parameter totalMemoryGB=4
           c-aci-testing aci param_set workloads/stress_tests --parameter "useNormalSidecar=true"
           echo stress_tests.bicepparam:
           cat workloads/stress_tests/stress_tests.bicepparam

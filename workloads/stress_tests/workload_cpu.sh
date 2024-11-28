@@ -2,6 +2,8 @@
 
 python3 server.py &
 
+uname -a
+
 echo ------------- payload start sysbench --------------- | tee /dev/kmsg
 
 while :; do

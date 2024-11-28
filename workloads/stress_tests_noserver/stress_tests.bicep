@@ -8,8 +8,8 @@ param ccePolicies object
 param script string = 'workload_fio'
 param useNormalSidecar bool = false
 
-param cpu int = 4
-param memoryInGb int = 4
+param totalCpus int = 4
+param totalMemoryGB int = 4
 
 var sidecarImage = useNormalSidecar ? 'mcr.microsoft.com/aci/skr:2.7' : '${registry}/${repo_base}/sidecar:${tag}'
 
@@ -42,8 +42,8 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
           image: '${registry}/${empty(repo_base) ? 'stress_tests_noserver' : repo_base}/workload:${tag}'
           resources: {
             requests: {
-              memoryInGB: memoryInGb
-              cpu: cpu
+              memoryInGB: totalMemoryGB-1
+              cpu: totalCpus-1
             }
           }
           command: [
@@ -64,8 +64,8 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
           ]
           resources: {
             requests: {
-              memoryInGB: 2
-              cpu: 2
+              memoryInGB: 1
+              cpu: 1
             }
           }
           // We do not have the correct attestation endpoint in this workload for skr to work properly, and it will

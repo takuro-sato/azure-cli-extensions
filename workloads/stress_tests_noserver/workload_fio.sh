@@ -12,6 +12,8 @@ sleep $sleepTime
 
 ./dump_to_output.sh &
 
+uname -a
+
 echo ------------- payload start fio --------------- | tee /dev/kmsg
 
 while :; do

@@ -128,7 +128,6 @@ jobs:
       policy_type: ${{ matrix.policy_type }}
       script: workload_${{ matrix.script }}
       useNormalSidecar: true
-      cpu: ${{ inputs.location == 'westus' && 4 || 2 }}
 
   info:
     name: info

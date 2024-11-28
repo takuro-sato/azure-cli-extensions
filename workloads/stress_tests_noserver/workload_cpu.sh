@@ -2,6 +2,8 @@
 
 ./dump_to_output.sh &
 
+uname -a
+
 echo ------------- payload start sysbench --------------- | tee /dev/kmsg
 
 while :; do

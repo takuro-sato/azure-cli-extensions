@@ -2,6 +2,8 @@
 
 ./dump_to_output.sh &
 
+uname -a
+
 echo ------------- payload start ls loop --------------- | tee /dev/kmsg
 
 while :; do

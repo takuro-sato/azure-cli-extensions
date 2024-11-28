@@ -177,8 +177,8 @@ jobs:
 
       - name: Deploy Container Group (fio, 2cpu)
         run: |
-          c-aci-testing aci param_set workloads/stress_tests --parameter cpu=2
-          c-aci-testing aci param_set workloads/stress_tests --parameter memoryInGb=4
+          c-aci-testing aci param_set workloads/stress_tests --parameter totalCpus=2
+          c-aci-testing aci param_set workloads/stress_tests --parameter totalMemoryGB=4
           c-aci-testing aci param_set workloads/stress_tests --parameter "script='workload_fio'"
           c-aci-testing vm runc workloads/stress_tests --deployment-name $DEPLOYMENT_NAME --prefix lcow_fio
 
@@ -199,15 +199,15 @@ jobs:
 
       - name: Deploy Container Group (cpu, 2cpu)
         run: |
-          c-aci-testing aci param_set workloads/stress_tests --parameter cpu=2
-          c-aci-testing aci param_set workloads/stress_tests --parameter memoryInGb=4
+          c-aci-testing aci param_set workloads/stress_tests --parameter totalCpus=2
+          c-aci-testing aci param_set workloads/stress_tests --parameter totalMemoryGB=4
           c-aci-testing aci param_set workloads/stress_tests --parameter "script='workload_cpu'"
           c-aci-testing vm runc workloads/stress_tests --deployment-name $DEPLOYMENT_NAME --prefix lcow_cpu
 
       - name: Deploy Container Group (tar, 1cpu)
         run: |
-          c-aci-testing aci param_set workloads/stress_tests --parameter cpu=1
-          c-aci-testing aci param_set workloads/stress_tests --parameter memoryInGb=1
+          c-aci-testing aci param_set workloads/stress_tests --parameter totalCpus=1
+          c-aci-testing aci param_set workloads/stress_tests --parameter totalMemoryGB=1
           c-aci-testing aci param_set workloads/stress_tests --parameter "script='workload_tar'"
           c-aci-testing vm runc workloads/stress_tests --deployment-name $DEPLOYMENT_NAME --prefix lcow_tar
 

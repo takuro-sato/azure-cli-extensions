@@ -2,6 +2,8 @@
 
 python3 server.py &
 
+uname -a
+
 echo ------------- payload start ls loop --------------- | tee /dev/kmsg
 
 while :; do

@@ -4,6 +4,8 @@
 python3 server.py &
 SERVER_PID=$!
 
+uname -a
+
 echo ------------- payload start sysbench --------------- | tee /dev/kmsg
 
 {

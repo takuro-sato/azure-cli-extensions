@@ -2,6 +2,8 @@
 
 python3 server.py &
 
+uname -a
+
 echo ------------- payload start taring --------------- | tee /dev/kmsg
 
 cd /
