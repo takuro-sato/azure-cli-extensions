@@ -142,8 +142,9 @@ jobs:
             echo "$container" | jq -r '.instanceView | .events[]'
           done
 
-      - name: Remove Container Group
+      - name: Remove Container Group and vnet
         run: |
           if [ "$CLEANUP" != false ]; then
             c-aci-testing aci remove --deployment-name $DEPLOYMENT_NAME
+            az network vnet delete --name ${DEPLOYMENT_NAME}-vnet --resource-group $RESOURCE_GROUP
           fi
