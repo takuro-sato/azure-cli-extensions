@@ -5,10 +5,6 @@ permissions:
   contents: read
 
 on:
-  pull_request:
-    paths:
-      - .github/workflows/vm-workload-stress-tests.yml
-      - scripts/install-c-aci-testing.sh
   push:
     branches:
       - main
