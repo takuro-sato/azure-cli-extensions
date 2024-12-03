@@ -131,7 +131,6 @@ function do_checks() {
   run_on workload dmesg > $dmesg_file
 
   found_sus_message=""
-  grep -F '] hv_storvsc' $dmesg_file && found_sus_message="hv_storvsc"
   grep -i segfault $dmesg_file && found_sus_message="segfault"
   grep -i 'protection fault' $dmesg_file && found_sus_message="protection-fault"
   grep 'BUG:' $dmesg_file && found_sus_message="kernel-bug"

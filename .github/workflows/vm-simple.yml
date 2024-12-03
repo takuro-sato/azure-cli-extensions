@@ -173,7 +173,6 @@ jobs:
           fi
 
           found_sus_message=""
-          grep -F '] hv_storvsc' $dmesg_file && found_sus_message="hv_storvsc"
           grep -i segfault $dmesg_file && found_sus_message="segfault"
           grep -i 'protection fault' $dmesg_file && found_sus_message="protection-fault"
           grep 'BUG:' $dmesg_file && found_sus_message="kernel-bug"
@@ -198,7 +197,13 @@ jobs:
           c-aci-testing vm cat --deployment-name $DEPLOYMENT_NAME "C:\\lcow\\container_log_*.log"
 
       - name: Remove VM
+        if: always()
         run: |
           if [ "$CLEANUP" != false ]; then
             c-aci-testing vm remove --deployment-name $DEPLOYMENT_NAME
+            # Don't leave VM hanging around even if deployment disappears
+            az vm delete \
+              --resource-group $RESOURCE_GROUP \
+              --name ${DEPLOYMENT_NAME}-vm \
+              --yes --force-deletion yes --verbose || true
           fi

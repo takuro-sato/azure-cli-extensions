@@ -14,9 +14,14 @@ on:
         type: string
         required: true
         description: 'The location of the Azure Container Instances'
+  workflow_dispatch:
+    inputs:
+      location:
+        type: string
+        required: true
+        description: 'The location of the Azure Container Instances'
 
 jobs:
-
   minimal:
     if: ${{ !cancelled() }}
     name: minimal
@@ -227,7 +232,7 @@ jobs:
       policy_type: ${{ matrix.policy_type }}
 
   vm-stress-curr-ws2025:
-    if: ${{ !cancelled() && inputs.location == 'uaenorth' }}
+    if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2025_VM_REGIONS, inputs.location) }}
     secrets: inherit
     uses: ./.github/workflows/vm-workload-stress-tests.yml
     with:
@@ -237,7 +242,7 @@ jobs:
       winFlavor: ws2025
 
   vm-stress-curr-ws2022:
-    if: ${{ !cancelled() && inputs.location == 'uaenorth' }}
+    if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2022_VM_REGIONS, inputs.location) }}
     secrets: inherit
     uses: ./.github/workflows/vm-workload-stress-tests.yml
     with:
@@ -247,7 +252,7 @@ jobs:
       winFlavor: ws2022
 
   vm-stress-next-6-1-ws2025:
-    if: ${{ !cancelled() && (inputs.location == 'eastus2euap' || inputs.location == 'uaenorth') }}
+    if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2025_VM_REGIONS, inputs.location) }}
     secrets: inherit
     uses: ./.github/workflows/vm-workload-stress-tests.yml
     with:
@@ -257,7 +262,7 @@ jobs:
       winFlavor: ws2025
 
   vm-stress-next-hard-6-1-ws2025:
-    if: ${{ !cancelled() && (inputs.location == 'eastus2euap' || inputs.location == 'uaenorth') }}
+    if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2025_VM_REGIONS, inputs.location) }}
     secrets: inherit
     uses: ./.github/workflows/vm-workload-stress-tests-hard.yml
     with:
