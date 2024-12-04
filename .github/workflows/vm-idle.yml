@@ -1,0 +1,308 @@
+name: VM Workload - Idle server
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/vm-idle.yml
+      - scripts/install-c-aci-testing.sh
+  workflow_dispatch:
+    inputs:
+      id:
+        type: string
+        description: ID of the run
+      location:
+        type: string
+        description: Where to deploy to
+        required: true
+      zone:
+        type: string
+        description: The zone to deploy to
+        required: false
+        default: ''
+      vmImage:
+        type: string
+        description: The Atlas image to use for the VM
+        required: false
+        default: ''
+      vmSize:
+        type: string
+        description: The size of the VM
+        default: Standard_DC8as_cc_v5
+      cleanup:
+        type: boolean
+        description: Whether to cleanup the VM after testing
+        default: true
+      cplatBlobName:
+        type: string
+        description: The name of the containerplat blob
+        default: ''
+      winFlavor:
+        type: choice
+        description: The Windows version of the image
+        default: ws2025
+        options:
+          - ws2022
+          - ws2025
+  workflow_call:
+    inputs:
+      id:
+        type: string
+        description: ID of the run
+      location:
+        type: string
+        description: Where to deploy to
+        required: true
+      zone:
+        type: string
+        description: The zone to deploy to
+        required: false
+        default: ''
+      vmImage:
+        type: string
+        description: The Atlas image to use for the VM
+        required: false
+        default: ''
+      vmSize:
+        type: string
+        description: The size of the VM
+        default: Standard_DC8as_cc_v5
+      cleanup:
+        type: boolean
+        description: Whether to cleanup the VM after testing
+        default: true
+      cplatBlobName:
+        type: string
+        description: The name of the containerplat blob
+        default: ''
+      winFlavor:
+        type: string
+        description: The Windows version of the image
+        default: ws2025
+
+env:
+  DEPLOYMENT_NAME: ${{ inputs.id || 'vm-idle' }}-${{ inputs.location }}-${{ github.run_number }}
+  SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
+  RESOURCE_GROUP: c-aci-dashboard
+  REGISTRY: cacidashboard.azurecr.io
+  MANAGED_IDENTITY: cacidashboard
+  STORAGE_ACCOUNT: cacitestingstorage
+  LOCATION: ${{ inputs.location || 'uaenorth' }}
+  CLEANUP: ${{ inputs.cleanup }}
+  USE_NORMAL_SIDECAR: true
+  VM_SIZE: ${{ inputs.vmSize || 'Standard_DC8as_cc_v5' }}
+  VM_IMAGE: ${{ inputs.vmImage || ( inputs.winFlavor == 'ws2022' && secrets.VM_IMAGE_WS2022 || secrets.VM_IMAGE_WS2025 ) }}
+  CPLAT_BLOB_NAME: ${{ inputs.cplatBlobName || vars.CPLAT_6_1_BLOB_NAME }}
+  WIN_FLAVOR: ${{ inputs.winFlavor || 'ws2025' }}
+  VM_ZONE: ${{ inputs.zone || '' }}
+
+jobs:
+  vm-idle:
+    name: ${{ inputs.id || 'vm-idle' }}
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log into Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION }}
+
+      - name: Install c_aci_testing package
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/install-c-aci-testing.sh
+
+      - name: Set Confcom Version
+        run: az extension add -n confcom --version 1.1.1 --upgrade
+
+      # TOOD: split this into vm create_noinit and vm_create
+      - name: Deploy VM with containerplat
+        run: c-aci-testing vm create --deployment-name $DEPLOYMENT_NAME
+
+      - name: Setup Docker
+        run: sudo usermod -aG docker $USER
+
+      - name: Use precise current time as tag
+        run: |
+          TAG=$(date "+%Y%m%d-%H%M%S.%N")
+          echo "TAG=$TAG"
+          echo "TAG=$TAG" >> $GITHUB_ENV
+
+      - name: Build image
+        run: c-aci-testing images build workloads/stress_tests
+
+      - name: Push image
+        run: c-aci-testing images push workloads/stress_tests
+
+      - name: Set parameters
+        run: |
+          c-aci-testing aci param_set workloads/stress_tests --parameter "useNormalSidecar=true"
+          echo stress_tests.bicepparam:
+          cat workloads/stress_tests/stress_tests.bicepparam
+
+      # The security policy has to be allow_all for exec-based checks to work
+      - name: Fill in allow_all security policy
+        run: |
+          c-aci-testing policies gen workloads/stress_tests --deployment-name $DEPLOYMENT_NAME --policy-type allow_all
+          cat workloads/stress_tests/policy_stress_tests.rego
+
+      # The Atlas image often reboots automatically on first boot for unknown reasons, but does not happen more than once.
+      # So we just wait for a bit to let that happen.
+      # It is also more realistic to not start spinning up containers immediately after the VM is created.
+      - name: Wait for any pending first-boot reboots
+        run: sleep 500
+
+      # OCID token refresh breaks after 5 min
+      # https://github.com/Azure/azure-cli/issues/28708
+      - name: Log into Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION }}
+
+      - name: Deploy Container Group (idle, 2cpu)
+        run: |
+          c-aci-testing aci param_set workloads/stress_tests --parameter totalCpus=2
+          c-aci-testing aci param_set workloads/stress_tests --parameter totalMemoryGB=4
+          c-aci-testing aci param_set workloads/stress_tests --parameter "script='workload_idle'"
+          c-aci-testing vm runc workloads/stress_tests --deployment-name $DEPLOYMENT_NAME --prefix lcow_idle
+
+      - name: Print info
+        run: |
+          c-aci-testing vm exec --deployment-name $DEPLOYMENT_NAME '
+            Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" > C:\info.txt
+            echo "" >> C:\info.txt
+            Set-Alias -Name shimdiag -Value C:\ContainerPlat\shimdiag.exe
+            echo "uname:" >> C:\info.txt
+            shimdiag exec (shimdiag list)[0] uname -a >> C:\info.txt
+            echo "cpuinfo:" >> C:\info.txt
+            shimdiag exec (shimdiag list)[0] cat /proc/cpuinfo >> C:\info.txt
+            echo "snp-report:" >> C:\info.txt
+            shimdiag exec (shimdiag list)[0] snp-report >> C:\info.txt
+          '
+          c-aci-testing vm cat --deployment-name $DEPLOYMENT_NAME 'C:\info.txt'
+
+      - name: Deploy Container Group (idle2, 2cpu)
+        run: |
+          c-aci-testing aci param_set workloads/stress_tests --parameter totalCpus=2
+          c-aci-testing aci param_set workloads/stress_tests --parameter totalMemoryGB=4
+          c-aci-testing aci param_set workloads/stress_tests --parameter "script='workload_idle'"
+          c-aci-testing vm runc workloads/stress_tests --deployment-name $DEPLOYMENT_NAME --prefix lcow_idle2
+
+      - name: Deploy Container Group (idle3, 1cpu)
+        run: |
+          c-aci-testing aci param_set workloads/stress_tests --parameter totalCpus=1
+          c-aci-testing aci param_set workloads/stress_tests --parameter totalMemoryGB=1
+          c-aci-testing aci param_set workloads/stress_tests --parameter "script='workload_idle'"
+          c-aci-testing vm runc workloads/stress_tests --deployment-name $DEPLOYMENT_NAME --prefix lcow_idle3
+
+      - name: Start check loop on VM
+        run: |
+          c-aci-testing vm cp_into --deployment-name $DEPLOYMENT_NAME \
+            scripts/vm_helpers \
+            'C:\vm_helpers' \
+            'C:\vm_helpers\start_check_loop.ps1 -checkArgs "-checkInterval 30 -additionalChecksScript check_stress_tests_http.ps1"'
+
+      - name: Poll VM for check results
+        run: |
+          set +e
+          consecutive_fail_count=0
+          for i in {1..20}; do
+            sleep 120
+            c-aci-testing vm cat --deployment-name $DEPLOYMENT_NAME 'C:\check_loop.log' > check.log
+            if [ $? -ne 0 ]; then
+              echo Error: Failed to poll VM for check log
+              consecutive_fail_count=$((consecutive_fail_count+1))
+              if [ $consecutive_fail_count -gt 3 ]; then
+                exit 1
+              fi
+            else
+              consecutive_fail_count=0
+              echo Last 20 lines of check_loop.log:
+              tail -n 20 check.log
+            fi
+          done
+          exit 0
+
+      - name: Check for errors
+        run: |
+          set +e
+          echo Full check_loop.log:
+          cat check.log
+          grep -F ERROR check.log
+          if [ $? -eq 0 ]; then
+            echo Found errors in check log.
+            exit 1
+          fi
+          exit 0
+
+      - name: Log into Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION }}
+
+      - name: Check dmesg
+        if: always()
+        run: |
+          set +e
+          dmesg_file="dmesg.log"
+
+          c-aci-testing vm exec --deployment-name $DEPLOYMENT_NAME 'Get-Item C:\*\dmesg*.log | foreach { echo ""; echo ""; echo $_.FullName; cat -Raw $_ } > C:\all-dmesg.log'
+          c-aci-testing vm cat --deployment-name $DEPLOYMENT_NAME 'C:\all-dmesg.log' > $dmesg_file
+          if [ $? -ne 0 ]; then
+            echo "Failed to get dmesg."
+            cat $dmesg_file
+            exit 1
+          fi
+
+          found_sus_message=""
+          grep -i segfault $dmesg_file && found_sus_message="segfault"
+          grep -i 'protection fault' $dmesg_file && found_sus_message="protection-fault"
+          grep 'BUG:' $dmesg_file && found_sus_message="kernel-bug"
+          grep 'WARNING:' $dmesg_file && found_sus_message="kernel-bug"
+          grep 'RIP:' $dmesg_file && found_sus_message="kernel-backtrace"
+
+          cat $dmesg_file
+
+          if [ -n "$found_sus_message" ]; then
+            echo "Found suspicious message in dmesg: $found_sus_message"
+            exit 1
+          fi
+
+          if [ ! -s $dmesg_file ]; then
+            echo "No dmesg output found"
+            exit 1
+          fi
+
+      - name: Container output (workload)
+        if: always()
+        run: |
+          for lcow_dir in lcow_idle lcow_idle2 lcow_idle3; do
+            echo "Container output for $lcow_dir:"
+            c-aci-testing vm cat --deployment-name $DEPLOYMENT_NAME "C:\\$lcow_dir\\container_log_stress_tests_workload.log"
+          done
+
+      - name: Remove VM
+        if: always()
+        run: |
+          if [ "$CLEANUP" != false ]; then
+            c-aci-testing vm remove --deployment-name $DEPLOYMENT_NAME
+            # Don't leave VM hanging around even if deployment disappears
+            az vm delete \
+              --resource-group $RESOURCE_GROUP \
+              --name ${DEPLOYMENT_NAME}-vm \
+              --yes --force-deletion yes --verbose || true
+          fi

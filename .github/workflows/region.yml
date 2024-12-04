@@ -271,6 +271,16 @@ jobs:
       cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
       winFlavor: ws2025
 
+  vm-idle-curr-ws2025:
+    if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2025_VM_REGIONS, inputs.location) }}
+    secrets: inherit
+    uses: ./.github/workflows/vm-idle.yml
+    with:
+      id: vm-idle-curr-ws2025-6.1
+      location: ${{ inputs.location }}
+      cplatBlobName: ${{ vars.CPLAT_CURR_BLOB_NAME }}
+      winFlavor: ws2025
+
   perf-cvm:
     if: ${{ !cancelled() && inputs.location == 'uaenorth' }}
     secrets: inherit
