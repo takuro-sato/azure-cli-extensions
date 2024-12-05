@@ -82,6 +82,26 @@ Deploys but doesn't remove, checks that containers live at least 48 hours withou
 
 [![Uptime - East US 2 EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-eastus2euap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-eastus2euap.yml)
 
+## VM tests
+
+### Stable
+
+[![VM - East US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-eastus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-eastus.yml)
+[![VM - North Europe](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-northeurope.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-northeurope.yml)
+[![VM - East Asia](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-eastasia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-eastasia.yml)
+[![VM - Germany West Central](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-germanywestcentral.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-germanywestcentral.yml)
+[![VM - Italy North](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-italynorth.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-italynorth.yml)
+[![VM - UAE North](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-uaenorth.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-uaenorth.yml)
+<!-- [![VM - Japan East](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-japaneast.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-japaneast.yml) -->
+<!-- [![VM - Switzerland North](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-switzerlandnorth.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-switzerlandnorth.yml) -->
+[![VM - South East Asia](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-southeastasia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-southeastasia.yml)
+[![VM - West Europe](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-westeurope.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-westeurope.yml)
+<!-- [![VM - West US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-westus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-westus.yml) -->
+
+### Canary
+[![VM - East US 2 EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-eastus2euap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-eastus2euap.yml)
+[![VM - Central US EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-centraluseuap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-centraluseuap.yml)
+
 ## Adding new regions
 
 To add a new region, simply copy high-spec-<anyregion>.yml, region-<anyregion>.yml and uptime-<anyregion>.yml files and change <anyregion> to the name of your region, including the title case workflow names.

@@ -1,0 +1,99 @@
+name: VM
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/vm-region.yml
+  workflow_call:
+    inputs:
+      location:
+        type: string
+        required: true
+        description: 'The location to deploy the VM'
+  workflow_dispatch:
+    inputs:
+      location:
+        type: string
+        required: true
+        description: 'The location to deploy the VM'
+
+jobs:
+  vm-stress-curr-ws2025:
+    if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2025_VM_REGIONS, inputs.location) }}
+    secrets: inherit
+    uses: ./.github/workflows/vm-workload-stress-tests.yml
+    with:
+      id: vm-stress-curr-ws2025-6.1
+      location: ${{ inputs.location }}
+      cplatBlobName: ${{ vars.CPLAT_CURR_BLOB_NAME }}
+      winFlavor: ws2025
+
+  vm-stress-curr-ws2022:
+    if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2022_VM_REGIONS, inputs.location) }}
+    secrets: inherit
+    uses: ./.github/workflows/vm-workload-stress-tests.yml
+    with:
+      id: vm-stress-curr-ws2022-6.1
+      location: ${{ inputs.location }}
+      cplatBlobName: ${{ vars.CPLAT_CURR_BLOB_NAME }}
+      winFlavor: ws2022
+
+  vm-stress-next-6-1-ws2025:
+    if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2025_VM_REGIONS, inputs.location) }}
+    secrets: inherit
+    uses: ./.github/workflows/vm-workload-stress-tests.yml
+    with:
+      id: vm-stress-next-ws2025-6.1
+      location: ${{ inputs.location }}
+      cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
+      winFlavor: ws2025
+
+  vm-stress-next-hard-6-1-ws2025:
+    if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2025_VM_REGIONS, inputs.location) }}
+    secrets: inherit
+    uses: ./.github/workflows/vm-workload-stress-tests-hard.yml
+    with:
+      id: vm-stress-next-hard-ws2025-6.1
+      location: ${{ inputs.location }}
+      cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
+      winFlavor: ws2025
+
+  vm-idle-curr-ws2025:
+    if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2025_VM_REGIONS, inputs.location) }}
+    secrets: inherit
+    uses: ./.github/workflows/vm-idle.yml
+    with:
+      id: vm-idle-curr-ws2025-6.1
+      location: ${{ inputs.location }}
+      cplatBlobName: ${{ vars.CPLAT_CURR_BLOB_NAME }}
+      winFlavor: ws2025
+
+  perf-cvm:
+    if: ${{ !cancelled() && inputs.location == 'uaenorth' }}
+    secrets: inherit
+    uses: ./.github/workflows/workload-perf-cvm.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        vmSize: ['DC4as_v5', 'DC8as_v5']
+    with:
+      id: perf-cvm-${{ matrix.vmSize }}
+      location: ${{ inputs.location }}
+      vmSize: Standard_${{ matrix.vmSize }}
+
+  perf-regular-vm:
+    if: ${{ !cancelled() && inputs.location == 'uaenorth' }}
+    secrets: inherit
+    uses: ./.github/workflows/workload-perf-regular-vm.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        vmSize: ['D4as_v5', 'D8as_v5']
+    with:
+      id: perf-regular-vm-${{ matrix.vmSize }}
+      location: ${{ inputs.location }}
+      vmSize: Standard_${{ matrix.vmSize }}

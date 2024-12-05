@@ -1,0 +1,20 @@
+name: VM - Germany West Central
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/vm-germanywestcentral.yml
+
+jobs:
+  vm-germanywestcentral:
+    secrets: inherit
+    uses: ./.github/workflows/vm-region.yml
+    with:
+      location: germanywestcentral

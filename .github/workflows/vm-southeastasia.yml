@@ -1,4 +1,4 @@
-name: Region - West Europe
+name: VM - Southeast Asia
 
 permissions:
   id-token: write
@@ -10,11 +10,11 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
-      - .github/workflows/region-westeurope.yml
+      - .github/workflows/vm-southeastasia.yml
 
 jobs:
-  westeurope:
+  vm-southeastasia:
     secrets: inherit
-    uses: ./.github/workflows/region.yml
+    uses: ./.github/workflows/vm-region.yml
     with:
-      location: westeurope
+      location: southeastasia

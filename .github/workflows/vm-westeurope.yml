@@ -1,0 +1,42 @@
+name: VM - West Europe
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/vm-westeurope.yml
+
+jobs:
+  vm-westeurope:
+    secrets: inherit
+    uses: ./.github/workflows/vm-region.yml
+    with:
+      location: westeurope
+
+  vm-genoa-weuz3-new-igvmfile:
+    secrets: inherit
+    uses: ./.github/workflows/vm-workload-stress-tests.yml
+    with:
+      id: vm-genoa-weuz3-ws2025-6.1
+      location: westeurope
+      vmSize: Standard_DC8as_cc_v5
+      zone: 3
+      cplatBlobName: ${{ vars.CPLAT_6_1_IGVMFILE_BLOB_NAME }}
+      winFlavor: ws2025
+
+  vm-milan-new-igvmfile:
+    secrets: inherit
+    uses: ./.github/workflows/vm-workload-stress-tests.yml
+    with:
+      id: vm-milan-weuz1-ws2025-6.1
+      location: westeurope
+      vmSize: Standard_DC8as_cc_v5
+      zone: 1
+      cplatBlobName: ${{ vars.CPLAT_6_1_IGVMFILE_BLOB_NAME }}
+      winFlavor: ws2025
