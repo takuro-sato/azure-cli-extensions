@@ -126,7 +126,12 @@ jobs:
       - name: Monitor Container Group
         if: always()
         continue-on-error: true
-        run: c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME --follow
+        run: |
+          c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME --follow | tee output.log
+
+      - name: Check that curl worked
+        run: |
+          cat output.log | grep "It worked"
 
       - name: Get Container States
         if: always()

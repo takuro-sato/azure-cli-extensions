@@ -1,5 +1,5 @@
 version: '3'
 services:
   outbound_traffic:
-    image: mcr.microsoft.com/mirror/docker/library/ubuntu:20.04
-    command: apt-get update && apt-get install curl && curl http://example.com
+    image: quay.io/curl/curl:8.11.0
+    command: 'curl http://example.com && echo "It worked"'

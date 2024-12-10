@@ -18,11 +18,11 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
       {
         name: 'ubuntu'
         properties: {
-          image: 'mcr.microsoft.com/mirror/docker/library/ubuntu:20.04'
+          image: 'quay.io/curl/curl:8.11.0'
           command: [
             'sh'
             '-c'
-            'apt-get update && apt-get install curl && curl http://example.com'
+            'curl http://example.com && echo "It worked"'
           ]
           resources: {
             requests: {
