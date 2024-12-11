@@ -24,6 +24,7 @@ KEY = ../../certs/intermediateCA/private/ec_p384_private.pem
 
 sidecar_fragment.rego sidecar_fragment.rego.cose: sidecar_config.json ${CHAIN} ${KEY} .image_push
 	$(eval MAYBE_DEBUG=$(shell if [ "${POLICY_TYPE}" = "debug" ]; then echo "--debug-mode"; fi))
+	$(eval MAYBE_OMIT_ID=$(shell if [ "${OMIT_ID}" = "true" ]; then echo "--omit-id"; fi))
 	az confcom acifragmentgen \
 		--chain ${CHAIN} \
 		--key ${KEY} \
@@ -34,6 +35,7 @@ sidecar_fragment.rego sidecar_fragment.rego.cose: sidecar_config.json ${CHAIN} $
 		--upload-fragment \
 		--no-print \
 		${MAYBE_DEBUG} \
+		${MAYBE_OMIT_ID} \
 		--output-filename sidecar_fragment # produces sidecar_fragment.rego and sidecar_fragment.rego.cose
 
 sidecar_fragment_sign1util: sidecar_fragment.rego oras_clean

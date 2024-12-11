@@ -1,8 +1,9 @@
 #!/bin/bash
 
-if [ -z "$REGISTRY" ]; then
-  export REGISTRY=cacitesting.azurecr.io
+if [ -z "$LOCATION" -o -z "$REGISTRY" ]; then
+  . `realpath $(dirname $0)/../../cacitesting.env`
 fi
+
 if [ -z "$REPO_BASE" ]; then
   export REPO_BASE=workload-sidecar-with-fragments
 fi

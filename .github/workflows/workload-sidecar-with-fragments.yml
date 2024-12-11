@@ -85,7 +85,7 @@ jobs:
       - name: Set Confcom Version
         run: |
           # az extension add -n confcom --version 1.1.2 --upgrade
-          WHEEL_NAME=confcom-1.1.2a4-py3-none-any.whl
+          WHEEL_NAME=confcom-1.1.2a6-py3-none-any.whl
           echo Using temporary patched confcom extension $WHEEL_NAME
           az storage blob download --auth-mode login --container-name container --name $WHEEL_NAME --file $WHEEL_NAME --account-name cacitestingstorage
           az extension add --source ./$WHEEL_NAME --allow-preview true --yes
