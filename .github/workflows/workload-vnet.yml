@@ -127,6 +127,7 @@ jobs:
         if: always()
         continue-on-error: true
         run: |
+          sleep 20
           c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME --follow | tee output.log
 
       - name: Check that curl worked
