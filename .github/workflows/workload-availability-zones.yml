@@ -77,6 +77,12 @@ on:
         default: generated
 
 env:
+  KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
+  KUSTO_DATABASE: ${{ secrets.KUSTO_DATABASE }}
+  KUSTO_TABLE: CACITestStepTrace
+  TEST_TYPE: aci
+  TEST_NAME: ${{ github.workflow }}
+  RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
   DEPLOYMENT_NAME: ${{ inputs.id || 'zones' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
   RESOURCE_GROUP: c-aci-dashboard
@@ -105,16 +111,10 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.SUBSCRIPTION }}
 
-      - name: Install c_aci_testing package
+      - name: Initialize Run
         env:
           GH_TOKEN: ${{ github.token }}
-        run: ./scripts/install-c-aci-testing.sh
-
-      - name: Set Confcom Version
-        run: az extension add -n confcom --version 1.1.1 --upgrade
-
-      - name: Setup Docker
-        run: sudo usermod -aG docker $USER
+        run: ./scripts/init_run.sh
 
       - name: Pull Image
         run: c-aci-testing images pull workloads/availability_zones
@@ -127,19 +127,30 @@ jobs:
 
       - name: Generate Security Policy
         run: |
+          ./scripts/tracing/trace_step.py --start 'Generate Policy'
           c-aci-testing policies gen workloads/availability_zones --deployment-name $DEPLOYMENT_NAME
           cat workloads/availability_zones/policy_availability_zones.rego
 
       - name: Deploy Container Group
-        run: c-aci-testing aci deploy workloads/availability_zones --deployment-name $DEPLOYMENT_NAME
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Deploy Container Group'
+          c-aci-testing aci deploy workloads/availability_zones --deployment-name $DEPLOYMENT_NAME
+
+      - name: Report result
+        if: always()
+        run: |
+          ./scripts/trace_run_result.sh ${{ job.status }}
 
       - name: Check zones in resource is correct
         run: |
+          ./scripts/tracing/trace_step.py --start 'Check zones in resource is correct'
           DEPLOYED_ZONE=$(az container show --name $DEPLOYMENT_NAME --resource-group $RESOURCE_GROUP --query 'zones' | jq -r '.[]')
           if [ "$DEPLOYED_ZONE" != "$ZONE" ]; then
             echo "Deployed to zone $DEPLOYED_ZONE, expected $ZONE"
+            ./scripts/tracing/trace_step.py --complete --err "Deployed to zone $DEPLOYED_ZONE, expected $ZONE"
             exit 1
           fi
+          ./scripts/tracing/trace_step.py --complete
           exit 0
 
       - name: Monitor Container Group

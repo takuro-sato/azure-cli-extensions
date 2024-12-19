@@ -90,6 +90,12 @@ on:
         default: true
 
 env:
+  KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
+  KUSTO_DATABASE: ${{ secrets.KUSTO_DATABASE }}
+  KUSTO_TABLE: CACITestStepTrace
+  TEST_TYPE: aci
+  TEST_NAME: ${{ github.workflow }}
+  RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
   DEPLOYMENT_NAME: ${{ inputs.id || 'stress' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
   RESOURCE_GROUP: c-aci-dashboard
@@ -121,16 +127,10 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.SUBSCRIPTION }}
 
-      - name: Install c_aci_testing package
+      - name: Initialize Run
         env:
           GH_TOKEN: ${{ github.token }}
-        run: ./scripts/install-c-aci-testing.sh
-
-      - name: Set Confcom Version
-        run: az extension add -n confcom --version 1.1.1 --upgrade
-
-      - name: Setup Docker
-        run: sudo usermod -aG docker $USER
+        run: ./scripts/init_run.sh
 
       - name: Use precise current time as tag
         run: |
@@ -156,14 +156,18 @@ jobs:
 
       - name: Generate Security Policy
         run: |
+          ./scripts/tracing/trace_step.py --start 'Generate Policy'
           c-aci-testing policies gen workloads/stress_tests --deployment-name $DEPLOYMENT_NAME
           cat workloads/stress_tests/policy_stress_tests.rego
 
       - name: Deploy Container Group
-        run: c-aci-testing aci deploy workloads/stress_tests --deployment-name $DEPLOYMENT_NAME
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Deploy Container Group'
+          c-aci-testing aci deploy workloads/stress_tests --deployment-name $DEPLOYMENT_NAME
 
       - name: Wait for IP address
         run: |
+          ./scripts/tracing/trace_step.py --start 'Wait for IP address'
           ip_address=""
           elapsed=0
           while [[ -z "$ip_address" && elapsed -lt 60 ]]; do
@@ -176,6 +180,7 @@ jobs:
 
       - name: Curl Server
         run: |
+          ./scripts/tracing/trace_step.py --start 'Curl Server'
           sleep 1
           echo "Attempting to send a request..."
 
@@ -197,15 +202,23 @@ jobs:
               sleep 5
             else
               echo "curl failed $attempts times"
+              ./scripts/tracing/trace_step.py --complete --output failedAttempts=$attempts --err "curl failed $attempts times"
               exit 1
             fi
           done
+          ./scripts/tracing/trace_step.py --complete --output failedAttempts=$attempts
           exit 0
 
       - name: Let container run for 1min and test again
         run: |
           sleep 100
+          ./scripts/tracing/trace_step.py --start 'Curl Server after 1min'
           timeout -s INT 1m curl --fail-with-body http://$ip_address:8000/index.txt || exit 1
+
+      - name: Report result
+        if: always()
+        run: |
+          ./scripts/trace_run_result.sh ${{ job.status }}
 
       - name: Monitor Container Group
         if: always()

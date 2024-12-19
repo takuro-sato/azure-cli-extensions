@@ -95,6 +95,12 @@ on:
         default: true
 
 env:
+  KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
+  KUSTO_DATABASE: ${{ secrets.KUSTO_DATABASE }}
+  KUSTO_TABLE: CACITestStepTrace
+  TEST_TYPE: aci
+  TEST_NAME: ${{ github.workflow }}
+  RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
   DEPLOYMENT_NAME: ${{ inputs.id || 'stress-nosrv' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
   RESOURCE_GROUP: c-aci-dashboard
@@ -126,16 +132,10 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.SUBSCRIPTION }}
 
-      - name: Install c_aci_testing package
+      - name: Initialize Run
         env:
           GH_TOKEN: ${{ github.token }}
-        run: ./scripts/install-c-aci-testing.sh
-
-      - name: Set Confcom Version
-        run: az extension add -n confcom --version 1.1.1 --upgrade
-
-      - name: Setup Docker
-        run: sudo usermod -aG docker $USER
+        run: ./scripts/init_run.sh
 
       - name: Use precise current time as tag
         run: |
@@ -161,24 +161,55 @@ jobs:
 
       - name: Generate Security Policy
         run: |
+          ./scripts/tracing/trace_step.py --start 'Generate Policy'
           c-aci-testing policies gen workloads/stress_tests_noserver --deployment-name $DEPLOYMENT_NAME
           cat workloads/stress_tests_noserver/policy_stress_tests.rego
 
       - name: Deploy Container Group
-        run: c-aci-testing aci deploy workloads/stress_tests_noserver --deployment-name $DEPLOYMENT_NAME
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Deploy Container Group'
+          c-aci-testing aci deploy workloads/stress_tests_noserver --deployment-name $DEPLOYMENT_NAME
 
       - name: Let container run for some time
         run: sleep 100
 
       - name: Monitor Container Group
-        if: always()
-        continue-on-error: true
         run: |
+          ./scripts/tracing/trace_step.py --start 'Monitor Container Group'
           rm -f output.log
           c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME | tee output.log
 
       - name: Check correct kernel version
-        run: scripts/check_uname_in_output.sh output.log
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Check Kernel Version'
+          ./scripts/check_uname_in_output.sh output.log
+
+      - name: Check output and dmesg
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Check Output and dmesg'
+
+          grep -q -F 'Stress test container alive' output.log || no_alive_output=true
+          if [ -n "$no_alive_output" ]; then
+            echo "No 'Stress test container alive' message found in output.log"
+            exit 1
+          fi
+          dmesg_file="output.log"
+
+          found_sus_message=""
+          grep -i segfault $dmesg_file && found_sus_message="segfault"
+          grep -i 'protection fault' $dmesg_file && found_sus_message="protection-fault"
+          grep 'BUG:' $dmesg_file && found_sus_message="kernel-bug"
+          grep 'RIP:' $dmesg_file && found_sus_message="kernel-backtrace"
+
+          if [ -n "$found_sus_message" ]; then
+            echo "Found suspicious message in dmesg: $found_sus_message"
+            exit 1
+          fi
+
+      - name: Report result
+        if: always()
+        run: |
+          ./scripts/trace_run_result.sh ${{ job.status }}
 
       - name: Get Container States
         if: always()
@@ -192,27 +223,6 @@ jobs:
             echo "Events for container $container_name:"
             echo "$container" | jq -r '.instanceView | .events[]'
           done
-
-      - name: Check output and dmesg
-        if: always()
-        run: |
-            grep -q -F 'Stress test container alive' output.log || no_alive_output=true
-            if [ -n "$no_alive_output" ]; then
-              echo "No 'Stress test container alive' message found in output.log"
-              exit 1
-            fi
-            dmesg_file="output.log"
-
-            found_sus_message=""
-            grep -i segfault $dmesg_file && found_sus_message="segfault"
-            grep -i 'protection fault' $dmesg_file && found_sus_message="protection-fault"
-            grep 'BUG:' $dmesg_file && found_sus_message="kernel-bug"
-            grep 'RIP:' $dmesg_file && found_sus_message="kernel-backtrace"
-
-            if [ -n "$found_sus_message" ]; then
-              echo "Found suspicious message in dmesg: $found_sus_message"
-              exit 1
-            fi
 
       - name: Remove Container Group
         run: |

@@ -1,0 +1,41 @@
+.create table CACITestStepTrace (
+    UniqueRunId: guid,
+    Timestamp: datetime,
+    ResourceGroup: string,
+    DeploymentName: string,
+    Branch: string,
+    Location: string,
+    TestType: string,
+    TestName: string,
+    RunLink: string,
+    StepName: string,
+    Status: string,
+    Error: string,
+    Output: dynamic
+) with (folder = "C-ACI")
+
+.create-or-alter function with (folder = "C-ACI") getCACITestSummary(startTime:datetime,endTime:datetime) {
+    CACITestStepTrace
+    | where Timestamp between (startTime .. endTime)
+    | sort by Timestamp asc
+    | summarize
+        ResourceGroup=take_any(ResourceGroup),
+        DeploymentName=take_any(DeploymentName),
+        Branch=take_any(Branch),
+        Location=take_any(Location),
+        TestType=take_any(TestType),
+        TestName=take_any(TestName),
+        RunLink=take_any(RunLink),
+        StartTime=min(Timestamp),
+        EndTime=max(Timestamp),
+        Duration=max(Timestamp)-min(Timestamp),
+        Failed=take_anyif(True, Error != ''),
+        Error=strcat_array(make_list_if(strcat(StepName, ": ", Error), Error != ''), '\n'),
+        StepOutputs=make_bag_if(bag_pack(StepName, Output), isnotnull(Output)),
+        _LastStep=arg_max(Timestamp, StepName)[1],
+        _LastStepStatus=arg_max(Timestamp, Status)[1]
+        by UniqueRunId
+    | extend Failed=iff(isempty(Failed),False,Failed), LastRunningStep=iff(_LastStepStatus == "Started", _LastStep, "")
+    | project-away _LastStep, _LastStepStatus
+    | sort by StartTime desc
+}

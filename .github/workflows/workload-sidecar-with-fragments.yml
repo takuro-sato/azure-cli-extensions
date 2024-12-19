@@ -53,6 +53,12 @@ on:
         default: generated
 
 env:
+  KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
+  KUSTO_DATABASE: ${{ secrets.KUSTO_DATABASE }}
+  KUSTO_TABLE: CACITestStepTrace
+  TEST_TYPE: aci
+  TEST_NAME: ${{ github.workflow }}
+  RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
   DEPLOYMENT_NAME: ${{ inputs.id || 'sidecar-fragment' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
   RESOURCE_GROUP: c-aci-dashboard
@@ -77,14 +83,14 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.SUBSCRIPTION }}
 
-      - name: Install c_aci_testing package
+      - name: Initialize Run
         env:
           GH_TOKEN: ${{ github.token }}
-        run: ./scripts/install-c-aci-testing.sh
+        run: ./scripts/init_run.sh
 
-      - name: Set Confcom Version
+      - name: Use patched confcom
         run: |
-          # az extension add -n confcom --version 1.1.2 --upgrade
+          az extension remove -n confcom
           WHEEL_NAME=confcom-1.1.2a6-py3-none-any.whl
           echo Using temporary patched confcom extension $WHEEL_NAME
           az storage blob download --auth-mode login --container-name container --name $WHEEL_NAME --file $WHEEL_NAME --account-name cacitestingstorage
@@ -97,9 +103,6 @@ jobs:
           curl -sL https://github.com/microsoft/cosesign1go/releases/download/v1.4.0/sign1util -o sign1util
           chmod +x sign1util
           echo "PATH=$PATH:/tmp/cosesign1go" >> $GITHUB_ENV
-
-      - name: Setup Docker
-        run: sudo usermod -aG docker $USER
 
       - name: Use precise current time as tag
         run: |
@@ -119,8 +122,14 @@ jobs:
 
       - name: Build, push and deploy
         run: |
+          ./scripts/tracing/trace_step.py --start 'make deploy'
           cd workloads/workload-sidecar-with-fragments
           make deploy
+
+      - name: Report result
+        if: always()
+        run: |
+          ./scripts/trace_run_result.sh ${{ job.status }}
 
       - name: Show fragments and policies
         if: always()
@@ -131,8 +140,16 @@ jobs:
       - name: Verify deployment
         if: always()
         run: |
+          set +e
+          ./scripts/tracing/trace_step.py --start 'Verify deployment'
           cd workloads/workload-sidecar-with-fragments
           make verify
+          if [ $? -ne 0 ]; then
+            ../../scripts/tracing/trace_step.py --complete --err 'make verify returned with non-zero exit code'
+            exit 1
+          fi
+          ../../scripts/tracing/trace_step.py --complete
+          exit 0
 
       - name: Get Container States
         if: always()
