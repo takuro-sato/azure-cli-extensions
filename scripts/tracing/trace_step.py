@@ -3,6 +3,7 @@
 from argparse import ArgumentParser
 import sys
 from common import read_state, write_state, trace_step, STATUS_STARTED, STATUS_COMPLETED
+import json
 
 
 args = ArgumentParser()
@@ -11,25 +12,32 @@ args.add_argument("--complete", action="store_true")
 args.add_argument(
     "--output", type=str, nargs="*", help="Output in the format key=value"
 )
+args.add_argument(
+    "--output-from-stdin",
+    action="store_true",
+)
 args.add_argument("--err", type=str, required=False, help="Error message")
 args = args.parse_args()
 
 
 def get_output():
-    obj = {}
-    if isinstance(args.output, list):
+    if args.output_from_stdin:
+        parsed = json.loads(sys.stdin.read())
+        return parsed
+    elif isinstance(args.output, list):
+        obj = {}
         for item in args.output:
             if "=" not in item:
                 raise ValueError(
                     f"Output argument {item} must be in the format key=value"
                 )
-            key, value = item.split("=")
+            key, value = item.split("=", 1)
             obj[key] = value
+        return obj
     elif args.output is None:
         return None
     else:
         raise AssertionError(f"wrong type?")
-    return obj
 
 
 state = read_state()

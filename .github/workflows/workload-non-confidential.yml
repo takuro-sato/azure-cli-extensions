@@ -155,14 +155,7 @@ jobs:
         continue-on-error: true
         run: |
           sleep 60 # Ensure all states are up to date
-          az container show \
-            --resource-group $RESOURCE_GROUP \
-            --name $DEPLOYMENT_NAME \
-          | jq -c '.containers[]' | while read -r container; do
-            container_name=$(echo "$container" | jq -r '.name')
-            echo "Events for container $container_name:"
-            echo "$container" | jq -r '.instanceView | .events[]'
-          done
+          ./scripts/trace_container_states.sh
 
       - name: Remove Container Group
         run: |

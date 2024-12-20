@@ -141,14 +141,9 @@ jobs:
         continue-on-error: true
         run: |
           sleep 60 # Ensure all states are up to date
-          az container show \
-            --resource-group $RESOURCE_GROUP \
-            --name $DEPLOYMENT_NAME \
-          | jq -c '.containers[]' | while read -r container; do
-            container_name=$(echo "$container" | jq -r '.name')
-            echo "Events for container $container_name:"
-            echo "$container" | jq -r '.instanceView | .events[]'
-          done
+          # TODO: fix c-aci-testing so that we don't need to do this
+          DEPLOYMENT_NAME=${DEPLOYMENT_NAME}-ubuntu2204 ./scripts/trace_container_states.sh
+          DEPLOYMENT_NAME=${DEPLOYMENT_NAME}-ubuntu2404 ./scripts/trace_container_states.sh
 
       - name: Remove Container Group
         run: |

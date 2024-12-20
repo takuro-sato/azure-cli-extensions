@@ -157,14 +157,7 @@ jobs:
         run: |
           sleep 60 # Ensure all states are up to date
           for depl in ${DEPLOYMENT_NAME}-a ${DEPLOYMENT_NAME}-b ${DEPLOYMENT_NAME}-justsc; do
-            az container show \
-              --resource-group $RESOURCE_GROUP \
-              --name $depl \
-            | jq -c '.containers[]' | while read -r container; do
-              container_name=$(echo "$container" | jq -r '.name')
-              echo "Events for container $container_name:"
-              echo "$container" | jq -r '.instanceView | .events[]'
-            done
+            DEPLOYMENT_NAME=$depl ./scripts/trace_container_states.sh
           done
 
       - name: Remove Container Group
