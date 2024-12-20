@@ -140,7 +140,16 @@ jobs:
 
       - name: Check that curl worked
         run: |
+          set +e
+          ./scripts/tracing/trace_step.py --start 'Check that curl worked'
           cat output.log | grep "It worked"
+          if [ $? -ne 0 ]; then
+            echo "Curl did not work"
+            ./scripts/tracing/trace_step.py --complete --err 'Curl did not work' --output "containerLog=$(cat output.log)"
+            exit 1
+          fi
+          ./scripts/tracing/trace_step.py --complete
+          exit 0
 
       - name: Get Container States
         if: always()
