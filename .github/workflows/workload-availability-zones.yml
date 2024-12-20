@@ -81,7 +81,7 @@ env:
   KUSTO_DATABASE: ${{ secrets.KUSTO_DATABASE }}
   KUSTO_TABLE: CACITestStepTrace
   TEST_TYPE: aci
-  TEST_NAME: ${{ github.workflow }}
+  TEST_NAME: Availability Zones
   RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
   DEPLOYMENT_NAME: ${{ inputs.id || 'zones' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
