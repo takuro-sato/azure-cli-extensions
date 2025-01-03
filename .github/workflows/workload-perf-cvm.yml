@@ -8,10 +8,12 @@ on:
   pull_request:
     paths:
       - .github/workflows/workload-perf-cvm.yml
+      - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
   push:
     paths:
       - .github/workflows/workload-perf-cvm.yml
+      - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
     branches:
       - main

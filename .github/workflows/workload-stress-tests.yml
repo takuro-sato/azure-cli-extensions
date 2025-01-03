@@ -9,11 +9,13 @@ on:
     paths:
       - workloads/stress_tests
       - .github/workflows/workload-stress-tests.yml
+      - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
   push:
     paths:
       - workloads/stress_tests
       - .github/workflows/workload-stress-tests.yml
+      - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
     branches:
       - main

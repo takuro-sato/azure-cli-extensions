@@ -9,11 +9,13 @@ on:
     paths:
       - workloads/vnet
       - .github/workflows/workload-vnet.yml
+      - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
   push:
     paths:
       - workloads/vnet
       - .github/workflows/workload-vnet.yml
+      - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
     branches:
       - main

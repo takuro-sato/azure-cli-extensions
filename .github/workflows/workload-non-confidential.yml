@@ -9,11 +9,13 @@ on:
     paths:
       - workloads/non_confidential
       - .github/workflows/workload-non-confidential.yml
+      - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
   push:
     paths:
       - workloads/non_confidential
       - .github/workflows/workload-non-confidential.yml
+      - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
     branches:
       - main

@@ -9,11 +9,13 @@ on:
     paths:
       - workloads/server
       - .github/workflows/workload-server.yml
+      - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
   push:
     paths:
       - workloads/server
       - .github/workflows/workload-server.yml
+      - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
     branches:
       - main

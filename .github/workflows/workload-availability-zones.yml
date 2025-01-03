@@ -9,11 +9,13 @@ on:
     paths:
       - workloads/availability_zones
       - .github/workflows/workload-availability-zones.yml
+      - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
   push:
     paths:
       - workloads/availability_zones
       - .github/workflows/workload-availability-zones.yml
+      - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
     branches:
       - main

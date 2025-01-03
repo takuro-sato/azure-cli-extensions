@@ -9,11 +9,13 @@ on:
     paths:
       - workloads/workload-sidecar-with-fragments
       - .github/workflows/workload-sidecar-with-fragments.yml
+      - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
   push:
     paths:
       - workloads/workload-sidecar-with-fragments
       - .github/workflows/workload-sidecar-with-fragments.yml
+      - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
     branches:
       - main

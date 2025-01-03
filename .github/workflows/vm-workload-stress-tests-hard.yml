@@ -10,6 +10,7 @@ on:
       - main
     paths:
       - .github/workflows/vm-workload-stress-tests-hard.yml
+      - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
   workflow_dispatch:
     inputs:

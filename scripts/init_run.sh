@@ -12,7 +12,7 @@ echo Install c_aci_testing package
 ./scripts/install-c-aci-testing.sh
 
 echo Set Confcom Version
-az extension add -n confcom --version 1.1.1 --upgrade
+./scripts/install-confcom.sh 1.1.1
 
 echo Setup Docker
 sudo usermod -aG docker $USER

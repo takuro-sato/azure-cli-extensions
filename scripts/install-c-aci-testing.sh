@@ -1,12 +1,31 @@
 #!/bin/bash
 
 version="1.0.17"
-curl -sL "$(\
-    curl -s "https://api.github.com/repos/microsoft/confidential-aci-testing/releases/tags/$version" \
-        | jq -r '.assets[] | select(.name | endswith(".tar.gz")) | .browser_download_url')" \
-            -o c-aci-testing.tar.gz
-pip install c-aci-testing.tar.gz
-rm c-aci-testing.tar.gz
+tgz_url="https://github.com/microsoft/confidential-aci-testing/releases/download/$version/c_aci_testing-$version.tar.gz"
+tgz_name="c-aci-testing.tar.gz"
+
+attempts=0
+while :; do
+    echo "Downloading $tgz_url"
+    curl -sL --fail -o "$tgz_name" "$tgz_url"
+    if [ $? -eq 0 ]; then
+        break
+    else
+        echo "Download failed."
+        attempts=$((attempts + 1))
+        if [ $attempts -ge 3 ]; then
+            echo "Failed to download after 3 attempts."
+            exit 1
+        fi
+        echo Retrying in 5s
+        sleep 5
+    fi
+done
+
+set -e
+
+pip install "$tgz_name"
+rm "$tgz_name"
 
 # Uncomment for private branch testing
 # BRANCH=???
