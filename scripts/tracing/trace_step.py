@@ -17,6 +17,7 @@ args.add_argument(
     action="store_true",
 )
 args.add_argument("--err", type=str, required=False, help="Error message")
+args.add_argument("--strict", action="store_true", help="Fail \"--complete\" if no current step open")
 args = args.parse_args()
 
 
@@ -41,16 +42,18 @@ def get_output():
 
 
 state = read_state()
+step_name_to_complete = state["curr_step"]
 
-if args.complete or (args.start and state["curr_step"]):
-    step_name = state["curr_step"]
-    if not step_name:
-        sys.stderr.write("No current step to complete\n")
-        sys.stderr.flush()
-        sys.exit(1)
-    trace_step(state["run_info"], step_name, STATUS_COMPLETED, args.err, get_output())
+if step_name_to_complete:
+    trace_step(state["run_info"], step_name_to_complete, STATUS_COMPLETED, args.err, get_output())
     state["curr_step"] = None
     write_state(state)
+
+if not step_name_to_complete and args.complete:
+    if not args.strict:
+        print("Warning: No step to mark as complete", file=sys.stderr, flush=True)
+    else:
+        raise RuntimeError("No step to mark as complete")
 
 if args.start:
     step_name = args.start

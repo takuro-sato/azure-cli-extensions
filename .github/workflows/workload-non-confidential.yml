@@ -119,8 +119,7 @@ jobs:
 
       - name: Deploy Container Group
         run: |
-          ./scripts/tracing/trace_step.py --start 'Deploy Container Group'
-          c-aci-testing aci deploy workloads/non_confidential --deployment-name $DEPLOYMENT_NAME
+          ./scripts/aci_deploy_traced.sh workloads/non_confidential
 
       - name: Wait for IP address
         run: |

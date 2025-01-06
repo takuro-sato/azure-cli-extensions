@@ -135,8 +135,7 @@ jobs:
 
       - name: Deploy Container Group
         run: |
-          ./scripts/tracing/trace_step.py --start 'Deploy Container Group'
-          c-aci-testing aci deploy workloads/availability_zones --deployment-name $DEPLOYMENT_NAME
+          ./scripts/aci_deploy_traced.sh workloads/availability_zones
 
       - name: Report result
         if: always()
@@ -149,10 +148,10 @@ jobs:
           DEPLOYED_ZONE=$(az container show --name $DEPLOYMENT_NAME --resource-group $RESOURCE_GROUP --query 'zones' | jq -r '.[]')
           if [ "$DEPLOYED_ZONE" != "$ZONE" ]; then
             echo "Deployed to zone $DEPLOYED_ZONE, expected $ZONE"
-            ./scripts/tracing/trace_step.py --complete --err "Deployed to zone $DEPLOYED_ZONE, expected $ZONE"
+            ./scripts/tracing/trace_step.py --complete --err "Deployed to zone $DEPLOYED_ZONE, expected $ZONE" --strict
             exit 1
           fi
-          ./scripts/tracing/trace_step.py --complete
+          ./scripts/tracing/trace_step.py --complete --strict
           exit 0
 
       - name: Monitor Container Group

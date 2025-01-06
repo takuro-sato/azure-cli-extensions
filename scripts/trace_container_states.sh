@@ -10,11 +10,11 @@ az container show \
 
 if [ $? -ne 0 ]; then
   echo "Failed to get container states"
-  ./scripts/tracing/trace_step.py --complete --err 'Failed to get container states'
+  ./scripts/tracing/trace_step.py --complete --err 'Failed to get container states' --strict
   exit 1
 fi
 
-cat /tmp/container_states.json | ./scripts/tracing/trace_step.py --complete --output-from-stdin
+cat /tmp/container_states.json | ./scripts/tracing/trace_step.py --complete --output-from-stdin --strict
 
 cat /tmp/container_states.json | jq -c '.containers[]' | while read -r container; do
   container_name=$(echo "$container" | jq -r '.name')

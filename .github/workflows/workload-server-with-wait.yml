@@ -126,8 +126,7 @@ jobs:
 
       - name: Deploy Container Group
         run: |
-          ./scripts/tracing/trace_step.py --start 'Deploy Container Group'
-          c-aci-testing aci deploy workloads/server --deployment-name $DEPLOYMENT_NAME
+          ./scripts/aci_deploy_traced.sh workloads/server
 
       - name: Curl Server
         run: |

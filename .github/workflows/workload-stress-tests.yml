@@ -164,8 +164,7 @@ jobs:
 
       - name: Deploy Container Group
         run: |
-          ./scripts/tracing/trace_step.py --start 'Deploy Container Group'
-          c-aci-testing aci deploy workloads/stress_tests --deployment-name $DEPLOYMENT_NAME
+          ./scripts/aci_deploy_traced.sh workloads/stress_tests
 
       - name: Wait for IP address
         run: |
@@ -204,11 +203,11 @@ jobs:
               sleep 5
             else
               echo "curl failed $attempts times"
-              ./scripts/tracing/trace_step.py --complete --output failedAttempts=$attempts --err "curl failed $attempts times"
+              ./scripts/tracing/trace_step.py --complete --output failedAttempts=$attempts --err "curl failed $attempts times" --strict
               exit 1
             fi
           done
-          ./scripts/tracing/trace_step.py --complete --output failedAttempts=$attempts
+          ./scripts/tracing/trace_step.py --complete --output failedAttempts=$attempts --strict
           exit 0
 
       - name: Let container run for 1min and test again

@@ -2,6 +2,8 @@ ALL: .primary_policy
 
 .PHONY: clean primary_policy deploy show
 
+DEPLOY_SCRIPT ?= c-aci-testing aci deploy
+
 clean:
 	rm -f .param_set .primary_policy *.rego *.cose
 
@@ -20,7 +22,7 @@ clean:
 primary_policy: .primary_policy
 
 deploy: .primary_policy
-	c-aci-testing aci deploy . --deployment-name ${DEPLOYMENT_NAME}
+	DEPLOYMENT_NAME=${DEPLOYMENT_NAME} ${DEPLOY_SCRIPT} .
 
 show:
 	@echo cat policy_*.rego

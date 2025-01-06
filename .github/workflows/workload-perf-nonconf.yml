@@ -108,8 +108,7 @@ jobs:
 
       - name: Deploy Container Group
         run: |
-          ./scripts/tracing/trace_step.py --start 'Deploy Container Group'
-          c-aci-testing aci deploy workloads/perf-nonconf --deployment-name $DEPLOYMENT_NAME
+          ./scripts/aci_deploy_traced.sh workloads/perf-nonconf
 
       - name: Report result
         if: always()

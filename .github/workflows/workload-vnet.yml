@@ -125,8 +125,7 @@ jobs:
 
       - name: Deploy Container Group
         run: |
-          ./scripts/tracing/trace_step.py --start 'Deploy Container Group'
-          c-aci-testing aci deploy workloads/vnet --deployment-name $DEPLOYMENT_NAME
+          ./scripts/aci_deploy_traced.sh workloads/vnet
 
       - name: Report result
         if: always()
@@ -147,10 +146,10 @@ jobs:
           cat output.log | grep "It worked"
           if [ $? -ne 0 ]; then
             echo "Curl did not work"
-            ./scripts/tracing/trace_step.py --complete --err 'Curl did not work' --output "containerLog=$(cat output.log)"
+            ./scripts/tracing/trace_step.py --complete --err 'Curl did not work' --output "containerLog=$(cat output.log)" --strict
             exit 1
           fi
-          ./scripts/tracing/trace_step.py --complete
+          ./scripts/tracing/trace_step.py --complete --strict
           exit 0
 
       - name: Get Container States

@@ -131,9 +131,15 @@ jobs:
           echo "SIDECAR_IMAGE_B=$SIDECAR_IMAGE_B" >> $GITHUB_ENV
           echo "FEED=$FEED" >> $GITHUB_ENV
 
-      - name: Build, push and deploy
+      - name: Build and push image and fragments (make)
         run: |
-          ./scripts/tracing/trace_step.py --start 'make deploy'
+          ./scripts/tracing/trace_step.py --start 'Build and push image and fragments (make)'
+          cd workloads/workload-sidecar-with-fragments
+          make
+
+      - name: Deploy
+        run: |
+          export DEPLOY_SCRIPT=$(realpath scripts/aci_deploy_traced.sh)
           cd workloads/workload-sidecar-with-fragments
           make deploy
 
@@ -152,14 +158,15 @@ jobs:
         if: always()
         run: |
           set +e
-          ./scripts/tracing/trace_step.py --start 'Verify deployment'
+          TRACE_STEP_SCRIPT=$(realpath ./scripts/tracing/trace_step.py)
+          $TRACE_STEP_SCRIPT --start 'Verify deployment'
           cd workloads/workload-sidecar-with-fragments
           make verify
           if [ $? -ne 0 ]; then
-            ../../scripts/tracing/trace_step.py --complete --err 'make verify returned with non-zero exit code'
+            $TRACE_STEP_SCRIPT --complete --err 'make verify returned with non-zero exit code' --strict
             exit 1
           fi
-          ../../scripts/tracing/trace_step.py --complete
+          $TRACE_STEP_SCRIPT --complete --strict
           exit 0
 
       - name: Get Container States
