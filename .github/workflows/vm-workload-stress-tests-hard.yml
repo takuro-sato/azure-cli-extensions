@@ -113,7 +113,7 @@ jobs:
         run: ./scripts/install-c-aci-testing.sh
 
       - name: Set Confcom Version
-        run: az extension add -n confcom --version 1.1.1 --upgrade
+        run: az extension add -n confcom --version 1.2.0 --upgrade
 
       - name: Deploy VM with containerplat
         run: c-aci-testing vm create --deployment-name $DEPLOYMENT_NAME

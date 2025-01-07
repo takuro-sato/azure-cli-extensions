@@ -90,14 +90,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: ./scripts/init_run.sh
 
-      - name: Use patched confcom
-        run: |
-          az extension remove -n confcom
-          WHEEL_NAME=confcom-1.1.2a6-py3-none-any.whl
-          echo Using temporary patched confcom extension $WHEEL_NAME
-          az storage blob download --auth-mode login --container-name container --name $WHEEL_NAME --file $WHEEL_NAME --account-name cacitestingstorage
-          az extension add --source ./$WHEEL_NAME --allow-preview true --yes
-
       - name: Install oras
         run: |
           VERSION="1.2.2"

@@ -129,7 +129,7 @@ jobs:
         run: ./scripts/install-c-aci-testing.sh
 
       - name: Set Confcom Version
-        run: az extension add -n confcom --version 1.1.1 --upgrade
+        run: az extension add -n confcom --version 1.2.0 --upgrade
 
       - name: Setup Docker
         run: sudo usermod -aG docker $USER
