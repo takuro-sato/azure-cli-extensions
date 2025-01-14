@@ -7,13 +7,13 @@ permissions:
 on:
   pull_request:
     paths:
-      - workloads/managed_identity
+      - workloads/managed_identity/**
       - .github/workflows/workload-managed-identity.yml
       - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
   push:
     paths:
-      - workloads/managed_identity
+      - workloads/managed_identity/**
       - .github/workflows/workload-managed-identity.yml
       - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh

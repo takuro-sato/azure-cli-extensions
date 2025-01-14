@@ -7,13 +7,13 @@ permissions:
 on:
   pull_request:
     paths:
-      - workloads/perf
+      - workloads/perf/**
       - .github/workflows/workload-perf.yml
       - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
   push:
     paths:
-      - workloads/perf
+      - workloads/perf/**
       - .github/workflows/workload-perf.yml
       - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh

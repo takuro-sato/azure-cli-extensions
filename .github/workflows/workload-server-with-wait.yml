@@ -7,13 +7,13 @@ permissions:
 on:
   pull_request:
     paths:
-      - workloads/server
+      - workloads/server/**
       - .github/workflows/workload-server-with-wait.yml
       - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
   push:
     paths:
-      - workloads/server
+      - workloads/server/**
       - .github/workflows/workload-server-with-wait.yml
       - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh

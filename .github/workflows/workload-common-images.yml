@@ -7,13 +7,13 @@ permissions:
 on:
   pull_request:
     paths:
-      - workloads/common_images
+      - workloads/common_images/**
       - .github/workflows/workload-common-images.yml
       - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
   push:
     paths:
-      - workloads/common_images
+      - workloads/common_images/**
       - .github/workflows/workload-common-images.yml
       - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh

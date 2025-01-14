@@ -7,13 +7,13 @@ permissions:
 on:
   pull_request:
     paths:
-      - workloads/many_layers
+      - workloads/many_layers/**
       - .github/workflows/many-layers.yml
       - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
   push:
     paths:
-      - workloads/many_layers
+      - workloads/many_layers/**
       - .github/workflows/many-layers.yml
       - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh

@@ -7,13 +7,13 @@ permissions:
 on:
   pull_request:
     paths:
-      - workloads/minimal
+      - workloads/minimal/**
       - .github/workflows/workload-minimal.yml
       - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
   push:
     paths:
-      - workloads/minimal
+      - workloads/minimal/**
       - .github/workflows/workload-minimal.yml
       - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh

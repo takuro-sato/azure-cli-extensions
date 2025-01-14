@@ -22,7 +22,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
           command: [
             'sh'
             '-c'
-            'curl http://example.com && echo "It worked"'
+            'curl -v http://example.com && echo "It worked"'
           ]
           resources: {
             requests: {
