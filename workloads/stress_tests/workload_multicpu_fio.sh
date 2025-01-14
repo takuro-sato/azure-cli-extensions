@@ -20,8 +20,21 @@ echo ------------- payload start multicpu --------------- | tee /dev/kmsg
   done
 } &
 
+{
+  echo ------------- payload start check_threads --------------- | tee /dev/kmsg
+
+  while :; do
+    ./check_threads
+    status=$?
+    if [ $status -ne 0 ]; then
+      kill $SERVER_PID
+      exit $status
+    fi
+  done
+} &
+
 while :; do
-  ./multicpu --num-threads $(nproc) | tee log >/dev/kmsg 2>/dev/kmsg
+  ./multicpu
   status=$?
   if [ $status -ne 0 ]; then
     kill $SERVER_PID

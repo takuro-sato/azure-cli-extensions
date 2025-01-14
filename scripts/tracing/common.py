@@ -42,6 +42,8 @@ def trace_step(
     error: str = None,
     output: dict = None,
 ):
+    if not error:
+        error = None
     trace_obj = {
         **run_info,
         "Timestamp": datetime.now().isoformat(),
@@ -51,7 +53,7 @@ def trace_step(
         "Output": output,
     }
     query_str = f".ingest inline into table {KUSTO_TABLE} with (format='json') <|\n  "
-    query_str += json.dumps(trace_obj)
+    query_str += "  " + json.dumps(trace_obj, indent=None)
     query_str += "\n"
     nb_attempts = 0
     max_attempts = 3

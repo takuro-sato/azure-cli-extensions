@@ -87,6 +87,12 @@ on:
         default: ws2025
 
 env:
+  KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
+  KUSTO_DATABASE: ${{ secrets.KUSTO_DATABASE }}
+  KUSTO_TABLE: CACITestStepTrace
+  TEST_TYPE: vm
+  TEST_NAME: VM Workload - Idle server
+  RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
   DEPLOYMENT_NAME: ${{ inputs.id || 'vm-idle' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
   RESOURCE_GROUP: c-aci-dashboard
@@ -118,20 +124,15 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.SUBSCRIPTION }}
 
-      - name: Install c_aci_testing package
+      - name: Initialize Run
         env:
           GH_TOKEN: ${{ github.token }}
-        run: ./scripts/install-c-aci-testing.sh
+        run: ./scripts/init_run.sh
 
-      - name: Set Confcom Version
-        run: az extension add -n confcom --version 1.2.0 --upgrade
-
-      # TOOD: split this into vm create_noinit and vm_create
       - name: Deploy VM with containerplat
-        run: c-aci-testing vm create --deployment-name $DEPLOYMENT_NAME
-
-      - name: Setup Docker
-        run: sudo usermod -aG docker $USER
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Deploy VM with containerplat'
+          c-aci-testing vm create --deployment-name $DEPLOYMENT_NAME
 
       - name: Use precise current time as tag
         run: |
@@ -140,7 +141,9 @@ jobs:
           echo "TAG=$TAG" >> $GITHUB_ENV
 
       - name: Build image
-        run: c-aci-testing images build workloads/stress_tests
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Build and push image'
+          c-aci-testing images build workloads/stress_tests
 
       - name: Push image
         run: c-aci-testing images push workloads/stress_tests
@@ -154,6 +157,7 @@ jobs:
       # The security policy has to be allow_all for exec-based checks to work
       - name: Fill in allow_all security policy
         run: |
+          ./scripts/tracing/trace_step.py --start 'Fill in allow_all security policy'
           c-aci-testing policies gen workloads/stress_tests --deployment-name $DEPLOYMENT_NAME --policy-type allow_all
           cat workloads/stress_tests/policy_stress_tests.rego
 
@@ -161,7 +165,9 @@ jobs:
       # So we just wait for a bit to let that happen.
       # It is also more realistic to not start spinning up containers immediately after the VM is created.
       - name: Wait for any pending first-boot reboots
-        run: sleep 500
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Wait for any pending first-boot reboots'
+          sleep 500
 
       # OCID token refresh breaks after 5 min
       # https://github.com/Azure/azure-cli/issues/28708
@@ -174,28 +180,18 @@ jobs:
 
       - name: Deploy Container Group (idle, 2cpu)
         run: |
+          ./scripts/tracing/trace_step.py --start 'Deploy Container Group (idle, 2cpu)'
           c-aci-testing aci param_set workloads/stress_tests --parameter totalCpus=2
           c-aci-testing aci param_set workloads/stress_tests --parameter totalMemoryGB=4
           c-aci-testing aci param_set workloads/stress_tests --parameter "script='workload_idle'"
           c-aci-testing vm runc workloads/stress_tests --deployment-name $DEPLOYMENT_NAME --prefix lcow_idle
 
       - name: Print info
-        run: |
-          c-aci-testing vm exec --deployment-name $DEPLOYMENT_NAME '
-            Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" > C:\info.txt
-            echo "" >> C:\info.txt
-            Set-Alias -Name shimdiag -Value C:\ContainerPlat\shimdiag.exe
-            echo "uname:" >> C:\info.txt
-            shimdiag exec (shimdiag list)[0] uname -a >> C:\info.txt
-            echo "cpuinfo:" >> C:\info.txt
-            shimdiag exec (shimdiag list)[0] cat /proc/cpuinfo >> C:\info.txt
-            echo "snp-report:" >> C:\info.txt
-            shimdiag exec (shimdiag list)[0] snp-report >> C:\info.txt
-          '
-          c-aci-testing vm cat --deployment-name $DEPLOYMENT_NAME 'C:\info.txt'
+        run: scripts/vm_print_info.sh
 
       - name: Deploy Container Group (idle2, 2cpu)
         run: |
+          ./scripts/tracing/trace_step.py --start 'Deploy Container Group (idle2, 2cpu)'
           c-aci-testing aci param_set workloads/stress_tests --parameter totalCpus=2
           c-aci-testing aci param_set workloads/stress_tests --parameter totalMemoryGB=4
           c-aci-testing aci param_set workloads/stress_tests --parameter "script='workload_idle'"
@@ -203,6 +199,7 @@ jobs:
 
       - name: Deploy Container Group (idle3, 1cpu)
         run: |
+          ./scripts/tracing/trace_step.py --start 'Deploy Container Group (idle3, 1cpu)'
           c-aci-testing aci param_set workloads/stress_tests --parameter totalCpus=1
           c-aci-testing aci param_set workloads/stress_tests --parameter totalMemoryGB=1
           c-aci-testing aci param_set workloads/stress_tests --parameter "script='workload_idle'"
@@ -210,6 +207,7 @@ jobs:
 
       - name: Start check loop on VM
         run: |
+          ./scripts/tracing/trace_step.py --start 'Start check loop on VM'
           c-aci-testing vm cp_into --deployment-name $DEPLOYMENT_NAME \
             scripts/vm_helpers \
             'C:\vm_helpers' \
@@ -217,6 +215,7 @@ jobs:
 
       - name: Poll VM for check results
         run: |
+          ./scripts/tracing/trace_step.py --start 'Poll VM for check results'
           set +e
           consecutive_fail_count=0
           for i in {1..20}; do
@@ -236,18 +235,6 @@ jobs:
           done
           exit 0
 
-      - name: Check for errors
-        run: |
-          set +e
-          echo Full check_loop.log:
-          cat check.log
-          grep -F ERROR check.log
-          if [ $? -eq 0 ]; then
-            echo Found errors in check log.
-            exit 1
-          fi
-          exit 0
-
       - name: Log into Azure
         uses: azure/login@v2
         with:
@@ -255,46 +242,44 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.SUBSCRIPTION }}
 
-      - name: Check dmesg
+      - name: Check for errors
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Check for errors'
+          set +e
+          echo Full check_loop.log:
+          cat check.log
+          err_cnt=$(grep -F ERROR check.log | wc -l)
+          if [ "$err_cnt" -gt 0 ]; then
+            echo Found $err_cnt errors in check log.
+            ./scripts/tracing/trace_step.py --complete --err "Found $err_cnt errors in check log." \
+              --output "num_errors=$err_cnt"
+            exit 1
+          fi
+          ./scripts/tracing/trace_step.py --complete
+          exit 0
+
+      - name: Report result
         if: always()
         run: |
-          set +e
-          dmesg_file="dmesg.log"
+          ./scripts/trace_run_result.sh ${{ job.status }}
 
-          c-aci-testing vm exec --deployment-name $DEPLOYMENT_NAME 'Get-Item C:\*\dmesg*.log | foreach { echo ""; echo ""; echo $_.FullName; cat -Raw $_ } > C:\all-dmesg.log'
-          c-aci-testing vm cat --deployment-name $DEPLOYMENT_NAME 'C:\all-dmesg.log' > $dmesg_file
-          if [ $? -ne 0 ]; then
-            echo "Failed to get dmesg."
-            cat $dmesg_file
-            exit 1
-          fi
-
-          found_sus_message=""
-          grep -i segfault $dmesg_file && found_sus_message="segfault"
-          grep -i 'protection fault' $dmesg_file && found_sus_message="protection-fault"
-          grep 'BUG:' $dmesg_file && found_sus_message="kernel-bug"
-          grep 'WARNING:' $dmesg_file && found_sus_message="kernel-bug"
-          grep 'RIP:' $dmesg_file && found_sus_message="kernel-backtrace"
-
-          cat $dmesg_file
-
-          if [ -n "$found_sus_message" ]; then
-            echo "Found suspicious message in dmesg: $found_sus_message"
-            exit 1
-          fi
-
-          if [ ! -s $dmesg_file ]; then
-            echo "No dmesg output found"
-            exit 1
-          fi
+      - name: Check dmesg
+        if: always()
+        run: ./scripts/vm_check_dmesg.sh
 
       - name: Container output (workload)
         if: always()
         run: |
+          ./scripts/tracing/trace_step.py --start 'Container output (workload)'
           for lcow_dir in lcow_idle lcow_idle2 lcow_idle3; do
             echo "Container output for $lcow_dir:"
             c-aci-testing vm cat --deployment-name $DEPLOYMENT_NAME "C:\\$lcow_dir\\container_log_stress_tests_workload.log"
           done
+
+      - name: Report result
+        if: always()
+        run: |
+          ./scripts/trace_run_result.sh ${{ job.status }}
 
       - name: Remove VM
         if: always()

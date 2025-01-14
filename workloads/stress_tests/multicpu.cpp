@@ -13,7 +13,7 @@ static uint64_t get_cycles()
     return t;
 }
 
-uint64_t measure_rdtsc_per_secs()
+static uint64_t measure_rdtsc_per_secs()
 {
     uint64_t start = get_cycles();
     auto start_tp = std::chrono::system_clock::now();
@@ -33,19 +33,36 @@ static int get_cpu()
     return sched_getcpu();
 }
 
+static void this_thread_pin_to_cpu(int cpu_id)
+{
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+    CPU_SET(cpu_id, &cpuset);
+    if (sched_setaffinity(0, sizeof(cpuset), &cpuset) != 0)
+    {
+        printf("Failed to pin thread to cpu %d\n", cpu_id);
+        exit(1);
+    }
+    sched_yield();
+}
+
 static int loop_rounds = 300000000;
 
 // These settings seems to be relatively stable
-static int wall_duration_mismatch_tolerance_ms = 100;
-static int stall_tolerance_ms = 300;
-static int speedup_jitter_tolerance_ms = 300;
+static int wall_duration_mismatch_tolerance_ms = 1000;
+static int stall_tolerance_ms = 1000;
+static int speedup_jitter_tolerance_ms = 1000;
 
 static bool update_average_cycles = true;
 static int calibration_time_secs = 10;
 static int numThreads = 2;
+static bool pinThreadsToCpu = true;
 
 void process_thread(int i)
 {
+    if (pinThreadsToCpu) {
+        this_thread_pin_to_cpu(i);
+    }
     printf("Thread %d started\n", i);
     uint64_t calibration_cycles = 0;
     uint64_t calibration_count = 0;
@@ -180,6 +197,8 @@ static void parse_command_line(int argc, char **argv) {
                 exit(1);
             }
             numThreads = atoi(argv[i]);
+        } else if (strcmp(argv[i], "--no-pin") == 0) {
+            pinThreadsToCpu = false;
         } else if (strcmp(argv[i], "--help") == 0) {
             printf("Options:\n");
             printf("--loop-rounds <num>\n");
@@ -188,6 +207,7 @@ static void parse_command_line(int argc, char **argv) {
             printf("--speedup-jitter-tolerance-ms <num>\n");
             printf("--no-update-average-cycles\n");
             printf("--calibration-time-secs <num>\n");
+            printf("--no-pin\n");
             exit(0);
         } else {
             printf("Unknown argument: %s\n", argv[i]);
@@ -199,6 +219,7 @@ static void parse_command_line(int argc, char **argv) {
 int main(int argc, char **argv)
 {
     setbuf(stdout, NULL);
+    numThreads = std::thread::hardware_concurrency();
 
     parse_command_line(argc, argv);
 

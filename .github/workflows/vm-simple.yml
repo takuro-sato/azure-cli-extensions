@@ -92,6 +92,12 @@ on:
         default: ws2025
 
 env:
+  KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
+  KUSTO_DATABASE: ${{ secrets.KUSTO_DATABASE }}
+  KUSTO_TABLE: CACITestStepTrace
+  TEST_TYPE: vm
+  TEST_NAME: VM Simple
+  RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
   DEPLOYMENT_NAME: ${{ inputs.id || 'vm-simple' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
   RESOURCE_GROUP: c-aci-dashboard
@@ -123,80 +129,46 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.SUBSCRIPTION }}
 
-      - name: Install c_aci_testing package
+      - name: Initialize Run
         env:
           GH_TOKEN: ${{ github.token }}
-        run: ./scripts/install-c-aci-testing.sh
-
-      - name: Set Confcom Version
-        run: az extension add -n confcom --version 1.2.0 --upgrade
-
-      - name: Setup Docker
-        run: sudo usermod -aG docker $USER
+        run: ./scripts/init_run.sh
 
       - name: Pull Image
         run: c-aci-testing images pull workloads/attestation
 
       - name: Generate Security Policy
         run: |
+          ./scripts/tracing/trace_step.py --start 'Generate Policy'
           c-aci-testing policies gen workloads/attestation --deployment-name $DEPLOYMENT_NAME --policy-type allow_all
           cat workloads/attestation/policy_attestation.rego
 
       - name: Deploy VM and Container Group
-        run: c-aci-testing vm deploy workloads/attestation --deployment-name $DEPLOYMENT_NAME
+        run: |
+          ./scripts/vm_deploy_traced.sh workloads/attestation
 
       - name: Print info
+        run: scripts/vm_print_info.sh
+
+      - name: Report result
+        if: always()
         run: |
-          c-aci-testing vm exec --deployment-name $DEPLOYMENT_NAME '
-            Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" > C:\info.txt
-            echo "" >> C:\info.txt
-            Set-Alias -Name shimdiag -Value C:\ContainerPlat\shimdiag.exe
-            echo "uname:" >> C:\info.txt
-            shimdiag exec (shimdiag list)[0] uname -a >> C:\info.txt
-            echo "cpuinfo:" >> C:\info.txt
-            shimdiag exec (shimdiag list)[0] cat /proc/cpuinfo >> C:\info.txt
-            echo "snp-report:" >> C:\info.txt
-            shimdiag exec (shimdiag list)[0] snp-report >> C:\info.txt
-          '
-          c-aci-testing vm cat --deployment-name $DEPLOYMENT_NAME 'C:\info.txt'
+          ./scripts/trace_run_result.sh ${{ job.status }}
 
       - name: Check dmesg
         if: always()
-        run: |
-          set +e
-          dmesg_file="dmesg.log"
-
-          c-aci-testing vm exec --deployment-name $DEPLOYMENT_NAME 'Get-Item C:\*\dmesg*.log | foreach { echo ""; echo ""; echo $_.FullName; cat -Raw $_ } > C:\all-dmesg.log'
-          c-aci-testing vm cat --deployment-name $DEPLOYMENT_NAME 'C:\all-dmesg.log' > $dmesg_file
-          if [ $? -ne 0 ]; then
-            echo "Failed to get dmesg."
-            cat $dmesg_file
-            exit 1
-          fi
-
-          found_sus_message=""
-          grep -i segfault $dmesg_file && found_sus_message="segfault"
-          grep -i 'protection fault' $dmesg_file && found_sus_message="protection-fault"
-          grep 'BUG:' $dmesg_file && found_sus_message="kernel-bug"
-          grep 'WARNING:' $dmesg_file && found_sus_message="kernel-bug"
-          grep 'RIP:' $dmesg_file && found_sus_message="kernel-backtrace"
-
-          cat $dmesg_file
-
-          if [ -n "$found_sus_message" ]; then
-            echo "Found suspicious message in dmesg: $found_sus_message"
-            exit 1
-          fi
-
-          if [ ! -s $dmesg_file ]; then
-            echo "No dmesg output found"
-            exit 1
-          fi
+        run: ./scripts/vm_check_dmesg.sh
 
       - name: Container output
         if: always()
         run: |
+          ./scripts/tracing/trace_step.py --start 'Container output'
           c-aci-testing vm cat --deployment-name $DEPLOYMENT_NAME "C:\\lcow\\container_log_*.log"
+
+      - name: Report result
+        if: always()
+        run: |
+          ./scripts/trace_run_result.sh ${{ job.status }}
 
       - name: Remove VM
         if: always()

@@ -6,7 +6,18 @@ SERVER_PID=$!
 
 uname -a
 
-echo ------------- payload start sysbench --------------- | tee /dev/kmsg
+{
+  echo ------------- payload start check_threads --------------- | tee /dev/kmsg
+
+  while :; do
+    ./check_threads
+    status=$?
+    if [ $status -ne 0 ]; then
+      kill $SERVER_PID
+      exit $status
+    fi
+  done
+} &
 
 {
   echo ------------- payload start fio --------------- | tee /dev/kmsg
@@ -21,6 +32,7 @@ echo ------------- payload start sysbench --------------- | tee /dev/kmsg
   done
 } &
 
+echo ------------- payload start sysbench --------------- | tee /dev/kmsg
 while :; do
   sysbench --threads=$(nproc) --time=10000 cpu run
   status=$?

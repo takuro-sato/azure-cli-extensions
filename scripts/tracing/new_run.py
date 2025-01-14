@@ -10,7 +10,7 @@ LOCATION = get_env_or_die("LOCATION")
 RUN_LINK = get_env_or_die("RUN_LINK")
 TEST_TYPE = get_env_or_die("TEST_TYPE")
 TEST_NAME = get_env_or_die("TEST_NAME")
-BRANCH = os.getenv("GITHUB_REF_NAME", "")
+BRANCH = os.getenv("GITHUB_REF_NAME", os.getenv("BRANCH", ""))
 
 unique_run_id = str(uuid.uuid4())
 
