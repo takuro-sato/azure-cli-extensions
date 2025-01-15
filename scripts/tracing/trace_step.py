@@ -10,7 +10,7 @@ args = ArgumentParser()
 args.add_argument("--start", type=str, nargs='?', help='Start a step, pass in step name')
 args.add_argument("--complete", action="store_true")
 args.add_argument(
-    "--output", type=str, nargs="*", help="Output in the format key=value"
+    "--output", type=str, nargs="*", help="Output in the format key1=value1 ..."
 )
 args.add_argument(
     "--output-from-stdin",

@@ -131,8 +131,7 @@ jobs:
 
       - name: Deploy VM with containerplat
         run: |
-          ./scripts/tracing/trace_step.py --start 'Deploy VM with containerplat'
-          c-aci-testing vm create --deployment-name $DEPLOYMENT_NAME
+          ./scripts/vm_create_traced.sh
 
       - name: Use precise current time as tag
         run: |
@@ -255,7 +254,7 @@ jobs:
               --output "num_errors=$err_cnt"
             exit 1
           fi
-          ./scripts/tracing/trace_step.py --complete
+          ./scripts/tracing/trace_step.py --complete --output "num_errors=0"
           exit 0
 
       - name: Report result
@@ -267,14 +266,10 @@ jobs:
         if: always()
         run: ./scripts/vm_check_dmesg.sh
 
-      - name: Container output (workload)
+      - name: Container output
         if: always()
         run: |
-          ./scripts/tracing/trace_step.py --start 'Container output (workload)'
-          for lcow_dir in lcow_idle lcow_idle2 lcow_idle3; do
-            echo "Container output for $lcow_dir:"
-            c-aci-testing vm cat --deployment-name $DEPLOYMENT_NAME "C:\\$lcow_dir\\container_log_stress_tests_workload.log"
-          done
+          ./scripts/vm_check_container_output.sh
 
       - name: Report result
         if: always()

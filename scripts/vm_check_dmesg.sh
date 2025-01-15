@@ -34,8 +34,7 @@ if [ ! -s $dmesg_file ]; then
 fi
 
 ./scripts/tracing/trace_step.py --complete --strict \
-  --output "sus_messages=$found_sus_message" \
-  --output "soft_lockup_count=$soft_lockup_count" \
+  --output "sus_messages=$found_sus_message" "soft_lockup_count=$soft_lockup_count" \
   --err "$found_sus_message"
 
 if [ -n "$found_sus_message" ]; then
