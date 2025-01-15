@@ -14,5 +14,11 @@ echo Install c_aci_testing package
 echo Set Confcom Version
 ./scripts/install-confcom.sh 1.2.0
 
+if [ -e /opt/az-config/config ]; then
+  echo "Fixup bad permission in github runner image:"
+  sudo ls -la /opt/az-config
+  sudo chown -Rv $(id -un):$(id -gn) /opt/az-config
+fi
+
 echo Setup Docker
 sudo usermod -aG docker $USER
