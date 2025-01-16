@@ -230,3 +230,20 @@ jobs:
       id: sidecar-fragment-${{ matrix.policy_type }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
+
+  thim:
+    if: ${{ !cancelled() }}
+    name: thim
+    secrets: inherit
+    needs: workload-sidecar-with-fragments
+    uses: ./.github/workflows/workload-thim.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        policy_type: ['generated', 'debug', 'allow_all']
+        has_managed_identity: [true, false]
+    with:
+      id: thim-${{ matrix.policy_type }}${{ matrix.has_managed_identity && '-mi' || '' }}
+      location: ${{ inputs.location }}
+      policy_type: ${{ matrix.policy_type }}
+      has_managed_identity: ${{ matrix.has_managed_identity }}

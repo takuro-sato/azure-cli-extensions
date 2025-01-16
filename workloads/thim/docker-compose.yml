@@ -1,0 +1,4 @@
+version: '3'
+services:
+  hello-world:
+    image: mcr.microsoft.com/aci/skr:${TAG:-latest}

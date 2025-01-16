@@ -1,0 +1,181 @@
+name: Workload - Thim Endpoint
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - workloads/thim/**
+      - .github/workflows/workload-thim.yml
+      - scripts/init_run.sh
+      - scripts/install-c-aci-testing.sh
+  push:
+    paths:
+      - workloads/thim/**
+      - .github/workflows/workload-thim.yml
+      - scripts/init_run.sh
+      - scripts/install-c-aci-testing.sh
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      id:
+        type: string
+        description: ID of the run
+      location:
+        type: string
+        description: Where to deploy to
+        required: true
+      cpu:
+        type: number
+        description: The number of CPU cores in container
+        default: 2
+      memory_in_gb:
+        type: number
+        description: The memory in container in Gb
+        default: 4
+      cleanup:
+        type: boolean
+        description: Whether to cleanup the container group after testing
+        default: true
+      policy_type:
+        type: string
+        description: The type of policy to use
+        default: generated
+      has_managed_identity:
+        type: boolean
+        description: Whether to use managed identity
+        default: true
+  workflow_call:
+    inputs:
+      id:
+        type: string
+        description: ID of the run
+      location:
+        type: string
+        description: Where to deploy to
+        required: true
+      cpu:
+        type: number
+        description: The number of CPU cores in container
+        default: 2
+      memory_in_gb:
+        type: number
+        description: The memory in container in Gb
+        default: 4
+      cleanup:
+        type: boolean
+        description: Whether to cleanup the container group after testing
+        default: true
+      policy_type:
+        type: string
+        description: The type of policy to use
+        default: generated
+      has_managed_identity:
+        type: boolean
+        description: Whether to use managed identity
+        default: false
+
+env:
+  KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
+  KUSTO_DATABASE: ${{ secrets.KUSTO_DATABASE }}
+  KUSTO_TABLE: CACITestStepTrace
+  TEST_TYPE: aci
+  TEST_NAME: Thim Endpoint
+  RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+  DEPLOYMENT_NAME: ${{ inputs.id || 'thim' }}-${{ inputs.location }}-${{ github.run_number }}
+  SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
+  RESOURCE_GROUP: c-aci-dashboard
+  REGISTRY: cacidashboard.azurecr.io
+  MANAGED_IDENTITY: ${{ inputs.has_managed_identity && 'cacidashboard' || '' }}
+  LOCATION: ${{ inputs.location || 'westeurope' }}
+  CPU: ${{ inputs.cpu || 2 }}
+  MEMORY_IN_GB: ${{ inputs.memory_in_gb || 4 }}
+  CLEANUP: ${{ inputs.cleanup }}
+  POLICY_TYPE: ${{ inputs.policy_type || 'generated' }}
+  TAG: 2.7
+
+jobs:
+  thim:
+    name: ${{ inputs.id || 'thim' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log into Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION }}
+
+      - name: Initialize Run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/init_run.sh
+
+      - name: Pull Image
+        run: c-aci-testing images pull workloads/thim
+
+      - name: Set Parameters
+        run: |
+          c-aci-testing aci param_set workloads/thim --parameter cpu=$CPU
+          c-aci-testing aci param_set workloads/thim --parameter memoryInGb=$MEMORY_IN_GB
+
+      - name: Generate Security Policy
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Generate Policy'
+          c-aci-testing policies gen workloads/thim --deployment-name $DEPLOYMENT_NAME
+          cat workloads/thim/policy_thim.rego
+
+      - name: Deploy Container Group
+        run: |
+          ./scripts/aci_deploy_traced.sh workloads/thim
+
+      - name: Wait for 60 seconds
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Wait for 60 seconds'
+          sleep 60
+
+      - name: Report result
+        if: always()
+        run: |
+          ./scripts/trace_run_result.sh ${{ job.status }}
+
+      - name: Monitor Container Group
+        if: always()
+        continue-on-error: true
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Monitor Container Group'
+          c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME 2>&1 | tee monitor.log
+
+      - name: Check for errors
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Check for errors'
+          if grep -q 'ERROR' monitor.log; then
+            echo "Error found in container log"
+            ./scripts/tracing/trace_step.py --complete --err 'Error found in container log'
+            exit 1
+          fi
+          if ! grep -q 'Doing repeat check' monitor.log; then
+            echo "Incomplete container log"
+            ./scripts/tracing/trace_step.py --complete --err 'Incomplete container log'
+            exit 1
+          fi
+          ./scripts/tracing/trace_step.py --complete
+
+      - name: Get Container States
+        if: always()
+        continue-on-error: true
+        run: |
+          sleep 60 # Ensure all states are up to date
+          ./scripts/trace_container_states.sh
+
+      - name: Remove Container Group
+        run: |
+          if [ "$CLEANUP" != false ]; then
+            c-aci-testing aci remove --deployment-name $DEPLOYMENT_NAME
+          fi
