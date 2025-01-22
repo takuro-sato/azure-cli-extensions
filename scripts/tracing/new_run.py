@@ -5,7 +5,9 @@ import uuid
 import os
 
 RESOURCE_GROUP = get_env_or_die("RESOURCE_GROUP")
-DEPLOYMENT_NAME = get_env_or_die("DEPLOYMENT_NAME")
+DEPLOYMENT_NAME = os.getenv("DEPLOYMENT_NAME", os.getenv("DEPLOYMENT_NAME_BASE", ""))
+if not DEPLOYMENT_NAME:
+    raise ValueError("DEPLOYMENT_NAME or DEPLOYMENT_NAME_BASE must be set")
 LOCATION = get_env_or_die("LOCATION")
 RUN_LINK = get_env_or_die("RUN_LINK")
 TEST_TYPE = get_env_or_die("TEST_TYPE")
