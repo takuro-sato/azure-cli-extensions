@@ -215,6 +215,13 @@ void check_thread_fn(int this_thread, int target_thread)
 
         if (connect(s, (struct sockaddr *)&addr, sizeof(addr)) < 0)
         {
+            if (errno == EINTR) {
+                // why are we not killed?
+                printf_with_time("Check thread %d: connect() -> EINTR\n", this_thread);
+                close(s);
+                sleep(1);
+                continue;
+            }
             check_fail_msg(this_thread, target_thread, check_start, errno);
             close(s);
             check_thread_sleep(this_thread);
@@ -223,6 +230,13 @@ void check_thread_fn(int this_thread, int target_thread)
         int received = recv(s, buf, 1024, 0);
         if (received < 0)
         {
+            if (errno == EINTR) {
+                // why are we not killed?
+                printf_with_time("Check thread %d: recv() -> EINTR\n", this_thread);
+                close(s);
+                sleep(1);
+                continue;
+            }
             check_fail_msg(this_thread, target_thread, check_start, errno);
             close(s);
             check_thread_sleep(this_thread);
