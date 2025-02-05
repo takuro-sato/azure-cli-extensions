@@ -7,12 +7,12 @@ permissions:
 on:
   pull_request:
     paths:
-      - .github/workflows/workload-vm-simple.yml
+      - .github/workflows/vm-simple.yml
       - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
   push:
     paths:
-      - .github/workflows/workload-vm-simple.yml
+      - .github/workflows/vm-simple.yml
       - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
     branches:
@@ -135,19 +135,19 @@ jobs:
         run: ./scripts/init_run.sh
 
       - name: Pull Image
-        run: c-aci-testing images pull workloads/attestation
+        run: c-aci-testing images pull workloads/server
 
       - name: Generate Security Policy
         run: |
           ./scripts/tracing/trace_step.py --start 'Generate Policy'
-          c-aci-testing policies gen workloads/attestation --deployment-name $DEPLOYMENT_NAME --policy-type allow_all
-          cat workloads/attestation/policy_attestation.rego
+          c-aci-testing policies gen workloads/server --deployment-name $DEPLOYMENT_NAME --policy-type allow_all
+          cat workloads/server/policy_server.rego
 
       - name: Deploy VM and Container Group
         run: |
           ./scripts/vm_create_traced.sh
           ./scripts/tracing/trace_step.py --start 'vm runc'
-          c-aci-testing vm runc workloads/attestation
+          c-aci-testing vm runc workloads/server
 
       - name: Print info
         run: scripts/vm_print_info.sh
