@@ -51,7 +51,7 @@ jobs:
         git clone https://github.com/microsoft/virtualnodesOnAzureContainerInstances.git
         ls virtualnodesOnAzureContainerInstances/    
 
-    - name: Deploy to AKS using bash script
+    - name: Deploy to AKS
       run: |
         # Make the script executable
         chmod +x workloads/vn2/deploy-cleanup-vn2.sh

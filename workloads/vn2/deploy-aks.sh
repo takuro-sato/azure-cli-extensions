@@ -15,26 +15,37 @@ NODE_VM_SIZE="Standard_DC4as_cc_v5"        # Node size for AKS cluster
 MIN_COUNT=1                       # Minimum number of nodes (for autoscaler, Dev/Test)
 MAX_COUNT=3                       # Maximum number of nodes (for autoscaler, Dev/Test)
 
-# 1) Create Resource Group
-echo "Creating resource group '$RESOURCE_GROUP' in '$LOCATION'..."
-az group create --name $RESOURCE_GROUP --location $LOCATION
+# 1) Check and Create Resource Group if it doesn't exist
+if az group show --name $RESOURCE_GROUP &>/dev/null; then
+    echo "Resource group '$RESOURCE_GROUP' already exists. Moving to the next step..."
+else
+    echo "Creating resource group '$RESOURCE_GROUP' in '$LOCATION'..."
+    az group create --name $RESOURCE_GROUP --location $LOCATION
+fi
 
-# 2) Deploy AKS Cluster with "Dev/Test" config
-echo "Creating AKS cluster with Dev/Test preset..."
-az aks create \
-    --resource-group $RESOURCE_GROUP \
-    --name $CLUSTER_NAME \
-    --node-count $NODE_COUNT \
-    --node-vm-size $NODE_VM_SIZE \
-    --generate-ssh-keys \
-    --location $LOCATION \
-    --enable-managed-identity \
-    --enable-cluster-autoscaler \
-    --min-count $MIN_COUNT \
-    --max-count $MAX_COUNT \
-    --auto-upgrade-channel patch \
-    --node-os-upgrade-channel NodeImage \
-    --nodepool-labels "environment=devtest"  # Label to mark this as a Dev/Test environment
+# 2) Check if AKS Cluster exists and create if it doesn't
+if az aks show --resource-group $RESOURCE_GROUP --name $CLUSTER_NAME &>/dev/null; then
+    echo "AKS cluster '$CLUSTER_NAME' already exists in resource group '$RESOURCE_GROUP'. Skipping creation."
+else
+    echo "Creating AKS cluster with Dev/Test preset..."
+    az aks create \
+        --resource-group $RESOURCE_GROUP \
+        --name $CLUSTER_NAME \
+        --node-count $NODE_COUNT \
+        --node-vm-size $NODE_VM_SIZE \
+        --generate-ssh-keys \
+        --location $LOCATION \
+        --enable-managed-identity \
+        --enable-cluster-autoscaler \
+        --min-count $MIN_COUNT \
+        --max-count $MAX_COUNT \
+        --auto-upgrade-channel patch \
+        --node-os-upgrade-channel NodeImage \
+        --nodepool-labels "environment=devtest"
+fi
+
+# wait until the resource group can be queried
+sleep 5
 
 # Get the resource group name of the managed cluster (MC_* is the default resource group for AKS managed resources)
 MC_RESOURCE_GROUP=$(az aks show --resource-group $RESOURCE_GROUP --name $CLUSTER_NAME --query "nodeResourceGroup" -o tsv)
