@@ -10,11 +10,13 @@ on:
       - .github/workflows/vm-simple.yml
       - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
+      - scripts/vm_print_info.sh
   push:
     paths:
       - .github/workflows/vm-simple.yml
       - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
+      - scripts/vm_print_info.sh
     branches:
       - main
   workflow_dispatch:

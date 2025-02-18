@@ -1,4 +1,7 @@
 version: '3'
 services:
   hello-world:
-    image: cacidashboard.azurecr.io/ubuntu:20.04
+    image: cacidashboard.azurecr.io/info:${TAG:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile

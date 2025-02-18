@@ -11,7 +11,7 @@ c-aci-testing vm exec --deployment-name $DEPLOYMENT_NAME '
   echo "cpuinfo:" >> C:\info.txt
   shimdiag exec (shimdiag list)[0] cat /proc/cpuinfo >> C:\info.txt
   echo "snp-report:" >> C:\info.txt
-  shimdiag exec (shimdiag list)[0] snp-report >> C:\info.txt
+  shimdiag exec (shimdiag list)[0] snp-report -verbose >> C:\info.txt
 '
 c-aci-testing vm cat --deployment-name $DEPLOYMENT_NAME 'C:\info.txt' | tee info.txt
 cat info.txt | jq -R -s '{info: .}' | ./scripts/tracing/trace_step.py --complete --strict --output-from-stdin

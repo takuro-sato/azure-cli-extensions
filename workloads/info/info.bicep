@@ -34,11 +34,11 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
       {
         name: 'ubuntu'
         properties: {
-          image: '${registry}/ubuntu:${empty(tag) ? '20.04': tag}'
+          image: '${registry}/info:${empty(tag) ? 'latest': tag}'
           command: [
             'sh'
             '-c'
-            'uname -a && dmesg | grep "Kernel command line" && dmesg | grep "Host Build" && cat /proc/cpuinfo'
+            'uname -a && dmesg | grep "Kernel command line" && dmesg | grep "Host Build" && cat /proc/cpuinfo && echo snp-report: && verbose-report'
           ]
           resources: {
             requests: {
