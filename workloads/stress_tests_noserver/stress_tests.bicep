@@ -11,8 +11,6 @@ param useNormalSidecar bool = false
 param totalCpus int = 4
 param totalMemoryGB int = 4
 
-var sidecarImage = useNormalSidecar ? 'mcr.microsoft.com/aci/skr:2.7' : '${registry}/${repo_base}/sidecar:${tag}'
-
 resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01' = {
   name: deployment().name
   location: location
@@ -55,7 +53,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
       {
         name: 'sidecar'
         properties: {
-          image: sidecarImage
+          image: 'mcr.microsoft.com/aci/skr:2.7'
           ports: [
             {
               protocol: 'TCP'
@@ -68,12 +66,6 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
               cpu: 1
             }
           }
-          // We do not have the correct attestation endpoint in this workload for skr to work properly, and it will
-          // just terminate.
-          command: useNormalSidecar ? [
-            '/bin/sleep'
-            'infinity'
-          ] : null
         }
       }
     ]
