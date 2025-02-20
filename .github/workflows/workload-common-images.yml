@@ -143,8 +143,8 @@ jobs:
         run: |
           sleep 60 # Ensure all states are up to date
           # TODO: fix c-aci-testing so that we don't need to do this
-          DEPLOYMENT_NAME=${DEPLOYMENT_NAME}-ubuntu2204 ./scripts/trace_container_states.sh
-          DEPLOYMENT_NAME=${DEPLOYMENT_NAME}-ubuntu2404 ./scripts/trace_container_states.sh
+          DEPLOYMENT_NAME=${DEPLOYMENT_NAME}-ubuntu-2204 ./scripts/trace_container_states.sh
+          DEPLOYMENT_NAME=${DEPLOYMENT_NAME}-ubuntu-2404 ./scripts/trace_container_states.sh
 
       - name: Remove Container Group
         run: |
