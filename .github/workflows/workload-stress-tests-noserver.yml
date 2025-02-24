@@ -19,7 +19,6 @@ on:
       - scripts/install-c-aci-testing.sh
     branches:
       - main
-      - tingmao/stress-test-nocurl
   workflow_dispatch:
     inputs:
       id:

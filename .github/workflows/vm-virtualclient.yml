@@ -1,0 +1,238 @@
+name: VM VirtualClient
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/vm-virtualclient.yml
+      - scripts/init_run.sh
+      - scripts/install-c-aci-testing.sh
+  push:
+    paths:
+      - .github/workflows/vm-virtualclient.yml
+      - scripts/init_run.sh
+      - scripts/install-c-aci-testing.sh
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      id:
+        type: string
+        description: ID of the run
+      location:
+        type: string
+        description: Where to deploy to
+        required: true
+      zone:
+        type: string
+        description: The zone to deploy to
+        required: false
+        default: ''
+      vmImage:
+        type: string
+        description: The Atlas image to use for the VM
+        required: false
+        default: ''
+      vmSize:
+        type: string
+        description: The size of the VM
+        default: Standard_DC8as_cc_v5
+      cleanup:
+        type: boolean
+        description: Whether to cleanup the VM after testing
+        default: true
+      cplatBlobName:
+        type: string
+        description: The name of the containerplat blob
+        default: ''
+      winFlavor:
+        type: choice
+        description: The Windows version of the image
+        default: ws2025
+        options:
+          - ws2022
+          - ws2025
+      profileName:
+        type: string
+        description: The profile to run, can be '-' for all
+        default: 'PERF-CPU-OPENSSL.json'
+  workflow_call:
+    inputs:
+      id:
+        type: string
+        description: ID of the run
+      location:
+        type: string
+        description: Where to deploy to
+        required: true
+      zone:
+        type: string
+        description: The zone to deploy to
+        required: false
+        default: ''
+      vmImage:
+        type: string
+        description: The Atlas image to use for the VM
+        required: false
+        default: ''
+      vmSize:
+        type: string
+        description: The size of the VM
+        default: Standard_DC8as_cc_v5
+      cleanup:
+        type: boolean
+        description: Whether to cleanup the VM after testing
+        default: true
+      cplatBlobName:
+        type: string
+        description: The name of the containerplat blob
+        default: ''
+      winFlavor:
+        type: string
+        description: The Windows version of the image
+        default: ws2025
+      profileName:
+        type: string
+        description: The profile to run, can be '-' for all
+        default: 'PERF-CPU-OPENSSL.json'
+
+env:
+  KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
+  KUSTO_DATABASE: ${{ secrets.KUSTO_DATABASE }}
+  KUSTO_TABLE: CACITestStepTrace
+  TEST_TYPE: vm
+  TEST_NAME: VM VirtualClient
+  RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+  DEPLOYMENT_NAME: ${{ inputs.id || 'vm-vc' }}-${{ inputs.location }}-${{ github.run_number }}
+  SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
+  RESOURCE_GROUP: c-aci-dashboard
+  REGISTRY: cacidashboard.azurecr.io
+  MANAGED_IDENTITY: cacidashboard
+  STORAGE_ACCOUNT: cacitestingstorage
+  LOCATION: ${{ inputs.location || 'uaenorth' }}
+  CLEANUP: ${{ inputs.cleanup }}
+  VM_SIZE: ${{ inputs.vmSize || 'Standard_DC8as_cc_v5' }}
+  # CPU: ${{ inputs.containerCpus || 4 }}
+  # MEMORY_IN_GB: ${{ inputs.containerMemoryGb || 16 }}
+  CPU: 4
+  MEMORY_IN_GB: 16
+  VM_IMAGE: ${{ inputs.vmImage || ( inputs.winFlavor == 'ws2022' && secrets.VM_IMAGE_WS2022 || secrets.VM_IMAGE_WS2025 ) }}
+  CPLAT_BLOB_NAME: ${{ inputs.cplatBlobName || vars.CPLAT_6_1_BLOB_NAME }}
+  WIN_FLAVOR: ${{ inputs.winFlavor || 'ws2025' }}
+  VM_ZONE: ${{ inputs.zone || '' }}
+  TAG: "20250224"
+  PROFILE_NAME: ${{ inputs.profileName || 'PERF-CPU-OPENSSL.json' }}
+
+jobs:
+  vm-virtualclient:
+    name: ${{ inputs.id || 'vm-virtualclient' }}
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log into Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION }}
+
+      - name: Initialize Run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/init_run.sh
+
+      - name: Pull Image
+        run: c-aci-testing images pull workloads/virtualclient
+
+      - name: Set Parameters
+        run: |
+          c-aci-testing aci param_set workloads/virtualclient --parameter totalCpus=$CPU
+          c-aci-testing aci param_set workloads/virtualclient --parameter totalMemoryGB=$MEMORY_IN_GB
+          c-aci-testing aci param_set workloads/virtualclient --parameter profileName=$PROFILE_NAME
+          echo virtualclient.bicepparam:
+          cat workloads/virtualclient/virtualclient.bicepparam
+
+      - name: Generate Security Policy
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Generate Policy'
+          c-aci-testing policies gen workloads/virtualclient --deployment-name $DEPLOYMENT_NAME --policy-type allow_all
+          cat workloads/virtualclient/policy_virtualclient.rego
+
+      - name: Deploy VM with containerplat
+        run: |
+          ./scripts/vm_create_traced.sh
+
+      # The Atlas image often reboots automatically on first boot for unknown reasons, but does not happen more than once.
+      # So we just wait for a bit to let that happen.
+      # It is also more realistic to not start spinning up containers immediately after the VM is created.
+      - name: Wait for any pending first-boot reboots
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Wait for any pending first-boot reboots'
+          sleep 600
+
+      # OCID token refresh breaks after 5 min
+      # https://github.com/Azure/azure-cli/issues/28708
+      - name: Log into Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION }}
+
+      - name: Run VirtualClient container
+        run: |
+          ./scripts/tracing/trace_step.py --start 'vm runc'
+          c-aci-testing vm runc workloads/virtualclient
+
+      - name: Print info
+        run: scripts/vm_print_info.sh
+
+      - name: Stream output
+        run: ./scripts/vm_check_container_output_until_container_terminate.sh
+
+      - name: Push result to Kusto
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Push results to Kusto'
+          KUSTO_TABLE=CACIVirtualClientResult ./scripts/tracing/trace_virtualclient.py "container_output.log"
+          ./scripts/tracing/trace_step.py --complete --output \
+            vmSize=$VM_SIZE \
+            containerCpus=$CPU \
+            containerMemoryGb=$MEMORY_IN_GB
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ${{ env.DEPLOYMENT_NAME }}-container_output.log
+          path: container_output.log
+
+      - name: Report result
+        if: always()
+        run: |
+          ./scripts/trace_run_result.sh ${{ job.status }}
+
+      - name: Check dmesg
+        if: always()
+        run: ./scripts/vm_check_dmesg.sh
+
+      - name: Report result
+        if: always()
+        run: |
+          ./scripts/trace_run_result.sh ${{ job.status }}
+
+      - name: Remove VM
+        if: always()
+        run: |
+          if [ "$CLEANUP" != false ]; then
+            c-aci-testing vm remove --deployment-name $DEPLOYMENT_NAME
+            # Don't leave VM hanging around even if deployment disappears
+            az vm delete \
+              --resource-group $RESOURCE_GROUP \
+              --name ${DEPLOYMENT_NAME}-vm \
+              --yes --force-deletion yes --verbose || true
+          fi

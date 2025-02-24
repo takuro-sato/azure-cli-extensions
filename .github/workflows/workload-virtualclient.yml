@@ -1,0 +1,199 @@
+name: Workload - VirtualClient
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - workloads/virtualclient/**
+      - .github/workflows/workload-virtualclient.yml
+      - scripts/init_run.sh
+      - scripts/install-c-aci-testing.sh
+  push:
+    paths:
+      - workloads/virtualclient/**
+      - .github/workflows/workload-virtualclient.yml
+      - scripts/init_run.sh
+      - scripts/install-c-aci-testing.sh
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      id:
+        type: string
+        description: ID of the run
+      location:
+        type: string
+        description: Where to deploy to
+        required: true
+      cpu:
+        type: number
+        description: The total number of CPU cores
+        default: 4
+      memory_in_gb:
+        type: number
+        description: The total amount of memory in GB
+        default: 16
+      cleanup:
+        type: boolean
+        description: Whether to cleanup the container group after testing
+        default: true
+      policy_type:
+        type: choice
+        description: The type of policy to use
+        default: allow_all
+        options:
+          # - generated
+          # - debug
+          - allow_all
+      profileName:
+        type: string
+        description: The profile to run, can be '-' for all
+        default: 'PERF-CPU-OPENSSL.json'
+  workflow_call:
+    inputs:
+      id:
+        type: string
+        description: ID of the run
+      location:
+        type: string
+        description: Where to deploy to
+        required: true
+      cpu:
+        type: number
+        description: The total number of CPU cores
+        default: 4
+      memory_in_gb:
+        type: number
+        description: The total amount of memory in GB
+        default: 16
+      cleanup:
+        type: boolean
+        description: Whether to cleanup the container group after testing
+        default: true
+      policy_type:
+        type: string
+        description: The type of policy to use
+        default: allow_all
+      profileName:
+        type: string
+        description: The profile to run, can be '-' for all
+        default: 'PERF-CPU-OPENSSL.json'
+
+env:
+  KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
+  KUSTO_DATABASE: ${{ secrets.KUSTO_DATABASE }}
+  KUSTO_TABLE: CACITestStepTrace
+  TEST_TYPE: aci
+  TEST_NAME: Workload - VirtualClient
+  RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+  DEPLOYMENT_NAME: ${{ inputs.id || 'vc' }}-${{ inputs.location }}-${{ github.run_number }}
+  SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
+  RESOURCE_GROUP: c-aci-dashboard
+  REGISTRY: cacidashboard.azurecr.io
+  MANAGED_IDENTITY: cacidashboard
+  LOCATION: ${{ inputs.location || 'westus' }}
+  CPU: ${{ inputs.cpu || 4 }}
+  MEMORY_IN_GB: ${{ inputs.memory_in_gb || 16 }}
+  CLEANUP: ${{ inputs.cleanup }}
+  POLICY_TYPE: ${{ inputs.policy_type || 'allow_all' }}
+  REPO_BASE: virtualclient
+  TAG: "20250224"
+  PROFILE_NAME: ${{ inputs.profileName || 'PERF-CPU-OPENSSL.json' }}
+
+jobs:
+  virtualclient:
+    name: ${{ inputs.id || 'virtualclient' }}
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log into Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION }}
+
+      - name: Initialize Run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/init_run.sh
+
+      - name: Pull Image
+        run: c-aci-testing images pull workloads/virtualclient
+
+      - name: Set Parameters
+        run: |
+          c-aci-testing aci param_set workloads/virtualclient --parameter totalCpus=$CPU
+          c-aci-testing aci param_set workloads/virtualclient --parameter totalMemoryGB=$MEMORY_IN_GB
+          c-aci-testing aci param_set workloads/virtualclient --parameter profileName=$PROFILE_NAME
+          echo virtualclient.bicepparam:
+          cat workloads/virtualclient/virtualclient.bicepparam
+
+      - name: Generate Security Policy
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Generate Policy'
+          c-aci-testing policies gen workloads/virtualclient --deployment-name $DEPLOYMENT_NAME
+          cat workloads/virtualclient/policy_virtualclient.rego
+
+      - name: Deploy Container Group
+        run: |
+          ./scripts/aci_deploy_traced.sh workloads/virtualclient
+
+      - name: Follow run log
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Follow run log'
+          rm -f output.log
+          # Can't use az container logs --follow, because it implements follow
+          # by using terminal control code to overwrite printed lines, which
+          # causes lots of spam in GitHub Actions log
+          #
+          # Also can't use `tail -n +0` because it gets turned into `tail -n  0`
+          # by az-cli.
+          az container exec \
+            --container-name virtualclient \
+            -g $RESOURCE_GROUP -n $DEPLOYMENT_NAME \
+            --exec-command 'tail -f -n 10000 /run.log' | tee output.log
+
+      - name: copy .cacitesting-tracing-state.json
+        run: |
+          cp $HOME/.cacitesting-tracing-state.json .
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: ${{ env.DEPLOYMENT_NAME }}-traing-debug
+          path: |
+            output.log
+            .cacitesting-tracing-state.json
+
+      - name: Push result to Kusto
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Push results to Kusto'
+          KUSTO_TABLE=CACIVirtualClientResult ./scripts/tracing/trace_virtualclient.py "output.log"
+          ./scripts/tracing/trace_step.py --complete --output \
+            containerCpus=$CPU \
+            containerMemoryGb=$MEMORY_IN_GB
+
+      - name: Report result
+        if: always()
+        run: |
+          ./scripts/trace_run_result.sh ${{ job.status }}
+
+      - name: Get Container States
+        if: always()
+        continue-on-error: true
+        run: |
+          ./scripts/trace_container_states.sh
+
+      - name: Remove Container Group
+        run: |
+          if [ "$CLEANUP" != false ]; then
+            c-aci-testing aci remove --deployment-name $DEPLOYMENT_NAME
+          fi

@@ -247,3 +247,26 @@ jobs:
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
       has_managed_identity: ${{ matrix.has_managed_identity }}
+
+  # Run virtualclient in parallel with all others since it takes so long
+  virtualclient:
+    if: ${{ !cancelled() }}
+    name: virtualclient
+    secrets: inherit
+    uses: ./.github/workflows/workload-virtualclient.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - short: openssl
+            profileName: PERF-CPU-OPENSSL.json
+          - short: compress
+            profileName: PERF-COMPRESSION.json
+          - short: fio
+            profileName: custom-profile-FIO.json
+          - short: hammerdb
+            profileName: custom-profile-POSTGRESQL-HAMMERDB-TPCC.json
+    with:
+      id: virtualclient-${{ matrix.short }}
+      location: ${{ inputs.location }}
+      profileName: ${{ matrix.profileName }}
