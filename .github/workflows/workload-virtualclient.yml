@@ -100,7 +100,7 @@ env:
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: ${{ inputs.policy_type || 'allow_all' }}
   REPO_BASE: virtualclient
-  TAG: "20250224"
+  TAG: "20250225"
   PROFILE_NAME: ${{ inputs.profileName || 'PERF-CPU-OPENSSL.json' }}
 
 jobs:

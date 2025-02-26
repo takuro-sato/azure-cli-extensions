@@ -6,8 +6,8 @@
         "SupportedOperatingSystems": "CBL-Mariner,CentOS,Debian,RedHat,Suse,Ubuntu,Windows"
     },
     "Parameters": {
-        "FileSize": "4G",
-        "DataIntegrityFileSize": "4G",
+        "FileSize": "2G",
+        "DataIntegrityFileSize": "2G",
         "DiskFilter": "BiggestSize",
         "Duration": "00:05:00",
         "ThreadCount": "{calculate({LogicalCoreCount}/2)}",
@@ -23,42 +23,6 @@
                 "PackageName": "fio",
                 "DiskFilter": "$.Parameters.DiskFilter",
                 "CommandLine": "--name=fio_randwrite_{FileSize}_4k_d{QueueDepth}_th{ThreadCount} --size={FileSize} --numjobs={ThreadCount} --rw=randwrite --bs=4k --iodepth={QueueDepth} --direct=1 --ramp_time=30 --runtime={Duration.TotalSeconds} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
-                "ThreadCount": "$.Parameters.ThreadCount",
-                "QueueDepth": "$.Parameters.QueueDepth",
-                "FileSize": "$.Parameters.FileSize",
-                "FileName": "fio-test.dat",
-                "Duration": "$.Parameters.Duration",
-                "ProcessModel": "$.Parameters.ProcessModel",
-                "DeleteTestFilesOnFinish": false,
-                "Tags": "IO,FIO,randwrite"
-            }
-        },
-        {
-            "Type": "FioExecutor",
-            "Parameters": {
-                "Scenario": "RandomWrite_8k_BlockSize",
-                "MetricScenario": "fio_randwrite_{FileSize}_8k_d{QueueDepth}_th{ThreadCount}",
-                "PackageName": "fio",
-                "DiskFilter": "$.Parameters.DiskFilter",
-                "CommandLine": "--name=fio_randwrite_{FileSize}_8k_d{QueueDepth}_th{ThreadCount} --size={FileSize} --numjobs={ThreadCount} --rw=randwrite --bs=8k --iodepth={QueueDepth} --direct=1 --ramp_time=30 --runtime={Duration.TotalSeconds} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
-                "ThreadCount": "$.Parameters.ThreadCount",
-                "QueueDepth": "$.Parameters.QueueDepth",
-                "FileSize": "$.Parameters.FileSize",
-                "FileName": "fio-test.dat",
-                "Duration": "$.Parameters.Duration",
-                "ProcessModel": "$.Parameters.ProcessModel",
-                "DeleteTestFilesOnFinish": false,
-                "Tags": "IO,FIO,randwrite"
-            }
-        },
-        {
-            "Type": "FioExecutor",
-            "Parameters": {
-                "Scenario": "RandomWrite_12k_BlockSize",
-                "MetricScenario": "fio_randwrite_{FileSize}_12k_d{QueueDepth}_th{ThreadCount}",
-                "PackageName": "fio",
-                "DiskFilter": "$.Parameters.DiskFilter",
-                "CommandLine": "--name=fio_randwrite_{FileSize}_12k_d{QueueDepth}_th{ThreadCount} --size={FileSize} --numjobs={ThreadCount} --rw=randwrite --bs=12k --iodepth={QueueDepth} --direct=1 --ramp_time=30 --runtime={Duration.TotalSeconds} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "QueueDepth": "$.Parameters.QueueDepth",
                 "FileSize": "$.Parameters.FileSize",
@@ -126,42 +90,6 @@
         {
             "Type": "FioExecutor",
             "Parameters": {
-                "Scenario": "SequentialWrite_8k_BlockSize",
-                "MetricScenario": "fio_write_{FileSize}_8k_d{QueueDepth}_th{ThreadCount}",
-                "PackageName": "fio",
-                "DiskFilter": "$.Parameters.DiskFilter",
-                "CommandLine": "--name=fio_write_{FileSize}_8k_d{QueueDepth}_th{ThreadCount} --size={FileSize} --numjobs={ThreadCount} --rw=write --bs=8k --iodepth={QueueDepth} --direct=1 --ramp_time=30 --runtime={Duration.TotalSeconds} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
-                "ThreadCount": "$.Parameters.ThreadCount",
-                "QueueDepth": "$.Parameters.QueueDepth",
-                "FileSize": "$.Parameters.FileSize",
-                "FileName": "fio-test.dat",
-                "Duration": "$.Parameters.Duration",
-                "ProcessModel": "$.Parameters.ProcessModel",
-                "DeleteTestFilesOnFinish": false,
-                "Tags": "IO,FIO,write"
-            }
-        },
-        {
-            "Type": "FioExecutor",
-            "Parameters": {
-                "Scenario": "SequentialWrite_12k_BlockSize",
-                "MetricScenario": "fio_write_{FileSize}_12k_d{QueueDepth}_th{ThreadCount}",
-                "PackageName": "fio",
-                "DiskFilter": "$.Parameters.DiskFilter",
-                "CommandLine": "--name=fio_write_{FileSize}_12k_d{QueueDepth}_th{ThreadCount} --size={FileSize} --numjobs={ThreadCount} --rw=write --bs=12k --iodepth={QueueDepth} --direct=1 --ramp_time=30 --runtime={Duration.TotalSeconds} --time_based --overwrite=1 --thread --group_reporting --output-format=json",
-                "ThreadCount": "$.Parameters.ThreadCount",
-                "QueueDepth": "$.Parameters.QueueDepth",
-                "FileSize": "$.Parameters.FileSize",
-                "FileName": "fio-test.dat",
-                "Duration": "$.Parameters.Duration",
-                "ProcessModel": "$.Parameters.ProcessModel",
-                "DeleteTestFilesOnFinish": false,
-                "Tags": "IO,FIO,write"
-            }
-        },
-        {
-            "Type": "FioExecutor",
-            "Parameters": {
                 "Scenario": "SequentialWrite_16k_BlockSize",
                 "MetricScenario": "fio_write_{FileSize}_16k_d{QueueDepth}_th{ThreadCount}",
                 "PackageName": "fio",
@@ -216,42 +144,6 @@
         {
             "Type": "FioExecutor",
             "Parameters": {
-                "Scenario": "RandomRead_8k_BlockSize",
-                "MetricScenario": "fio_randread_{FileSize}_8k_d{QueueDepth}_th{ThreadCount}",
-                "PackageName": "fio",
-                "DiskFilter": "$.Parameters.DiskFilter",
-                "CommandLine": "--name=fio_randread_{FileSize}_8k_d{QueueDepth}_th{ThreadCount} --size={FileSize} --numjobs={ThreadCount} --rw=randread --bs=8k --iodepth={QueueDepth} --direct=1 --ramp_time=30 --runtime={Duration.TotalSeconds} --time_based --thread --group_reporting --output-format=json",
-                "ThreadCount": "$.Parameters.ThreadCount",
-                "QueueDepth": "$.Parameters.QueueDepth",
-                "FileSize": "$.Parameters.FileSize",
-                "FileName": "fio-test.dat",
-                "Duration": "$.Parameters.Duration",
-                "ProcessModel": "$.Parameters.ProcessModel",
-                "DeleteTestFilesOnFinish": false,
-                "Tags": "IO,FIO,randread"
-            }
-        },
-        {
-            "Type": "FioExecutor",
-            "Parameters": {
-                "Scenario": "RandomRead_12k_BlockSize",
-                "MetricScenario": "fio_randread_{FileSize}_12k_d{QueueDepth}_th{ThreadCount}",
-                "PackageName": "fio",
-                "DiskFilter": "$.Parameters.DiskFilter",
-                "CommandLine": "--name=fio_randread_{FileSize}_12k_d{QueueDepth}_th{ThreadCount} --size={FileSize} --numjobs={ThreadCount} --rw=randread --bs=12k --iodepth={QueueDepth} --direct=1 --ramp_time=30 --runtime={Duration.TotalSeconds} --time_based --thread --group_reporting --output-format=json",
-                "ThreadCount": "$.Parameters.ThreadCount",
-                "QueueDepth": "$.Parameters.QueueDepth",
-                "FileSize": "$.Parameters.FileSize",
-                "FileName": "fio-test.dat",
-                "Duration": "$.Parameters.Duration",
-                "ProcessModel": "$.Parameters.ProcessModel",
-                "DeleteTestFilesOnFinish": false,
-                "Tags": "IO,FIO,randread"
-            }
-        },
-        {
-            "Type": "FioExecutor",
-            "Parameters": {
                 "Scenario": "RandomRead_16k_BlockSize",
                 "MetricScenario": "fio_randread_{FileSize}_16k_d{QueueDepth}_th{ThreadCount}",
                 "PackageName": "fio",
@@ -285,7 +177,6 @@
                 "Tags": "IO,FIO,randread"
             }
         },
-
         {
             "Type": "FioExecutor",
             "Parameters": {
@@ -294,42 +185,6 @@
                 "PackageName": "fio",
                 "DiskFilter": "$.Parameters.DiskFilter",
                 "CommandLine": "--name=fio_read_{FileSize}_4k_d{QueueDepth}_th{ThreadCount} --size={FileSize} --numjobs={ThreadCount} --rw=read --bs=4k --iodepth={QueueDepth} --direct=1 --ramp_time=30 --runtime={Duration.TotalSeconds} --time_based --thread --group_reporting --output-format=json",
-                "ThreadCount": "$.Parameters.ThreadCount",
-                "QueueDepth": "$.Parameters.QueueDepth",
-                "FileSize": "$.Parameters.FileSize",
-                "FileName": "fio-test.dat",
-                "Duration": "$.Parameters.Duration",
-                "ProcessModel": "$.Parameters.ProcessModel",
-                "DeleteTestFilesOnFinish": false,
-                "Tags": "IO,FIO,read"
-            }
-        },
-        {
-            "Type": "FioExecutor",
-            "Parameters": {
-                "Scenario": "SequentialRead_8k_BlockSize",
-                "MetricScenario": "fio_read_{FileSize}_8k_d{QueueDepth}_th{ThreadCount}",
-                "PackageName": "fio",
-                "DiskFilter": "$.Parameters.DiskFilter",
-                "CommandLine": "--name=fio_read_{FileSize}_8k_d{QueueDepth}_th{ThreadCount} --size={FileSize} --numjobs={ThreadCount} --rw=read --bs=8k --iodepth={QueueDepth} --direct=1 --ramp_time=30 --runtime={Duration.TotalSeconds} --time_based --thread --group_reporting --output-format=json",
-                "ThreadCount": "$.Parameters.ThreadCount",
-                "QueueDepth": "$.Parameters.QueueDepth",
-                "FileSize": "$.Parameters.FileSize",
-                "FileName": "fio-test.dat",
-                "Duration": "$.Parameters.Duration",
-                "ProcessModel": "$.Parameters.ProcessModel",
-                "DeleteTestFilesOnFinish": false,
-                "Tags": "IO,FIO,read"
-            }
-        },
-        {
-            "Type": "FioExecutor",
-            "Parameters": {
-                "Scenario": "SequentialRead_12k_BlockSize",
-                "MetricScenario": "fio_read_{FileSize}_12k_d{QueueDepth}_th{ThreadCount}",
-                "PackageName": "fio",
-                "DiskFilter": "$.Parameters.DiskFilter",
-                "CommandLine": "--name=fio_read_{FileSize}_12k_d{QueueDepth}_th{ThreadCount} --size={FileSize} --numjobs={ThreadCount} --rw=read --bs=12k --iodepth={QueueDepth} --direct=1 --ramp_time=30 --runtime={Duration.TotalSeconds} --time_based --thread --group_reporting --output-format=json",
                 "ThreadCount": "$.Parameters.ThreadCount",
                 "QueueDepth": "$.Parameters.QueueDepth",
                 "FileSize": "$.Parameters.FileSize",
@@ -379,86 +234,11 @@
         {
             "Type": "FioExecutor",
             "Parameters": {
-                "Scenario": "DataIntegrity_RandomWrite_4k_BlockSize",
-                "MetricScenario": "fio_randwrite_{FileSize}_4k_d1_th1_verify",
-                "PackageName": "fio",
-                "DiskFilter": "$.Parameters.DiskFilter",
-                "CommandLine": "--name=fio_randwrite_{FileSize}_4k_d1_th1_verify --size={FileSize} --numjobs=1 --rw=randwrite --bs=4k --iodepth=1 --direct=1 --overwrite=1 --verify=sha256 --do_verify=1 --thread --group_reporting --output-format=json",
-                "TestFocus": "DataIntegrity",
-                "FileSize": "$.Parameters.DataIntegrityFileSize",
-                "ProcessModel": "$.Parameters.ProcessModel",
-                "DeleteTestFilesOnFinish": true,
-                "Tags": "IO,FIO,randwrite,data integrity"
-            }
-        },
-        {
-            "Type": "FioExecutor",
-            "Parameters": {
                 "Scenario": "DataIntegrity_RandomWrite_16k_BlockSize",
                 "MetricScenario": "fio_randwrite_{FileSize}_16k_d1_th1_verify",
                 "PackageName": "fio",
                 "DiskFilter": "$.Parameters.DiskFilter",
                 "CommandLine": "--name=fio_randwrite_{FileSize}_16k_d1_th1_verify --size={FileSize} --numjobs=1 --rw=randwrite --bs=16k --iodepth=1 --direct=1 --overwrite=1 --verify=sha256 --do_verify=1 --thread --group_reporting --output-format=json",
-                "TestFocus": "DataIntegrity",
-                "FileSize": "$.Parameters.DataIntegrityFileSize",
-                "ProcessModel": "$.Parameters.ProcessModel",
-                "DeleteTestFilesOnFinish": true,
-                "Tags": "IO,FIO,randwrite,data integrity"
-            }
-        },
-        {
-            "Type": "FioExecutor",
-            "Parameters": {
-                "Scenario": "DataIntegrity_RandomWrite_1024k_BlockSize",
-                "MetricScenario": "fio_randwrite_{FileSize}_1024k_d1_th1_verify",
-                "PackageName": "fio",
-                "DiskFilter": "$.Parameters.DiskFilter",
-                "CommandLine": "--name=fio_randwrite_{FileSize}_1024k_d1_th1_verify --size={FileSize} --numjobs=1 --rw=randwrite --bs=1024k --iodepth=1 --direct=1 --overwrite=1 --verify=sha256 --do_verify=1 --thread --group_reporting --output-format=json",
-                "TestFocus": "DataIntegrity",
-                "FileSize": "$.Parameters.DataIntegrityFileSize",
-                "ProcessModel": "$.Parameters.ProcessModel",
-                "DeleteTestFilesOnFinish": true,
-                "Tags": "IO,FIO,randwrite,data integrity"
-            }
-        },
-        {
-            "Type": "FioExecutor",
-            "Parameters": {
-                "Scenario": "DataIntegrity_SequentialWrite_4k_BlockSize",
-                "MetricScenario": "fio_write_{FileSize}_4k_d1_th1_verify",
-                "PackageName": "fio",
-                "DiskFilter": "$.Parameters.DiskFilter",
-                "CommandLine": "--name=fio_write_{FileSize}_4k_d1_th1_verify --size={FileSize} --numjobs=1 --rw=write --bs=4k --iodepth=1 --direct=1 --overwrite=1 --verify=sha256 --do_verify=1 --thread --group_reporting --output-format=json",
-                "TestFocus": "DataIntegrity",
-                "FileSize": "$.Parameters.DataIntegrityFileSize",
-                "ProcessModel": "$.Parameters.ProcessModel",
-                "DeleteTestFilesOnFinish": true,
-                "Tags": "IO,FIO,write,data integrity"
-            }
-        },
-        {
-            "Type": "FioExecutor",
-            "Parameters": {
-                "Scenario": "DataIntegrity_SequentialWrite_16k_BlockSize",
-                "MetricScenario": "fio_write_{FileSize}_16k_d1_th1_verify",
-                "PackageName": "fio",
-                "DiskFilter": "$.Parameters.DiskFilter",
-                "CommandLine": "--name=fio_write_{FileSize}_16k_d1_th1_verify --size={FileSize} --numjobs=1 --rw=write --bs=16k --iodepth=1 --direct=1 --overwrite=1 --verify=sha256 --do_verify=1 --thread --group_reporting --output-format=json",
-                "TestFocus": "DataIntegrity",
-                "FileSize": "$.Parameters.DataIntegrityFileSize",
-                "ProcessModel": "$.Parameters.ProcessModel",
-                "DeleteTestFilesOnFinish": true,
-                "Tags": "IO,FIO,write,data integrity"
-            }
-        },
-        {
-            "Type": "FioExecutor",
-            "Parameters": {
-                "Scenario": "DataIntegrity_SequentialWrite_1024k_BlockSize",
-                "MetricScenario": "fio_write_{FileSize}_1024k_d1_th1_verify",
-                "PackageName": "fio",
-                "DiskFilter": "$.Parameters.DiskFilter",
-                "CommandLine": "--name=fio_write_{FileSize}_1024k_d1_th1_verify --size={FileSize} --numjobs=1 --rw=write --bs=1024k --iodepth=1 --direct=1 --overwrite=1 --verify=sha256 --do_verify=1 --thread --group_reporting --output-format=json",
                 "TestFocus": "DataIntegrity",
                 "FileSize": "$.Parameters.DataIntegrityFileSize",
                 "ProcessModel": "$.Parameters.ProcessModel",

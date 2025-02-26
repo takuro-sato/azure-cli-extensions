@@ -123,7 +123,7 @@ env:
   CPLAT_BLOB_NAME: ${{ inputs.cplatBlobName || vars.CPLAT_6_1_BLOB_NAME }}
   WIN_FLAVOR: ${{ inputs.winFlavor || 'ws2025' }}
   VM_ZONE: ${{ inputs.zone || '' }}
-  TAG: "20250224"
+  TAG: "20250225"
   PROFILE_NAME: ${{ inputs.profileName || 'PERF-CPU-OPENSSL.json' }}
 
 jobs:
