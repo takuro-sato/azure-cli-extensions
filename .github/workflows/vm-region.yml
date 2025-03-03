@@ -31,6 +31,7 @@ jobs:
       location: ${{ inputs.location }}
       cplatBlobName: ${{ vars.CPLAT_CURR_BLOB_NAME }}
       winFlavor: ws2025
+      vmSize: ${{ inputs.location != 'centraluseuap' && 'Standard_DC8as_cc_v5' || 'Standard_DC8as_cc_v6' }}
 
   vm-stress-curr-ws2022:
     if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2022_VM_REGIONS, inputs.location) }}
@@ -41,6 +42,7 @@ jobs:
       location: ${{ inputs.location }}
       cplatBlobName: ${{ vars.CPLAT_CURR_BLOB_NAME }}
       winFlavor: ws2022
+      vmSize: ${{ inputs.location != 'centraluseuap' && 'Standard_DC8as_cc_v5' || 'Standard_DC8as_cc_v6' }}
 
   vm-stress-next-6-1-ws2025:
     if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2025_VM_REGIONS, inputs.location) }}
@@ -51,6 +53,7 @@ jobs:
       location: ${{ inputs.location }}
       cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
       winFlavor: ws2025
+      vmSize: ${{ inputs.location != 'centraluseuap' && 'Standard_DC8as_cc_v5' || 'Standard_DC8as_cc_v6' }}
 
   vm-stress-next-hard-6-1-ws2025:
     if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2025_VM_REGIONS, inputs.location) }}
@@ -61,6 +64,7 @@ jobs:
       location: ${{ inputs.location }}
       cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
       winFlavor: ws2025
+      vmSize: ${{ inputs.location != 'centraluseuap' && 'Standard_DC8as_cc_v5' || 'Standard_DC8as_cc_v6' }}
 
   vm-idle-curr-ws2025:
     if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2025_VM_REGIONS, inputs.location) }}
@@ -71,6 +75,7 @@ jobs:
       location: ${{ inputs.location }}
       cplatBlobName: ${{ vars.CPLAT_CURR_BLOB_NAME }}
       winFlavor: ws2025
+      vmSize: ${{ inputs.location != 'centraluseuap' && 'Standard_DC8as_cc_v5' || 'Standard_DC8as_cc_v6' }}
 
   perf-cvm:
     if: ${{ !cancelled() && inputs.location == 'uaenorth' }}
