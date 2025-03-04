@@ -41,6 +41,9 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
             cd skr/tools/get-snp-report
             make
             cp ./bin/* /usr/local/bin/
+            echo "raw report:"
+            get-snp-report
+            echo
             echo "snp-report:"
             verbose-report
             '''
