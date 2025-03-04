@@ -250,7 +250,7 @@ jobs:
 
   # Run virtualclient in parallel with all others since it takes so long
   virtualclient:
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && inputs.location != 'centraluseuap' }}
     name: virtualclient
     secrets: inherit
     uses: ./.github/workflows/workload-virtualclient.yml
@@ -266,6 +266,24 @@ jobs:
             profileName: custom-profile-FIO.json
           - short: hammerdb
             profileName: custom-profile-POSTGRESQL-HAMMERDB-TPCC.json
+    with:
+      id: virtualclient-${{ matrix.short }}
+      location: ${{ inputs.location }}
+      profileName: ${{ matrix.profileName }}
+
+  virtualclient-cuseuap:
+    if: ${{ !cancelled() && inputs.location == 'centraluseuap' }}
+    name: virtualclient
+    secrets: inherit
+    uses: ./.github/workflows/workload-virtualclient.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - short: openssl
+            profileName: PERF-CPU-OPENSSL.json
+          - short: compress
+            profileName: PERF-COMPRESSION.json
     with:
       id: virtualclient-${{ matrix.short }}
       location: ${{ inputs.location }}

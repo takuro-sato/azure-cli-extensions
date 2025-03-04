@@ -1,4 +1,4 @@
-name: VM - West Europe
+name: Uptime - Central US EUAP
 
 permissions:
   id-token: write
@@ -10,11 +10,11 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
-      - .github/workflows/vm-westeurope.yml
+      - .github/workflows/uptime-centraluseuap.yml
 
 jobs:
-  vm-westeurope:
+  uptime:
     secrets: inherit
-    uses: ./.github/workflows/vm-region.yml
+    uses: ./.github/workflows/uptime.yml
     with:
-      location: westeurope
+      location: centraluseuap

@@ -1,0 +1,32 @@
+name: High Spec - Central US EUAP
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/high-spec-centraluseuap.yml
+
+jobs:
+  minimal-4cpu-8gb:
+    secrets: inherit
+    uses: ./.github/workflows/workload-minimal.yml
+    with:
+      id: 4cpu-8gb
+      location: centraluseuap
+      cpu: 4
+      memory_in_gb: 8
+
+  minimal-4cpu-16gb:
+    secrets: inherit
+    uses: ./.github/workflows/workload-minimal.yml
+    with:
+      id: 4cpu-16gb
+      location: centraluseuap
+      cpu: 4
+      memory_in_gb: 16

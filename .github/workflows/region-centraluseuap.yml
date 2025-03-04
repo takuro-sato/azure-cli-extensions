@@ -1,4 +1,4 @@
-name: VM - West Europe
+name: Region - Central US EUAP
 
 permissions:
   id-token: write
@@ -10,11 +10,11 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
-      - .github/workflows/vm-westeurope.yml
+      - .github/workflows/region-centraluseuap.yml
 
 jobs:
-  vm-westeurope:
+  centraluseuap:
     secrets: inherit
-    uses: ./.github/workflows/vm-region.yml
+    uses: ./.github/workflows/region.yml
     with:
-      location: westeurope
+      location: centraluseuap

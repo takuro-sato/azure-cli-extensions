@@ -13,7 +13,7 @@ on:
       - .github/workflows/vm-centraluseuap.yml
 
 jobs:
-  centraluseuap:
+  vm-centraluseuap:
     secrets: inherit
     uses: ./.github/workflows/vm-region.yml
     with:

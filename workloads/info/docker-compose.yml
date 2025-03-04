@@ -1,7 +1,4 @@
 version: '3'
 services:
-  hello-world:
-    image: cacidashboard.azurecr.io/info:${TAG:-latest}
-    build:
-      context: .
-      dockerfile: Dockerfile
+  ubuntu:
+    image: mcr.microsoft.com/mirror/docker/library/ubuntu:24.04

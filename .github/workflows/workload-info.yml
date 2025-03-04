@@ -87,7 +87,6 @@ env:
   MEMORY_IN_GB: ${{ inputs.memory_in_gb || 4 }}
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: ${{ inputs.policy_type || 'generated' }}
-  TAG: "20250217"
 
 jobs:
   info:
