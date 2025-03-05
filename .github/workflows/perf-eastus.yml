@@ -1,0 +1,20 @@
+name: Perf - East US
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/perf-eastus.yml
+
+jobs:
+  perf-eastus:
+    secrets: inherit
+    uses: ./.github/workflows/perf-region.yml
+    with:
+      location: eastus

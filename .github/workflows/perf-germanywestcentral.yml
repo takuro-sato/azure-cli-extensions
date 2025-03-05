@@ -1,0 +1,20 @@
+name: Perf - Germany West Central
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/perf-germanywestcentral.yml
+
+jobs:
+  perf-germanywestcentral:
+    secrets: inherit
+    uses: ./.github/workflows/perf-region.yml
+    with:
+      location: germanywestcentral

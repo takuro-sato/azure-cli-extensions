@@ -1,0 +1,20 @@
+name: Perf - West US
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/perf-westus.yml
+
+jobs:
+  perf-westus:
+    secrets: inherit
+    uses: ./.github/workflows/perf-region.yml
+    with:
+      location: westus

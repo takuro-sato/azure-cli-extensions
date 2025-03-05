@@ -161,36 +161,11 @@ jobs:
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
 
-  perf:
-    if: ${{ !cancelled() }}
-    name: perf
-    secrets: inherit
-    needs: info
-    uses: ./.github/workflows/workload-perf.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        policy_type: ['generated', 'debug', 'allow_all']
-    with:
-      id: perf-${{ matrix.policy_type }}
-      location: ${{ inputs.location }}
-      policy_type: ${{ matrix.policy_type }}
-
-  perf-nonconf:
-    if: ${{ !cancelled() }}
-    name: perf-nonconf
-    secrets: inherit
-    needs: perf
-    uses: ./.github/workflows/workload-perf-nonconf.yml
-    with:
-      id: perf-nonconf
-      location: ${{ inputs.location }}
-
   vnet:
     if: ${{ !cancelled() }}
     name: vnet
     secrets: inherit
-    needs: perf-nonconf
+    needs: info
     uses: ./.github/workflows/workload-vnet.yml
     strategy:
       fail-fast: false
@@ -247,44 +222,3 @@ jobs:
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
       has_managed_identity: ${{ matrix.has_managed_identity }}
-
-  # Run virtualclient in parallel with all others since it takes so long
-  virtualclient:
-    if: ${{ !cancelled() && inputs.location != 'centraluseuap' }}
-    name: virtualclient
-    secrets: inherit
-    uses: ./.github/workflows/workload-virtualclient.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - short: openssl
-            profileName: PERF-CPU-OPENSSL.json
-          - short: compress
-            profileName: PERF-COMPRESSION.json
-          - short: fio
-            profileName: custom-profile-FIO.json
-          - short: hammerdb
-            profileName: custom-profile-POSTGRESQL-HAMMERDB-TPCC.json
-    with:
-      id: virtualclient-${{ matrix.short }}
-      location: ${{ inputs.location }}
-      profileName: ${{ matrix.profileName }}
-
-  virtualclient-cuseuap:
-    if: ${{ !cancelled() && inputs.location == 'centraluseuap' }}
-    name: virtualclient
-    secrets: inherit
-    uses: ./.github/workflows/workload-virtualclient.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - short: openssl
-            profileName: PERF-CPU-OPENSSL.json
-          - short: compress
-            profileName: PERF-COMPRESSION.json
-    with:
-      id: virtualclient-${{ matrix.short }}
-      location: ${{ inputs.location }}
-      profileName: ${{ matrix.profileName }}

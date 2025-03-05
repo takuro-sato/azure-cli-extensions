@@ -1,0 +1,20 @@
+name: Perf - West Europe
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/perf-westeurope.yml
+
+jobs:
+  perf-westeurope:
+    secrets: inherit
+    uses: ./.github/workflows/perf-region.yml
+    with:
+      location: westeurope
