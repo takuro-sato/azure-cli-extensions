@@ -5,11 +5,6 @@ permissions:
   contents: read
 
 on:
-  pull_request:
-    paths:
-      - .github/workflows/vm-virtualclient.yml
-      - scripts/init_run.sh
-      - scripts/install-c-aci-testing.sh
   push:
     paths:
       - .github/workflows/vm-virtualclient.yml
@@ -167,23 +162,6 @@ jobs:
       - name: Deploy VM with containerplat
         run: |
           ./scripts/vm_create_traced.sh
-
-      # The Atlas image often reboots automatically on first boot for unknown reasons, but does not happen more than once.
-      # So we just wait for a bit to let that happen.
-      # It is also more realistic to not start spinning up containers immediately after the VM is created.
-      - name: Wait for any pending first-boot reboots
-        run: |
-          ./scripts/tracing/trace_step.py --start 'Wait for any pending first-boot reboots'
-          sleep 600
-
-      # OCID token refresh breaks after 5 min
-      # https://github.com/Azure/azure-cli/issues/28708
-      - name: Log into Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION }}
 
       - name: Run VirtualClient container
         run: |

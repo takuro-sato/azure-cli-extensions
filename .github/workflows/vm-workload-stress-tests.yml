@@ -160,23 +160,6 @@ jobs:
           c-aci-testing policies gen workloads/stress_tests --deployment-name $DEPLOYMENT_NAME --policy-type allow_all
           cat workloads/stress_tests/policy_stress_tests.rego
 
-      # The Atlas image often reboots automatically on first boot for unknown reasons, but does not happen more than once.
-      # So we just wait for a bit to let that happen.
-      # It is also more realistic to not start spinning up containers immediately after the VM is created.
-      - name: Wait for any pending first-boot reboots
-        run: |
-          ./scripts/tracing/trace_step.py --start 'Wait for any pending first-boot reboots'
-          sleep 500
-
-      # OCID token refresh breaks after 5 min
-      # https://github.com/Azure/azure-cli/issues/28708
-      - name: Log into Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION }}
-
       - name: Deploy Container Group (fio, 2cpu)
         run: |
           ./scripts/tracing/trace_step.py --start 'Deploy Container Group (fio, 2cpu)'
