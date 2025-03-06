@@ -130,31 +130,11 @@ jobs:
 
       - name: Wait for IP address
         run: |
-          ./scripts/tracing/trace_step.py --start 'Wait for IP address'
-          ip_address=""
-          elapsed=0
-          while [[ -z "$ip_address" && elapsed -lt 60 ]]; do
-            ip_address=$(c-aci-testing aci get ips --deployment-name $DEPLOYMENT_NAME | sed "s/\['\([^']*\)'\]/\1/")
-            echo "IP Address: $ip_address"
-            sleep 5
-            elapsed=$((elapsed + 5))
-          done
+          ./scripts/aci_get_ip.sh
 
       - name: Curl Server
         run: |
           ./scripts/tracing/trace_step.py --start 'Curl Server'
-          template_ip_address=$(c-aci-testing aci get ips --deployment-name $DEPLOYMENT_NAME | sed "s/\['\([^']*\)'\]/\1/")
-          echo "IP Address from template output: $template_ip_address"
-          az_cli_ip_address=$(\
-            az container show \
-            --resource-group $RESOURCE_GROUP \
-            --name $DEPLOYMENT_NAME \
-            --query ipAddress.ip --output tsv \
-          )
-          echo "IP Address from az cli: $az_cli_ip_address"
-
-          # Select the IP address which is not empty
-          ip_address="${template_ip_address:-${az_cli_ip_address}}"
           echo "Attempting to send a request..."
           curl http://$ip_address:80
 

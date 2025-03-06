@@ -128,17 +128,12 @@ jobs:
         run: |
           ./scripts/aci_deploy_traced.sh workloads/server
 
+      - name: Wait for IP address
+        run: |
+          ./scripts/aci_get_ip.sh
+
       - name: Curl Server
         run: |
-          ./scripts/tracing/trace_step.py --start 'Wait for IP address'
-          ip_address=""
-          timeout=$(($(date +%s) + (60 * 10))) # 10 minutes
-          while [[ -z "$ip_address" && $(date +%s) -lt $timeout ]]; do
-            ip_address=$(c-aci-testing aci get ips --deployment-name $DEPLOYMENT_NAME | sed "s/\['\([^']*\)'\]/\1/")
-            echo "IP Address: $ip_address"
-            sleep 5
-          done
-
           ./scripts/tracing/trace_step.py --start 'Curl Server'
           echo "Attempting to send a request..."
           timeout=$(($(date +%s) + (60 * 10))) # 10 minutes

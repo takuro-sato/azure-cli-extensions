@@ -123,21 +123,11 @@ jobs:
 
       - name: Wait for IP address
         run: |
-          ./scripts/tracing/trace_step.py --start 'Wait for IP address'
-          ip_address=""
-          elapsed=0
-          while [[ -z "$ip_address" && elapsed -lt 60 ]]; do
-            ip_address=$(c-aci-testing aci get ips --deployment-name $DEPLOYMENT_NAME | sed "s/\['\([^']*\)'\]/\1/")
-            echo "IP Address: $ip_address"
-            sleep 5
-            elapsed=$((elapsed + 5))
-          done
+          ./scripts/aci_get_ip.sh
 
       - name: Curl Server
         run: |
           ./scripts/tracing/trace_step.py --start 'Curl Server'
-          ip_address=$(c-aci-testing aci get ips --deployment-name $DEPLOYMENT_NAME | sed "s/\['\([^']*\)'\]/\1/")
-          echo "IP Address fetched by Az CLI is: $ip_address"
           echo "Attempting to send a request..."
           curl http://$ip_address:80
 
