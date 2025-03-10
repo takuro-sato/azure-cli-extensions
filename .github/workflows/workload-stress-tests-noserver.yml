@@ -53,6 +53,8 @@ on:
         description: The script to run
         default: workload_fio
         options:
+          - workload_attestation_loop
+          - workload_check_threads
           - workload_cpu
           - workload_cpu_fio
           - workload_exec
