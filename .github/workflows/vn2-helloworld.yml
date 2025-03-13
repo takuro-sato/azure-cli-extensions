@@ -1,0 +1,138 @@
+name: VN2 - Hello World workload
+
+permissions:
+   id-token: write
+   contents: read
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/vn2-helloworld.yml
+      - scripts/init_run.sh
+      - workloads/vn2/**
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/vn2-helloworld.yml
+      - scripts/init_run.sh
+      - workloads/vn2/**
+  workflow_call:
+    inputs:
+      id:
+        type: string
+        description: ID of the run
+      location:
+        type: string
+        description: Where to deploy to
+        required: true
+      resource_group:
+        required: true
+        type: string
+      aks_cluster_name:
+        required: true
+        type: string
+      cleanup:
+        type: boolean
+        description: Whether to cleanup the pods after testing
+        default: true
+  workflow_dispatch:
+    inputs:
+      id:
+        type: string
+        description: ID of the run
+      location:
+        type: string
+        description: Where to deploy to
+        required: true
+      resource_group:
+        required: true
+        type: string
+      aks_cluster_name:
+        required: true
+        type: string
+      cleanup:
+        type: boolean
+        description: Whether to cleanup the pods after testing
+        default: true
+
+env:
+  KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
+  KUSTO_DATABASE: ${{ secrets.KUSTO_DATABASE }}
+  KUSTO_TABLE: CACITestStepTrace
+  TEST_TYPE: vn2
+  TEST_NAME: VN2 - Hello World
+  RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+  DEPLOYMENT_NAME: ${{ inputs.id || 'vn2-hello' }}-${{ inputs.location }}-${{ github.run_number }}
+  SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
+  RESOURCE_GROUP: ${{ inputs.resource_group || 'mchamarthy-aks-ci-northeurope' }}
+  LOCATION: ${{ inputs.location || 'northeurope' }}
+  AKS_CLUSTER_NAME: ${{ inputs.aks_cluster_name || 'aks-ci-northeurope' }}
+  CLEANUP: ${{ inputs.cleanup || 'true' }}
+  YAML_FILE: workloads/vn2/sample-pod.yaml
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log into Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION }}
+
+      # Note: GitHub Actions runner images have Kubectl and Helm pre-installed.
+
+      - name: Initialize Run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/init_run.sh
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Delete any existing deployments and uninstall VN2
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Delete any existing deployments and uninstall VN2'
+          ./workloads/vn2/cleanup-vn2-helm.sh $RESOURCE_GROUP $AKS_CLUSTER_NAME
+          # Waits a bit for the helm uninstall to really finish
+          sleep 30
+
+      - name: Deploy VN2 Helm Chart
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Deploy VN2 Helm Chart'
+          ./workloads/vn2/deploy-vn2-helm.sh $RESOURCE_GROUP $AKS_CLUSTER_NAME
+
+      - name: Deploy sample-pod.yaml and run checks
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Deploy sample-pod.yaml and run checks'
+          set +e
+          ./workloads/vn2/create_vn2_deployment_checked.py $YAML_FILE
+          status=$?
+          cat test_output.json
+          if [ $status -ne 0 ]; then
+            cat test_output.json | ./scripts/tracing/trace_step.py --complete --strict --output-from-stdin --err "$(cat test_output.json | jq -r '.err_str')"
+            exit 1
+          else
+            cat test_output.json | ./scripts/tracing/trace_step.py --complete --strict --output-from-stdin
+            exit $?
+          fi
+
+      - name: Report result
+        if: always()
+        run: |
+          ./scripts/trace_run_result.sh ${{ job.status }}
+
+      - name: Cleanup pods
+        run: |
+          if [ "$CLEANUP" != false ]; then
+            ./workloads/vn2/cleanup_vn2_deployment_checked.py $YAML_FILE
+            ./workloads/vn2/cleanup-vn2-helm.sh $RESOURCE_GROUP $AKS_CLUSTER_NAME
+          fi

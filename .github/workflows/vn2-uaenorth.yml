@@ -1,4 +1,4 @@
-name: VN2 - North UAE
+name: VN2 - UAE North
 
 permissions:
    id-token: write
@@ -6,58 +6,17 @@ permissions:
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # This will run the workflow every day at midnight UTC
-  workflow_dispatch:  # Allows manual triggering of the workflow
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/vn2-uaenorth.yml
 
 jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    env:
-      RESOURCE_GROUP: mchamarthy-aks-ci-uaenorth
-      AKS_CLUSTER_NAME: aks-ci-uaenorth
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Fetch region
-      env:
-        Region: ${{ github.event.inputs.REGION }}
-      run: echo "Region being deployed to is ${{github.event.inputs.Region}}"
-
-    - name: Log into Azure
-      uses: azure/login@v2
-      with:
-        client-id: ${{ secrets.AZURE_CLIENT_ID }}
-        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-        subscription-id: ${{ vars.SUBSCRIPTION }}
-
-    - name: Install Git
-      run: sudo apt-get install -y git
-
-    - name: Install Helm
-      run: curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-
-    - name: Install Azure CLI
-      run: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-
-    - name: Set up kubectl
-      uses: azure/setup-kubectl@v3
-      with:
-        version: 'latest'
-
-    - name: Clone VN2 Repo
-      run: |
-        git clone https://github.com/microsoft/virtualnodesOnAzureContainerInstances.git
-        ls virtualnodesOnAzureContainerInstances/    
-
-    - name: Deploy to AKS
-      run: |
-        # Make the script executable
-        chmod +x workloads/vn2/deploy-cleanup-vn2.sh
-        
-        # Run the bash script and ensure the workflow fails if the script fails
-        ./workloads/vn2/deploy-cleanup-vn2.sh $RESOURCE_GROUP $AKS_CLUSTER_NAME
-      shell: bash
-      continue-on-error: false  # Ensures the workflow fails if the script exits with a non-zero status
-
+  vn2-uaenorth:
+    secrets: inherit
+    uses: ./.github/workflows/vn2-helloworld.yml
+    with:
+      location: uaenorth
+      resource_group: mchamarthy-aks-ci-uaenorth
+      aks_cluster_name: aks-ci-uaenorth

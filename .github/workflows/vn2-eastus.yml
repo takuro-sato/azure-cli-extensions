@@ -1,4 +1,4 @@
-name: VN2 - North Europe
+name: VN2 - East US
 
 permissions:
    id-token: write
@@ -10,13 +10,13 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
-      - .github/workflows/vn2-northeurope.yml
+      - .github/workflows/vn2-eastus.yml
 
 jobs:
-  vn2-northeurope:
+  vn2-eastus:
     secrets: inherit
     uses: ./.github/workflows/vn2-helloworld.yml
     with:
-      location: northeurope
-      resource_group: mchamarthy-aks-ci-northeurope
-      aks_cluster_name: aks-ci-northeurope
+      location: eastus
+      resource_group: vn2-aks-eastus
+      aks_cluster_name: vn2-aks-eastus

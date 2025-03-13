@@ -1,0 +1,22 @@
+name: VN2 - Germany West Central
+
+permissions:
+   id-token: write
+   contents: read
+
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/vn2-germanywestcentral.yml
+
+jobs:
+  vn2-germanywestcentral:
+    secrets: inherit
+    uses: ./.github/workflows/vn2-helloworld.yml
+    with:
+      location: germanywestcentral
+      resource_group: vn2-aks-germanywestcentral
+      aks_cluster_name: vn2-aks-germanywestcentral
