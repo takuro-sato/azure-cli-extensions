@@ -37,9 +37,13 @@ on:
         description: The total amount of memory in GB
         default: 4
       cleanup:
-        type: boolean
-        description: Whether to cleanup the container group after testing
-        default: true
+        type: choice
+        description: "Whether to cleanup the container group after testing (true/false/always)"
+        default: "true"
+        options:
+          - "true"
+          - "false"
+          - "always"
       policy_type:
         type: string
         description: The type of policy to use
@@ -78,9 +82,9 @@ on:
         description: The total amount of memory in GB
         default: 4
       cleanup:
-        type: boolean
-        description: Whether to cleanup the container group after testing
-        default: true
+        type: string
+        description: "Whether to cleanup the container group after testing (true/false/always)"
+        default: "true"
       policy_type:
         type: string
         description: The type of policy to use
@@ -261,7 +265,6 @@ jobs:
             fi
 
       - name: Remove Container Group
+        if: (inputs.cleanup == 'true' && success()) || inputs.cleanup == 'always'
         run: |
-          if [ "$CLEANUP" != false ]; then
-            c-aci-testing aci remove --deployment-name $DEPLOYMENT_NAME
-          fi
+          c-aci-testing aci remove --deployment-name $DEPLOYMENT_NAME

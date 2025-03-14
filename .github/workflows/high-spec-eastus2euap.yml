@@ -13,38 +13,8 @@ on:
       - .github/workflows/high-spec-eastus2euap.yml
 
 jobs:
-  minimal-4cpu-8gb:
+  high-spec-eastus2euap:
+    uses: ./.github/workflows/high-spec.yml
     secrets: inherit
-    uses: ./.github/workflows/workload-minimal.yml
     with:
-      id: 4cpu-8gb
       location: eastus2euap
-      cpu: 4
-      memory_in_gb: 8
-
-  minimal-4cpu-16gb:
-    secrets: inherit
-    uses: ./.github/workflows/workload-minimal.yml
-    with:
-      id: 4cpu-16gb
-      location: eastus2euap
-      cpu: 4
-      memory_in_gb: 16
-
-  minimal-16cpu-16gb:
-    secrets: inherit
-    uses: ./.github/workflows/workload-minimal.yml
-    with:
-      id: 16cpu-16gb
-      location: eastus2euap
-      cpu: 16
-      memory_in_gb: 16
-
-  minimal-32cpu-32gb:
-    secrets: inherit
-    uses: ./.github/workflows/workload-minimal.yml
-    with:
-      id: 32cpu-32gb
-      location: eastus2euap
-      cpu: 32
-      memory_in_gb: 32

@@ -1,0 +1,96 @@
+name: High Spec
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/high-spec.yml
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/high-spec.yml
+  workflow_dispatch:
+    inputs:
+      location:
+        type: string
+        description: Test region
+        required: true
+  workflow_call:
+    inputs:
+      location:
+        type: string
+        description: Test region
+        required: true
+
+jobs:
+  stress-4cpu-16gb:
+    secrets: inherit
+    # This should be available in all regions
+    if: ${{ !cancelled() }}
+    uses: ./.github/workflows/workload-stress-tests.yml
+    with:
+      id: 4cpu-16gb
+      location: ${{ inputs.location }}
+      cpu: 4
+      memory_in_gb: 16
+      cleanup: "always"
+
+  stress-8cpu-16gb:
+    secrets: inherit
+    # BigContainers regions
+    if: ${{ !cancelled() && (inputs.location == 'centralindia' || inputs.location == 'westus' || inputs.location == 'eastus' || inputs.location == 'eastus2euap') }}
+    # Serializes execution
+    needs: stress-4cpu-16gb
+    uses: ./.github/workflows/workload-stress-tests.yml
+    with:
+      id: 8cpu-16gb
+      location: ${{ inputs.location }}
+      cpu: 8
+      memory_in_gb: 16
+      cleanup: "always"
+
+  stress-16cpu-32gb:
+    secrets: inherit
+    # BigContainers regions
+    if: ${{ !cancelled() && (inputs.location == 'centralindia' || inputs.location == 'westus' || inputs.location == 'eastus' || inputs.location == 'eastus2euap') }}
+    # Serializes execution
+    needs: stress-8cpu-16gb
+    uses: ./.github/workflows/workload-stress-tests.yml
+    with:
+      id: 16cpu-32gb
+      location: ${{ inputs.location }}
+      cpu: 16
+      memory_in_gb: 32
+      cleanup: "always"
+
+  stress-17cpu-32gb:
+    secrets: inherit
+    # BigContainers regions
+    if: ${{ !cancelled() && (inputs.location == 'centralindia' || inputs.location == 'westus' || inputs.location == 'eastus' || inputs.location == 'eastus2euap') }}
+    # Serializes execution
+    needs: stress-16cpu-32gb
+    uses: ./.github/workflows/workload-stress-tests.yml
+    with:
+      id: 17cpu-32gb
+      location: ${{ inputs.location }}
+      cpu: 17
+      memory_in_gb: 32
+      cleanup: "always"
+
+  stress-28cpu-96gb:
+    secrets: inherit
+    # BigContainers regions
+    if: ${{ !cancelled() && (inputs.location == 'centralindia' || inputs.location == 'westus' || inputs.location == 'eastus' || inputs.location == 'eastus2euap') }}
+    # Serializes execution
+    needs: stress-17cpu-32gb
+    uses: ./.github/workflows/workload-stress-tests.yml
+    with:
+      id: 28cpu-96gb
+      location: ${{ inputs.location }}
+      cpu: 28
+      memory_in_gb: 96
+      cleanup: "always"

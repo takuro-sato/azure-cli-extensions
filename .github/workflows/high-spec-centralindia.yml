@@ -13,38 +13,8 @@ on:
       - .github/workflows/high-spec-centralindia.yml
 
 jobs:
-  minimal-4cpu-8gb:
+  high-spec-centralindia:
+    uses: ./.github/workflows/high-spec.yml
     secrets: inherit
-    uses: ./.github/workflows/workload-minimal.yml
     with:
-      id: 4cpu-8gb
       location: centralindia
-      cpu: 4
-      memory_in_gb: 8
-
-  minimal-4cpu-16gb:
-    secrets: inherit
-    uses: ./.github/workflows/workload-minimal.yml
-    with:
-      id: 4cpu-16gb
-      location: centralindia
-      cpu: 4
-      memory_in_gb: 16
-
-  minimal-16cpu-16gb:
-    secrets: inherit
-    uses: ./.github/workflows/workload-minimal.yml
-    with:
-      id: 16cpu-16gb
-      location: centralindia
-      cpu: 16
-      memory_in_gb: 16
-
-  minimal-32cpu-32gb:
-    secrets: inherit
-    uses: ./.github/workflows/workload-minimal.yml
-    with:
-      id: 32cpu-32gb
-      location: centralindia
-      cpu: 32
-      memory_in_gb: 32

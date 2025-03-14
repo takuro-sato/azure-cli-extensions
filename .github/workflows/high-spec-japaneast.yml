@@ -13,20 +13,8 @@ on:
       - .github/workflows/high-spec-japaneast.yml
 
 jobs:
-  minimal-4cpu-8gb:
+  high-spec-japaneast:
+    uses: ./.github/workflows/high-spec.yml
     secrets: inherit
-    uses: ./.github/workflows/workload-minimal.yml
     with:
-      id: 4cpu-8gb
       location: japaneast
-      cpu: 4
-      memory_in_gb: 8
-
-  minimal-4cpu-16gb:
-    secrets: inherit
-    uses: ./.github/workflows/workload-minimal.yml
-    with:
-      id: 4cpu-16gb
-      location: japaneast
-      cpu: 4
-      memory_in_gb: 16

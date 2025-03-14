@@ -13,20 +13,8 @@ on:
       - .github/workflows/high-spec-northeurope.yml
 
 jobs:
-  minimal-4cpu-8gb:
+  high-spec-northeurope:
+    uses: ./.github/workflows/high-spec.yml
     secrets: inherit
-    uses: ./.github/workflows/workload-minimal.yml
     with:
-      id: 4cpu-8gb
       location: northeurope
-      cpu: 4
-      memory_in_gb: 8
-
-  minimal-4cpu-16gb:
-    secrets: inherit
-    uses: ./.github/workflows/workload-minimal.yml
-    with:
-      id: 4cpu-16gb
-      location: northeurope
-      cpu: 4
-      memory_in_gb: 16
