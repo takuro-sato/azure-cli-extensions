@@ -15,7 +15,7 @@ class Handler(BaseHTTPRequestHandler):
     self.end_headers()
 
   def do_GET(self):
-    print(f"GET {self.path}")
+    print(f"GET {self.path}", flush=True)
     if self.path == "/index.txt":
       self.status(200)
       self.wfile.write(b"Hello\n")
@@ -34,5 +34,5 @@ class Handler(BaseHTTPRequestHandler):
 
 PORT = int(getenv("PORT", "8000"))
 with HTTPServer(("0.0.0.0", PORT), Handler) as server:
-  print(f"Listening on port {PORT}")
+  print(f"Listening on port {PORT}", flush=True)
   server.serve_forever()

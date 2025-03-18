@@ -82,8 +82,7 @@ jobs:
       policy_type: ${{ matrix.policy_type }}
 
   server:
-    # public IP doesn't work here for now
-    if: ${{ !cancelled() && inputs.location != 'eastus2euap' }}
+    if: ${{ !cancelled() }}
     name: server
     secrets: inherit
     needs: many-layers
@@ -99,7 +98,7 @@ jobs:
 
   server-with-wait:
     # public IP doesn't work here for now
-    if: ${{ !cancelled() && inputs.location != 'eastus2euap' }}
+    if: ${{ !cancelled() }}
     name: server-with-wait
     secrets: inherit
     needs: server
@@ -129,7 +128,7 @@ jobs:
       policy_type: ${{ matrix.policy_type }}
 
   stress-tests:
-    if: ${{ !cancelled() && inputs.location != 'eastus2euap' }}
+    if: ${{ !cancelled() }}
     name: stress-tests
     secrets: inherit
     needs: non-confidential

@@ -34,12 +34,12 @@ if [ -z "$ip_address" ]; then
 
   if [ "$status" -ne 0 ] || [ -z "$ip_address" ]; then
     echo "Failed to get IP address from az-cli"
-    ./scripts/tracing/trace_step.py --complete --strict --err "Failed to get IP address"
+    ./tracing/trace_step.py --complete --strict --err "Failed to get IP address"
     exit 1
   fi
 fi
 
-./scripts/tracing/trace_step.py --complete --output "ip_address=$ip_address"
+./tracing/trace_step.py --complete --output "ip_address=$ip_address"
 
 if [ -n "$GITHUB_ENV" ]; then
   echo "ip_address=$ip_address" >> $GITHUB_ENV
