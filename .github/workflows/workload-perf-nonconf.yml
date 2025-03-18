@@ -66,7 +66,7 @@ env:
   KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
   KUSTO_DATABASE: ${{ secrets.KUSTO_DATABASE }}
   KUSTO_TABLE: CACITestStepTrace
-  TEST_TYPE: aci
+  TEST_TYPE: aci-perf
   TEST_NAME: perf-nonconf
   RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
   DEPLOYMENT_NAME: ${{ inputs.id || 'perf-nonconf' }}-${{ inputs.location }}-${{ github.run_number }}
