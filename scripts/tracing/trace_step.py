@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 
-from argparse import ArgumentParser
+import os
 import sys
+if not os.environ.get("KUSTO_CONNECTION_STRING"):
+    print("No KUSTO_CONNECTION_STRING set, skipping tracing", file=sys.stderr, flush=True)
+    sys.exit(0)
+
+from argparse import ArgumentParser
 from common import read_state, write_state, trace_step, STATUS_STARTED, STATUS_COMPLETED
 import json
 

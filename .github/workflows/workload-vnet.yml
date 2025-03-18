@@ -127,6 +127,12 @@ jobs:
         run: |
           ./scripts/aci_deploy_traced.sh workloads/vnet
 
+      - name: Wait for container
+        run: |
+          # Wait for up to 210s for container script to execute - timeout there is 200s.
+          # This give it time to do retries, etc
+          sleep 210
+
       - name: Report result
         if: always()
         run: |
@@ -136,17 +142,21 @@ jobs:
         if: always()
         continue-on-error: true
         run: |
-          sleep 20
-          c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME --follow | tee output.log
+          ./scripts/tracing/trace_step.py --start 'Monitor Container Group'
+          c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME | tee output.log
+          jq -Rs '{containerLog: .}' output.log | ./scripts/tracing/trace_step.py --complete --strict --output-from-stdin
 
-      - name: Check that curl worked
+      - name: Parse output
         run: |
-          set +e
+          ./scripts/parse_container_output.py --must-have-output output.log --write-output-to output.json --fail-on-error
+
+      - name: Check that curl worked early enough
+        run: |
           ./scripts/tracing/trace_step.py --start 'Check that curl worked'
-          cat output.log | grep "It worked"
-          if [ $? -ne 0 ]; then
-            echo "Curl did not work"
-            ./scripts/tracing/trace_step.py --complete --err 'Curl did not work' --output "containerLog=$(cat output.log)" --strict
+          first_success_exit_time=$(jq -r '.first_success_exit_time' output.json)
+          if [ "$first_success_exit_time" -gt 60 ]; then
+            echo "Erroring as it took more than 1 minute to get a successful curl in the container"
+            ./scripts/tracing/trace_step.py --complete --err 'Took more than 1 minute to get a successful curl in the container' --strict
             exit 1
           fi
           ./scripts/tracing/trace_step.py --complete --strict
