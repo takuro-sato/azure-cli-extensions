@@ -205,11 +205,26 @@ jobs:
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
 
+  workload-sidecar-with-fragments-with-wait:
+    if: ${{ !cancelled() }}
+    name: workload-sidecar-with-fragments-with-wait
+    secrets: inherit
+    needs: workload-sidecar-with-fragments
+    uses: ./.github/workflows/workload-sidecar-with-fragments-with-wait.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        policy_type: ['generated', 'debug', 'allow_all']
+    with:
+      id: sidecar-fragment-wait-${{ matrix.policy_type }}
+      location: ${{ inputs.location }}
+      policy_type: ${{ matrix.policy_type }}
+
   thim:
     if: ${{ !cancelled() }}
     name: thim
     secrets: inherit
-    needs: workload-sidecar-with-fragments
+    needs: workload-sidecar-with-fragments-with-wait
     uses: ./.github/workflows/workload-thim.yml
     strategy:
       fail-fast: false
