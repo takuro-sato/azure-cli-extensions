@@ -1,6 +1,6 @@
 #!/bin/bash
 
-version="1.1.0"
+version="1.1.1"
 tgz_url="https://github.com/microsoft/confidential-aci-testing/releases/download/$version/c_aci_testing-$version.tar.gz"
 tgz_name="c-aci-testing.tar.gz"
 
