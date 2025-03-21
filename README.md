@@ -138,6 +138,12 @@ To add a new region, simply copy high-spec-<anyregion>.yml, region-<anyregion>.y
 
 Then update `README.md` to point to the three new workflows.
 
+## Updating custom test containers
+
+You need to manually trigger the "Build and push test containers" workflow to update the test images from your PR.  (Or if you merge your PR to main, in which case it will automatically trigger.)
+
+For PR testing, the workflow will tag the image with today's date, and you should use that tag in your workflow to test it.  This is to prevent racing the image build with test workflow runs.
+
 ## Contributing
 
 To take administrator actions such as adding users as contributors, please refer to [engineering hub](https://eng.ms/docs/initiatives/open-source-at-microsoft/github/opensource/repos/jit)

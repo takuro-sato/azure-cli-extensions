@@ -7,10 +7,6 @@ on:
     paths:
       - 'containers/**'
       - .github/workflows/build-test-containers.yaml
-  pull_request:
-    paths:
-      - 'containers/**'
-      - .github/workflows/build-test-containers.yaml
   workflow_dispatch:
 
 permissions:
@@ -36,5 +32,17 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Use short date as tag
+        run: |
+          TAG=$(date "+%Y%m%d")
+          echo "TAG=$TAG"
+          echo "TAG=$TAG" >> $GITHUB_ENV
+
       - name: Build and push containers
-        run: cd containers && make REGISTRY=$REGISTRY REPOSITORY=$REPOSITORY push
+        run: cd containers && make REGISTRY=$REGISTRY REPOSITORY=$REPOSITORY TAG=$TAG push
+
+      - name: Tag with latest
+        if: github.ref == 'refs/heads/main'
+        run: |
+          # Rebuilding the image won't change it due to caching
+          cd containers && make REGISTRY=$REGISTRY REPOSITORY=$REPOSITORY TAG=latest push
