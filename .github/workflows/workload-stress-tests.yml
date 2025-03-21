@@ -178,34 +178,7 @@ jobs:
 
       - name: Curl Server
         run: |
-          ./scripts/tracing/trace_step.py --start 'Curl Server'
-          sleep 1
-          echo "Attempting to send a request..."
-
-          set +e
-          attempts=0
-          while [ $attempts -lt 5 ]; do
-            # We want to limit the total amount of time this curl command can run for,
-            # rather than just connect time, so that if the server accepts the request
-            # but then hangs we also exit. This necessitates the use of `timeout`.
-            timeout -s INT 20 curl --fail-with-body http://$ip_address:8000/index.txt
-            status=$?
-            if [ $status -eq 0 ]; then
-              break
-            fi
-            attempts=$((attempts + 1))
-            echo "Attempt $attempts failed"
-            if [ $attempts -lt 5 ]; then
-              echo "Retrying in 5 seconds..."
-              sleep 5
-            else
-              echo "curl failed $attempts times"
-              ./scripts/tracing/trace_step.py --complete --output failedAttempts=$attempts --err "curl failed $attempts times" --strict
-              exit 1
-            fi
-          done
-          ./scripts/tracing/trace_step.py --complete --output failedAttempts=$attempts --strict
-          exit 0
+          ./scripts/curl_check_with_retry.sh "http://$ip_address:8000/index.txt"
 
       - name: Let container run for 1min and test again
         run: |

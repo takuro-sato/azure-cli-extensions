@@ -1,5 +1,9 @@
 param location string
 param ccePolicies object
+param registry string
+param repository string
+param tag string = ''
+
 param cpu int = 1
 param memoryInGb int = 2
 
@@ -16,41 +20,14 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
     }
     containers: [
       {
-        name: 'ubuntu'
+        name: 'vnet'
         properties: {
-          image: 'quay.io/curl/curl:8.11.0'
+          image: '${registry}/${repository}/networking:${empty(tag) ? 'latest' : tag}'
+          // Note: vnet containers do not have public IPs, and so it's too
+          // difficult to test the server from the runner.  We just do curl
+          // check within the container instead.
           command: [
-            'sh'
-            '-c'
-            '''
-            ATTEMPTS=0
-            TIMEOUT=200
-            START_TS=$(date +%s)
-            SECS_SINCE_START=0
-            while [ $SECS_SINCE_START -lt $TIMEOUT ]; do
-              ATTEMPTS=$((ATTEMPTS+1))
-              SECS_SINCE_START=$(( $(date +%s) - $START_TS ))
-              echo "Attempt $ATTEMPTS: $SECS_SINCE_START seconds since start"
-              timeout -s INT 20s curl -sv http://example.com
-              if [ $? -eq 0 ]; then
-                SECS_SINCE_START=$(( $(date +%s) - $START_TS ))
-                echo "It worked"
-                echo "OUTPUT: {\"attempts\": $ATTEMPTS, \"first_success_exit_time\": $SECS_SINCE_START}"
-                exit 0
-              fi
-              echo "Didn't work, trying without dependency on DNS"
-              timeout -s INT 20s curl -sv http://1.1.1.1
-              if [ $? -eq 0 ]; then
-                echo "Hmm... that worked. DNS broken?"
-                echo "Retrying..."
-                continue
-              fi
-              echo "That still didn't work - outbound networking is broken."
-              echo "Retrying in 5 seconds..."
-              sleep 5
-            done
-            echo "ERROR: curl failed after $ATTEMPTS attempts, $TIMEOUT seconds"
-            '''
+            'curl_from_container.sh'
           ]
           resources: {
             requests: {

@@ -1,4 +1,4 @@
 version: '3'
 services:
   server:
-    image: mcr.microsoft.com/acc/samples/aci/helloworld:${TAG:-latest}
+    image: $REGISTRY/$REPOSITORY/networking:${TAG:-latest}

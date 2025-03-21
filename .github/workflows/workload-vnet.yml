@@ -80,14 +80,15 @@ env:
   DEPLOYMENT_NAME: ${{ inputs.id || 'vnet' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
   RESOURCE_GROUP: c-aci-dashboard
-  REGISTRY: cacidashboard.azurecr.io
+  REGISTRY: ghcr.io
+  REPOSITORY: ${{ github.repository }}/test-containers
+  TAG: latest
   MANAGED_IDENTITY: cacidashboard
   LOCATION: ${{ inputs.location || 'westeurope' }}
   CPU: ${{ inputs.cpu || 2 }}
   MEMORY_IN_GB: ${{ inputs.memory_in_gb || 4 }}
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: ${{ inputs.policy_type || 'generated' }}
-  TAG: 20.04
 
 jobs:
   vnet:
@@ -148,25 +149,12 @@ jobs:
 
       - name: Parse output
         run: |
-          ./scripts/parse_container_output.py --must-have-output output.log --write-output-to output.json --fail-on-error
-
-      - name: Check that curl worked early enough
-        run: |
-          ./scripts/tracing/trace_step.py --start 'Check that curl worked'
-          first_success_exit_time=$(jq -r '.first_success_exit_time' output.json)
-          if [ "$first_success_exit_time" -gt 60 ]; then
-            echo "Erroring as it took more than 1 minute to get a successful curl in the container"
-            ./scripts/tracing/trace_step.py --complete --err 'Took more than 1 minute to get a successful curl in the container' --strict
-            exit 1
-          fi
-          ./scripts/tracing/trace_step.py --complete --strict
-          exit 0
+          ./scripts/parse_container_output.py --must-have-output --fail-on-error output.log
 
       - name: Get Container States
         if: always()
         continue-on-error: true
         run: |
-          sleep 60 # Ensure all states are up to date
           ./scripts/trace_container_states.sh
 
       - name: Remove Container Group and vnet

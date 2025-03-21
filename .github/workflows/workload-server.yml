@@ -80,14 +80,15 @@ env:
   DEPLOYMENT_NAME: ${{ inputs.id || 'server' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
   RESOURCE_GROUP: c-aci-dashboard
-  REGISTRY: cacidashboard.azurecr.io
+  REGISTRY: ghcr.io
+  REPOSITORY: ${{ github.repository }}/test-containers
+  TAG: latest
   MANAGED_IDENTITY: cacidashboard
   LOCATION: ${{ inputs.location || 'westeurope' }}
   CPU: ${{ inputs.cpu || 2 }}
   MEMORY_IN_GB: ${{ inputs.memory_in_gb || 4 }}
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: ${{ inputs.policy_type || 'generated' }}
-  TAG: "2.6"
 
 jobs:
   server:
@@ -134,25 +135,32 @@ jobs:
 
       - name: Curl Server
         run: |
-          ./scripts/tracing/trace_step.py --start 'Curl Server'
-          echo "Attempting to send a request..."
-          curl http://$ip_address:80
+          ./scripts/curl_check_with_retry.sh "http://$ip_address:80"
 
       - name: Report result
         if: always()
         run: |
           ./scripts/trace_run_result.sh ${{ job.status }}
 
+      # See container output even if curl check from our end fails
       - name: Monitor Container Group
         if: always()
-        continue-on-error: true
-        run: c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME
+        run: |
+          sleep 210 # waits for anything inside the container to finish
+          ./scripts/tracing/trace_step.py --start 'Monitor Container Group'
+          c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME | tee output.log
+          jq -Rs '{containerLog: .}' output.log | ./scripts/tracing/trace_step.py \
+            --complete --strict --output-from-stdin
+
+      - name: Parse output
+        if: always()
+        run: |
+          ./scripts/parse_container_output.py --must-have-output --fail-on-error output.log
 
       - name: Get Container States
         if: always()
         continue-on-error: true
         run: |
-          sleep 60 # Ensure all states are up to date
           ./scripts/trace_container_states.sh
 
       - name: Remove Container Group

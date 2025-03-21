@@ -1,0 +1,40 @@
+name: Build and push test containers
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'containers/**'
+      - .github/workflows/build-test-containers.yaml
+  pull_request:
+    paths:
+      - 'containers/**'
+      - .github/workflows/build-test-containers.yaml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  DOCKER_BUILDKIT: 1
+  REGISTRY: ghcr.io
+  REPOSITORY: ${{ github.repository }}/test-containers
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push containers
+        run: cd containers && make REGISTRY=$REGISTRY REPOSITORY=$REPOSITORY push

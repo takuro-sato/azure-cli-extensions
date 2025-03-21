@@ -1,5 +1,4 @@
 version: '3'
 services:
-  outbound_traffic:
-    image: quay.io/curl/curl:8.11.0
-    command: 'curl http://example.com && echo "It worked"'
+  vnet:
+    image: $REGISTRY/$REPOSITORY/networking:${TAG:-latest}

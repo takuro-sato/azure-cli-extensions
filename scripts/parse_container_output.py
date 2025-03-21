@@ -65,13 +65,12 @@ for line in out_file:
     if output_idx >= 0:
         output_msg = line[output_idx + len(output_prefix) :].strip()
         print(f"Output found: {output_msg}", flush=True)
-        if output_seen:
-            print("Warning: Multiple OUTPUTs found in container output", flush=True)
         try:
-            output = json.loads(output_msg)
-            output_seen = True
-            if not isinstance(output, dict):
+            this_output = json.loads(output_msg)
+            if not isinstance(this_output, dict):
                 fail(f"OUTPUT is not a JSON object: {output_msg}")
+            output.update(this_output)
+            output_seen = True
         except json.JSONDecodeError as e:
             fail(f"Failed to decode JSON in OUTPUT: {output_msg}")
 
@@ -81,11 +80,7 @@ output["error_count"] = len(err_msgs)
 args = [trace_step_py, "--complete", "--strict", "--output-from-stdin"]
 if err_msgs:
     args.append("--err")
-    if len(err_msgs) > 1:
-        args.append(f"Found {len(err_msgs)} ERRORs in container output")
-    else:
-        args.append(err_msgs[0])
-    output["errors"] = err_msgs[:20]
+    args.append("\n".join(err_msgs))
 elif not output_seen and must_have_output:
     fail("No OUTPUT or ERROR found in container output.\nContainer execution failed?")
 

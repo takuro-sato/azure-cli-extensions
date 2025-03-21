@@ -96,27 +96,11 @@ jobs:
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
 
-  server-with-wait:
-    # public IP doesn't work here for now
-    if: ${{ !cancelled() }}
-    name: server-with-wait
-    secrets: inherit
-    needs: server
-    uses: ./.github/workflows/workload-server-with-wait.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        policy_type: ['generated', 'debug', 'allow_all']
-    with:
-      id: server-with-wait-${{ matrix.policy_type }}
-      location: ${{ inputs.location }}
-      policy_type: ${{ matrix.policy_type }}
-
   non-confidential:
     if: ${{ !cancelled() }}
     name: non-confidential
     secrets: inherit
-    needs: server-with-wait
+    needs: server
     uses: ./.github/workflows/workload-non-confidential.yml
     strategy:
       fail-fast: false
