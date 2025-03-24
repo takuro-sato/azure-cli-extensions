@@ -107,7 +107,9 @@ env:
   DEPLOYMENT_NAME: ${{ inputs.id || 'stress-nosrv' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
   RESOURCE_GROUP: c-aci-dashboard
-  REGISTRY: cacidashboard.azurecr.io
+  REGISTRY: ghcr.io
+  REPOSITORY: ${{ github.repository }}/test-containers/stress-tests-noserver-alpine
+  TAG: 20250321
   MANAGED_IDENTITY: cacidashboard
   LOCATION: ${{ inputs.location || 'westus' }}
   CPU: ${{ inputs.cpu || 4 }}
@@ -140,25 +142,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: ./scripts/init_run.sh
 
-      - name: Use precise current time as tag
-        run: |
-          TAG=$(date "+%Y%m%d-%H%M%S.%N")
-          echo "TAG=$TAG"
-          echo "TAG=$TAG" >> $GITHUB_ENV
-
-      - name: Build image
-        run: c-aci-testing images build workloads/stress_tests_noserver
-
-      - name: Push image
-        run: c-aci-testing images push workloads/stress_tests_noserver
+      - name: Pull Image
+        run: c-aci-testing images pull workloads/stress_tests_noserver
 
       - name: Set Parameters
         run: |
           c-aci-testing aci param_set workloads/stress_tests_noserver --parameter totalCpus=$CPU
           c-aci-testing aci param_set workloads/stress_tests_noserver --parameter totalMemoryGB=$MEMORY_IN_GB
           c-aci-testing aci param_set workloads/stress_tests_noserver --parameter "script='$SCRIPT'"
-          c-aci-testing aci param_set workloads/stress_tests_noserver --parameter "repo_base='$REPO_BASE'"
-          c-aci-testing aci param_set workloads/stress_tests_noserver --parameter "useNormalSidecar=$USE_NORMAL_SIDECAR"
           echo stress_tests.bicepparam:
           cat workloads/stress_tests_noserver/stress_tests.bicepparam
 
@@ -177,9 +168,15 @@ jobs:
 
       - name: Monitor Container Group
         run: |
+          set -eo pipefail
           ./scripts/tracing/trace_step.py --start 'Monitor Container Group'
           rm -f output.log
           c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME | tee output.log
+
+      - name: Parse output
+        if: always()
+        run: |
+          ./scripts/parse_container_output.py --fail-on-error output.log
 
       - name: Check correct kernel version
         run: |
@@ -197,16 +194,8 @@ jobs:
           fi
           dmesg_file="output.log"
 
-          found_sus_message=""
-          grep -i segfault $dmesg_file && found_sus_message="segfault"
-          grep -i 'protection fault' $dmesg_file && found_sus_message="protection-fault"
-          grep 'BUG:' $dmesg_file && found_sus_message="kernel-bug"
-          grep 'RIP:' $dmesg_file && found_sus_message="kernel-backtrace"
-
-          if [ -n "$found_sus_message" ]; then
-            echo "Found suspicious message in dmesg: $found_sus_message"
-            exit 1
-          fi
+          # will call trace --complete
+          ./scripts/_check_dmesg.sh "$dmesg_file"
 
       - name: Report result
         if: always()

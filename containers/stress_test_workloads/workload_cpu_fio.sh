@@ -1,10 +1,8 @@
 #!/bin/bash
 # workload_fio.sh and workload_cpu.sh together, with changes
 
-python3 server.py &
+/server &
 SERVER_PID=$!
-
-uname -a
 
 {
   echo ------------- payload start check_threads --------------- | tee /dev/kmsg

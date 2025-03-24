@@ -1,8 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-python3 server.py &
-
-uname -a
+/server &
 
 {
   echo ------------- payload start check_threads --------------- | tee /dev/kmsg
@@ -17,14 +15,13 @@ uname -a
   done
 } &
 
-echo ------------- payload start sysbench --------------- | tee /dev/kmsg
+echo ------------- payload start fio --------------- | tee /dev/kmsg
 
 while :; do
-  nice -n +10 sysbench --threads=$(nproc) --time=60 --test=cpu --cpu-max-prime=15000 run
+  nice -n +10 fio  --ioengine=libaio --direct=1 --gtod_reduce=1 --name=test --bs=64k --iodepth=64 --readwrite=randrw --size=5G --loop=1 --max-jobs=$(nproc)
   status=$?
   if [ $status -ne 0 ]; then
     kill %1
     exit $status
   fi
 done
-kill %1

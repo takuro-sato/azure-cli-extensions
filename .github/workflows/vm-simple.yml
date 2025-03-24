@@ -103,7 +103,9 @@ env:
   DEPLOYMENT_NAME: ${{ inputs.id || 'vm-simple' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
   RESOURCE_GROUP: c-aci-dashboard
-  REGISTRY: cacidashboard.azurecr.io
+  REGISTRY: ghcr.io
+  REPOSITORY: ${{ github.repository }}/test-containers
+  TAG: latest
   MANAGED_IDENTITY: cacidashboard
   STORAGE_ACCOUNT: cacitestingstorage
   LOCATION: ${{ inputs.location || 'uaenorth' }}
@@ -113,7 +115,6 @@ env:
   CPLAT_BLOB_NAME: ${{ inputs.cplatBlobName || vars.CPLAT_6_1_BLOB_NAME }}
   WIN_FLAVOR: ${{ inputs.winFlavor || 'ws2025' }}
   VM_ZONE: ${{ inputs.zone || '' }}
-  TAG: "2.7"
 
 jobs:
   vm-simple:

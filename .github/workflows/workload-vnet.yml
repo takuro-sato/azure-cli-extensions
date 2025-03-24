@@ -143,6 +143,7 @@ jobs:
         if: always()
         continue-on-error: true
         run: |
+          set -eo pipefail
           ./scripts/tracing/trace_step.py --start 'Monitor Container Group'
           c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME | tee output.log
           jq -Rs '{containerLog: .}' output.log | ./scripts/tracing/trace_step.py --complete --strict --output-from-stdin

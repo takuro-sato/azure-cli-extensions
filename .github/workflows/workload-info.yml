@@ -136,6 +136,7 @@ jobs:
         if: always()
         continue-on-error: true
         run: |
+          set -eo pipefail
           ./scripts/tracing/trace_step.py --start 'Monitor Container Group'
           sleep 20
           echo > output.log

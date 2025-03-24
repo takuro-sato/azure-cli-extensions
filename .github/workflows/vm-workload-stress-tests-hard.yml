@@ -86,7 +86,9 @@ env:
   DEPLOYMENT_NAME: ${{ inputs.id || 'vm-stress-hard' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
   RESOURCE_GROUP: c-aci-dashboard
-  REGISTRY: cacidashboard.azurecr.io
+  REGISTRY: ghcr.io
+  REPOSITORY: ${{ github.repository }}/test-containers/stress-tests-server-alpine
+  TAG: 20250321
   MANAGED_IDENTITY: cacidashboard
   STORAGE_ACCOUNT: cacitestingstorage
   LOCATION: ${{ inputs.location || 'uaenorth' }}
@@ -96,6 +98,8 @@ env:
   VM_IMAGE: ${{ inputs.vmImage || ( inputs.winFlavor == 'ws2022' && secrets.VM_IMAGE_WS2022 || secrets.VM_IMAGE_WS2025 ) }}
   CPLAT_BLOB_NAME: ${{ inputs.cplatBlobName || vars.CPLAT_6_1_BLOB_NAME }}
   WIN_FLAVOR: ${{ inputs.winFlavor || 'ws2025' }}
+  CONTAINER_CPUS: 4
+  CONTAINER_MEMORY_GBS: 4
 
 jobs:
   vm-stress-tests-hard:
@@ -118,29 +122,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: ./scripts/init_run.sh
 
-      - name: Deploy VM with containerplat
-        run: |
-          ./scripts/vm_create_traced.sh
-
-      - name: Use precise current time as tag
-        run: |
-          TAG=$(date "+%Y%m%d-%H%M%S.%N")
-          echo "TAG=$TAG"
-          echo "TAG=$TAG" >> $GITHUB_ENV
-
-      - name: Build image
-        run: |
-          ./scripts/tracing/trace_step.py --start 'Build and push image'
-          c-aci-testing images build workloads/stress_tests
-
-      - name: Push image
-        run: c-aci-testing images push workloads/stress_tests
+      - name: Pull Image
+        run: c-aci-testing images pull workloads/stress_tests
 
       - name: Set parameters
         run: |
-          c-aci-testing aci param_set workloads/stress_tests --parameter totalCpus=4
-          c-aci-testing aci param_set workloads/stress_tests --parameter totalMemoryGB=4
-          c-aci-testing aci param_set workloads/stress_tests --parameter "useNormalSidecar=true"
+          c-aci-testing aci param_set workloads/stress_tests --parameter "totalCpus=$CONTAINER_CPUS"
+          c-aci-testing aci param_set workloads/stress_tests --parameter "totalMemoryGB=$CONTAINER_MEMORY_GBS"
           echo stress_tests.bicepparam:
           cat workloads/stress_tests/stress_tests.bicepparam
 
@@ -150,6 +138,10 @@ jobs:
           ./scripts/tracing/trace_step.py --start 'Fill in allow_all security policy'
           c-aci-testing policies gen workloads/stress_tests --deployment-name $DEPLOYMENT_NAME --policy-type allow_all
           cat workloads/stress_tests/policy_stress_tests.rego
+
+      - name: Deploy VM with containerplat
+        run: |
+          ./scripts/vm_create_traced.sh
 
       - name: Deploy Container Group (cpu_fio)
         run: |

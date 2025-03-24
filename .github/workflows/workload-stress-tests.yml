@@ -61,9 +61,6 @@ on:
           - workload_fio
           - workload_multicpu_fio
           - workload_tar
-      useNormalSidecar:
-        type: boolean
-        default: false
   workflow_call:
     inputs:
       id:
@@ -93,9 +90,6 @@ on:
         type: string
         description: The script to run
         default: workload_fio
-      useNormalSidecar:
-        type: boolean
-        default: true
 
 env:
   KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
@@ -107,7 +101,9 @@ env:
   DEPLOYMENT_NAME: ${{ inputs.id || 'stress' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
   RESOURCE_GROUP: c-aci-dashboard
-  REGISTRY: cacidashboard.azurecr.io
+  REGISTRY: ghcr.io
+  REPOSITORY: ${{ github.repository }}/test-containers/stress-tests-server-alpine
+  TAG: 20250321
   MANAGED_IDENTITY: cacidashboard
   LOCATION: ${{ inputs.location || 'westus' }}
   CPU: ${{ inputs.cpu || 4 }}
@@ -116,7 +112,6 @@ env:
   POLICY_TYPE: ${{ inputs.policy_type || 'generated' }}
   SCRIPT: ${{ inputs.script || 'workload_fio' }}
   REPO_BASE: stress_tests
-  USE_NORMAL_SIDECAR: ${{ inputs.useNormalSidecar || true }}
   ACI_EXPECTED_KERNEL_DATE: ${{ vars.ACI_EXPECTED_KERNEL_DATE }}
 
 jobs:
@@ -140,25 +135,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: ./scripts/init_run.sh
 
-      - name: Use precise current time as tag
-        run: |
-          TAG=$(date "+%Y%m%d-%H%M%S.%N")
-          echo "TAG=$TAG"
-          echo "TAG=$TAG" >> $GITHUB_ENV
-
-      - name: Build image
-        run: c-aci-testing images build workloads/stress_tests
-
-      - name: Push image
-        run: c-aci-testing images push workloads/stress_tests
+      - name: Pull Image
+        run: c-aci-testing images pull workloads/server
 
       - name: Set Parameters
         run: |
           c-aci-testing aci param_set workloads/stress_tests --parameter totalCpus=$CPU
           c-aci-testing aci param_set workloads/stress_tests --parameter totalMemoryGB=$MEMORY_IN_GB
           c-aci-testing aci param_set workloads/stress_tests --parameter "script='$SCRIPT'"
-          c-aci-testing aci param_set workloads/stress_tests --parameter "repo_base='$REPO_BASE'"
-          c-aci-testing aci param_set workloads/stress_tests --parameter "useNormalSidecar=$USE_NORMAL_SIDECAR"
           echo stress_tests.bicepparam:
           cat workloads/stress_tests/stress_tests.bicepparam
 
@@ -178,13 +162,13 @@ jobs:
 
       - name: Curl Server
         run: |
-          ./scripts/curl_check_with_retry.sh "http://$ip_address:8000/index.txt"
+          ./scripts/curl_check_with_retry.sh "http://$ip_address:80"
 
       - name: Let container run for 1min and test again
         run: |
           sleep 100
           ./scripts/tracing/trace_step.py --start 'Curl Server after 1min'
-          timeout -s INT 1m curl --fail-with-body http://$ip_address:8000/index.txt || exit 1
+          timeout -s INT 1m curl --fail-with-body http://$ip_address:80 || exit 1
 
       - name: Report result
         if: always()
@@ -195,8 +179,15 @@ jobs:
         if: always()
         continue-on-error: true
         run: |
+          set -eo pipefail
+          ./scripts/tracing/trace_step.py --start 'Monitor Container Group'
           rm -f output.log
           c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME | tee output.log
+
+      - name: Parse output
+        if: always()
+        run: |
+          ./scripts/parse_container_output.py --fail-on-error output.log
 
       - name: Check correct kernel version
         run: scripts/check_uname_in_output.sh output.log
@@ -210,32 +201,18 @@ jobs:
       - name: Check dmesg
         if: always()
         run: |
+            ./scripts/tracing/trace_step.py --start 'Check dmesg'
             dmesg_file="dmesg.log"
 
-            timeout -s INT 1m curl --fail-with-body http://$ip_address:8000/dmesg.log -o $dmesg_file
+            timeout -s INT 1m curl --fail-with-body http://$ip_address:80/dmesg.log -o $dmesg_file
             if [ $? -ne 0 ]; then
               echo "Failed to get dmesg:"
               cat $dmesg_file
               exit 1
             fi
 
-            found_sus_message=""
-            grep -i segfault $dmesg_file && found_sus_message="segfault"
-            grep -i 'protection fault' $dmesg_file && found_sus_message="protection-fault"
-            grep 'BUG:' $dmesg_file && found_sus_message="kernel-bug"
-            grep 'RIP:' $dmesg_file && found_sus_message="kernel-backtrace"
-
-            cat $dmesg_file
-
-            if [ -n "$found_sus_message" ]; then
-              echo "Found suspicious message in dmesg: $found_sus_message"
-              exit 1
-            fi
-
-            if [ ! -s $dmesg_file ]; then
-              echo "No dmesg output found"
-              exit 1
-            fi
+            # will call trace --complete
+            ./scripts/_check_dmesg.sh "$dmesg_file"
 
       - name: Remove Container Group
         if: (inputs.cleanup == 'true' && success()) || inputs.cleanup == 'always'

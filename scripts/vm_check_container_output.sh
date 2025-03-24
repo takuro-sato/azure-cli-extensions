@@ -22,13 +22,5 @@ if [ ! -s $out_file ]; then
   exit 1
 fi
 
-error_count=$(grep 'ERROR' $out_file | wc -l)
-err_str=""
-
-if [ "$error_count" -gt 0 ]; then
-  err_str="Found ERROR in container output"
-fi
-
-./scripts/tracing/trace_step.py --complete --strict \
-  --output "error_count=$error_count" \
-  --err "$err_str"
+./scripts/parse_container_output.py $out_file --fail-on-error
+exit $?

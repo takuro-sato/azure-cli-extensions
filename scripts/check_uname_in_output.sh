@@ -9,7 +9,7 @@ if [ ! -f "$output_file" ]; then
   echo "Output file $output_file not found"
   exit 1
 fi
-kernel_date=`grep -oP '(?<=PREEMPT_DYNAMIC ).+(?= x86_64)' $output_file`
+kernel_date=`grep -oP '(?<=PREEMPT_DYNAMIC ).+(?= x86_64)' $output_file | head -n 1`
 if [ -z "$kernel_date" ]; then
   echo "Failed to find uname line in $output_file"
   exit 1

@@ -1,8 +1,6 @@
 #!/bin/bash
 
-python3 server.py &
-
-uname -a
+/server &
 
 echo ------------- payload start check_threads --------------- | tee /dev/kmsg
 

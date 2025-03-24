@@ -96,12 +96,13 @@ env:
   DEPLOYMENT_NAME: ${{ inputs.id || 'vm-stress' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
   RESOURCE_GROUP: c-aci-dashboard
-  REGISTRY: cacidashboard.azurecr.io
+  REGISTRY: ghcr.io
+  REPOSITORY: ${{ github.repository }}/test-containers/stress-tests-server-alpine
+  TAG: 20250321
   MANAGED_IDENTITY: cacidashboard
   STORAGE_ACCOUNT: cacitestingstorage
   LOCATION: ${{ inputs.location || 'uaenorth' }}
   CLEANUP: ${{ inputs.cleanup }}
-  USE_NORMAL_SIDECAR: true
   VM_SIZE: ${{ inputs.vmSize || 'Standard_DC8as_cc_v5' }}
   VM_IMAGE: ${{ inputs.vmImage || ( inputs.winFlavor == 'ws2022' && secrets.VM_IMAGE_WS2022 || secrets.VM_IMAGE_WS2025 ) }}
   CPLAT_BLOB_NAME: ${{ inputs.cplatBlobName || vars.CPLAT_6_1_BLOB_NAME }}
@@ -129,29 +130,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: ./scripts/init_run.sh
 
-      - name: Deploy VM with containerplat
-        run: |
-          ./scripts/vm_create_traced.sh
-
-      - name: Use precise current time as tag
-        run: |
-          TAG=$(date "+%Y%m%d-%H%M%S.%N")
-          echo "TAG=$TAG"
-          echo "TAG=$TAG" >> $GITHUB_ENV
-
-      - name: Build image
-        run: |
-          ./scripts/tracing/trace_step.py --start 'Build and push image'
-          c-aci-testing images build workloads/stress_tests
-
-      - name: Push image
-        run: c-aci-testing images push workloads/stress_tests
-
-      - name: Set parameters
-        run: |
-          c-aci-testing aci param_set workloads/stress_tests --parameter "useNormalSidecar=true"
-          echo stress_tests.bicepparam:
-          cat workloads/stress_tests/stress_tests.bicepparam
+      - name: Pull Image
+        run: c-aci-testing images pull workloads/stress_tests
 
       # The security policy has to be allow_all for exec-based checks to work
       - name: Fill in allow_all security policy
@@ -159,6 +139,10 @@ jobs:
           ./scripts/tracing/trace_step.py --start 'Fill in allow_all security policy'
           c-aci-testing policies gen workloads/stress_tests --deployment-name $DEPLOYMENT_NAME --policy-type allow_all
           cat workloads/stress_tests/policy_stress_tests.rego
+
+      - name: Deploy VM with containerplat
+        run: |
+          ./scripts/vm_create_traced.sh
 
       - name: Deploy Container Group (fio, 2cpu)
         run: |

@@ -1,8 +1,6 @@
 #!/bin/bash
 
-./dump_to_output.sh &
-
-uname -a
+/server &
 
 echo ------------- payload start attestation_loop --------------- | tee /dev/kmsg
 

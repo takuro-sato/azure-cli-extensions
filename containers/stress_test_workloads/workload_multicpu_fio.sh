@@ -1,9 +1,7 @@
 #!/bin/bash
 
-python3 server.py &
+/server &
 SERVER_PID=$!
-
-uname -a
 
 echo ------------- payload start multicpu --------------- | tee /dev/kmsg
 

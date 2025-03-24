@@ -146,6 +146,7 @@ jobs:
       - name: Monitor Container Group
         if: always()
         run: |
+          set -eo pipefail
           sleep 210 # waits for anything inside the container to finish
           ./scripts/tracing/trace_step.py --start 'Monitor Container Group'
           c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME | tee output.log
