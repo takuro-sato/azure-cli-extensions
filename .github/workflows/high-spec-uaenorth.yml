@@ -11,6 +11,7 @@ on:
   pull_request:
     paths:
       - .github/workflows/high-spec-uaenorth.yml
+      - .github/workflows/high-spec.yml
 
 jobs:
   high-spec-uaenorth:

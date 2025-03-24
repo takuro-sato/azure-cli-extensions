@@ -12,11 +12,16 @@ script_dir="$(dirname "$0")"
 args=("$@")
 $script_dir/tracing/trace_step.py --start "aci deploy $DEPLOYMENT_NAME"
 err_file=`mktemp`
-c-aci-testing aci deploy "${args[@]}" 2> "$err_file"
+timeout -s INT 20m c-aci-testing aci deploy "${args[@]}" 2> "$err_file"
 status=$?
 cat "$err_file" >&2
 if [ $status -ne 0 ]; then
-  $script_dir/tracing/trace_step.py --complete --err "$(printf "Failed to deploy to %s:\n%s" "$DEPLOYMENT_NAME" "$(cat "$err_file")")" --strict
+  if [ $status -eq 124 ]; then
+    echo "Deployment timed out"
+    $script_dir/tracing/trace_step.py --complete --err "Deployment timed out after 20m" --strict
+  else
+    $script_dir/tracing/trace_step.py --complete --err "$(printf "Failed to deploy to %s:\n%s" "$DEPLOYMENT_NAME" "$(cat "$err_file")")" --strict
+  fi
 else
   $script_dir/tracing/trace_step.py --complete --strict
 fi
