@@ -1,6 +1,7 @@
 #!/bin/bash
 
 /server &
+SERVER_PID=$!
 
 echo ------------- payload start check_threads --------------- | tee /dev/kmsg
 
