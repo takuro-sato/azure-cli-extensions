@@ -31,7 +31,6 @@ jobs:
       location: eastus2euap
       policy_type: allow_all
       script: workload_${{ matrix.script }}
-      useNormalSidecar: true
       cpu: 2
 
   stress-tests-noserver-debug:
@@ -46,7 +45,6 @@ jobs:
       location: eastus2euap
       policy_type: debug
       script: workload_${{ matrix.script }}
-      useNormalSidecar: true
       cpu: 2
 
   stress-test-noserver-generated:
@@ -61,5 +59,4 @@ jobs:
       location: eastus2euap
       policy_type: generated
       script: workload_${{ matrix.script }}
-      useNormalSidecar: true
       cpu: 2

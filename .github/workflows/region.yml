@@ -127,7 +127,6 @@ jobs:
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
       script: workload_${{ matrix.script }}
-      useNormalSidecar: true
 
   info:
     if: ${{ !cancelled() }}

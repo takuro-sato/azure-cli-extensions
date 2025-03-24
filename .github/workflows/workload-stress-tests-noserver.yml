@@ -61,9 +61,6 @@ on:
           - workload_fio
           - workload_multicpu_fio
           - workload_tar
-      useNormalSidecar:
-        type: boolean
-        default: false
   workflow_call:
     inputs:
       id:
@@ -93,9 +90,6 @@ on:
         type: string
         description: The script to run
         default: workload_fio
-      useNormalSidecar:
-        type: boolean
-        default: true
 
 env:
   KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
@@ -118,7 +112,6 @@ env:
   POLICY_TYPE: ${{ inputs.policy_type || 'allow_all' }}
   SCRIPT: ${{ inputs.script || 'workload_fio' }}
   REPO_BASE: stress_tests_noserver
-  USE_NORMAL_SIDECAR: ${{ inputs.useNormalSidecar || true }}
   ACI_EXPECTED_KERNEL_DATE: ${{ vars.ACI_EXPECTED_KERNEL_DATE }}
 
 jobs:
