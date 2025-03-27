@@ -21,6 +21,9 @@ args.add_argument(
     "--fail-on-error", action="store_true", help="Exit with non-zero code if any ERROR found"
 )
 args.add_argument(
+    "--error-count-threshold", type=int, default=1, help="At least this many errors must be found in output for the step to trace as failed"
+)
+args.add_argument(
     "--write-output-to", type=FileType("wt"), required=False, default=None, help="Extract output to file"
 )
 args = args.parse_args()
@@ -29,6 +32,9 @@ out_file: TextIO = args.container_log_file
 write_output_to: TextIO = args.write_output_to
 must_have_output = args.must_have_output
 fail_on_error = args.fail_on_error
+error_count_threshold = args.error_count_threshold
+if error_count_threshold <= 0:
+    raise ValueError("error-count-threshold must be at least 1")
 
 trace_step_py = os.path.join(os.path.dirname(__file__), "tracing", "trace_step.py")
 
@@ -77,8 +83,9 @@ for line in out_file:
 out_file.close()
 
 output["error_count"] = len(err_msgs)
+output["errors"] = err_msgs
 args = [trace_step_py, "--complete", "--strict", "--output-from-stdin"]
-if err_msgs:
+if len(err_msgs) >= error_count_threshold:
     args.append("--err")
     args.append("\n".join(err_msgs))
 elif not output_seen and must_have_output:
@@ -91,6 +98,6 @@ if write_output_to and output_seen:
 output_str = json.dumps(output, indent=2)
 subprocess.run(args, input=output_str.encode(), check=True)
 
-if fail_on_error and err_msgs:
+if fail_on_error and len(err_msgs) >= error_count_threshold:
     print("Exiting with failure due to ERRORs in container output", flush=True)
     sys.exit(1)

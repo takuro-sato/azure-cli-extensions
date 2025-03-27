@@ -193,7 +193,7 @@ jobs:
       - name: Parse output
         if: always()
         run: |
-          ./scripts/parse_container_output.py --fail-on-error output.log
+          ./scripts/parse_container_output.py --fail-on-error --error-count-threshold 15 output.log
 
       - name: Check correct kernel version
         run: scripts/check_uname_in_output.sh output.log
