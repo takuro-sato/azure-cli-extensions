@@ -221,12 +221,12 @@ jobs:
             ./scripts/_check_dmesg.sh "$dmesg_file"
 
       - name: Remove Container Group
-        if: (inputs.cleanup == 'true' && success()) || inputs.cleanup == 'always'
+        if: (inputs.cleanup != 'false' && success()) || inputs.cleanup == 'always'
         run: |
           c-aci-testing aci remove --deployment-name $DEPLOYMENT_NAME
 
       - name: Be extra sure we removed the containers
-        if: (inputs.cleanup == 'true' && success()) || inputs.cleanup == 'always'
+        if: (inputs.cleanup != 'false' && success()) || inputs.cleanup == 'always'
         run: |
           set +e
           az container delete --name $DEPLOYMENT_NAME --resource-group $RESOURCE_GROUP --yes
