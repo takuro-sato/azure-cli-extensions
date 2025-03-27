@@ -1,12 +1,6 @@
 name: Build and push test containers
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'containers/**'
-      - .github/workflows/build-test-containers.yaml
   workflow_dispatch:
 
 permissions:
