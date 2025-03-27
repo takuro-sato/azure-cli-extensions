@@ -105,6 +105,11 @@ jobs:
           # Waits a bit for the helm uninstall to really finish
           sleep 30
 
+      - name: Upgrade AKS
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Upgrade AKS'
+          ./workloads/vn2/upgrade-aks.sh $RESOURCE_GROUP $AKS_CLUSTER_NAME
+
       - name: Deploy VN2 Helm Chart
         run: |
           ./scripts/tracing/trace_step.py --start 'Deploy VN2 Helm Chart'
