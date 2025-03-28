@@ -51,6 +51,7 @@ else
         --auto-upgrade-channel patch \
         --node-os-upgrade-channel NodeImage \
         --nodepool-labels "environment=devtest"
+        --os-sku AzureLinux
 fi
 
 # wait until the resource group can be queried
