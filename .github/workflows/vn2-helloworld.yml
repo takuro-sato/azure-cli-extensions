@@ -1,5 +1,11 @@
 name: VN2 - Hello World workload
 
+# Due to permission issues we can only use pre-created AKSes, and we have one
+# per region.
+concurrency:
+  group: vn2-aks-${{ inputs.location }}
+  cancel-in-progress: false
+
 permissions:
    id-token: write
    contents: read
@@ -65,9 +71,9 @@ env:
   RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
   DEPLOYMENT_NAME: ${{ inputs.id || 'vn2-hello' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
-  RESOURCE_GROUP: ${{ inputs.resource_group || 'mchamarthy-aks-ci-northeurope' }}
+  RESOURCE_GROUP: ${{ inputs.resource_group || 'vn2-aks-northeurope' }}
   LOCATION: ${{ inputs.location || 'northeurope' }}
-  AKS_CLUSTER_NAME: ${{ inputs.aks_cluster_name || 'aks-ci-northeurope' }}
+  AKS_CLUSTER_NAME: ${{ inputs.aks_cluster_name || 'vn2-aks-northeurope' }}
   CLEANUP: ${{ inputs.cleanup || 'true' }}
   YAML_FILE: workloads/vn2/sample-pod.yaml
 
@@ -98,17 +104,20 @@ jobs:
         with:
           version: 'latest'
 
+      - name: Start the AKS
+        run: |
+          # do nothing if AKS is already running
+          if [ "$(az aks show --name $AKS_CLUSTER_NAME --resource-group $RESOURCE_GROUP --query 'powerState.code' -o tsv)" != "Running" ]; then
+            echo "Starting AKS cluster..."
+            az aks start --name $AKS_CLUSTER_NAME --resource-group $RESOURCE_GROUP
+          fi
+
       - name: Delete any existing deployments and uninstall VN2
         run: |
           ./scripts/tracing/trace_step.py --start 'Delete any existing deployments and uninstall VN2'
           ./workloads/vn2/cleanup-vn2-helm.sh $RESOURCE_GROUP $AKS_CLUSTER_NAME
           # Waits a bit for the helm uninstall to really finish
           sleep 30
-
-      - name: Upgrade AKS
-        run: |
-          ./scripts/tracing/trace_step.py --start 'Upgrade AKS'
-          ./workloads/vn2/upgrade-aks.sh $RESOURCE_GROUP $AKS_CLUSTER_NAME
 
       - name: Deploy VN2 Helm Chart
         run: |
@@ -135,9 +144,28 @@ jobs:
         run: |
           ./scripts/trace_run_result.sh ${{ job.status }}
 
+      # Note this is not cleaning up the AKS cluster itself
       - name: Cleanup pods
         run: |
           if [ "$CLEANUP" != false ]; then
             ./workloads/vn2/cleanup_vn2_deployment_checked.py $YAML_FILE
             ./workloads/vn2/cleanup-vn2-helm.sh $RESOURCE_GROUP $AKS_CLUSTER_NAME
+          fi
+
+      # Attempt to upgrade the AKS cluster, but don't fail this workflow if it fails
+      # Only do this if we haven't got any errors (implied by no `if`) and also we want to do cleanup
+      - name: Upgrade AKS
+        continue-on-error: true
+        run: |
+          if [ "$CLEANUP" != false ]; then
+            ./workloads/vn2/upgrade-aks.sh $RESOURCE_GROUP $AKS_CLUSTER_NAME
+          fi
+
+      # Also don't fail this workflow if stopping the AKS fails
+      # Only do this if we haven't got any errors (implied by no `if`) and also we want to do cleanup
+      - name: Stop AKS
+        continue-on-error: true
+        run: |
+          if [ "$CLEANUP" != false ]; then
+            az aks stop --name $AKS_CLUSTER_NAME --resource-group $RESOURCE_GROUP
           fi

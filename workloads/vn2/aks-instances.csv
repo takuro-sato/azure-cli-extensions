@@ -5,8 +5,8 @@ vn2-aks-germanywestcentral,vn2-aks-germanywestcentral,germanywestcentral
 vn2-aks-italynorth,vn2-aks-italynorth,italynorth
 vn2-aks-southeastasia,vn2-aks-southeastasia,southeastasia
 vn2-aks-westeurope,vn2-aks-westeurope,westeurope
-mchamarthy-aks-ci-northeurope,aks-ci-northeurope,northeurope
-mchamarthy-aks-ci-uaenorth,aks-ci-uaenorth,uaenorth
+vn2-aks-northeurope,vn2-aks-northeurope,northeurope
+vn2-aks-uaenorth,vn2-aks-uaenorth,uaenorth
 vn2-aks-japaneast,vn2-aks-japaneast,japaneast
 vn2-aks-switzerlandnorth,vn2-aks-switzerlandnorth,switzerlandnorth
 vn2-aks-westus,vn2-aks-westus,westus

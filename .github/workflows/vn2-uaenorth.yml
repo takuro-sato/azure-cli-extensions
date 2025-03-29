@@ -18,5 +18,5 @@ jobs:
     uses: ./.github/workflows/vn2-helloworld.yml
     with:
       location: uaenorth
-      resource_group: mchamarthy-aks-ci-uaenorth
-      aks_cluster_name: aks-ci-uaenorth
+      resource_group: vn2-aks-uaenorth
+      aks_cluster_name: vn2-aks-uaenorth

@@ -18,5 +18,5 @@ jobs:
     uses: ./.github/workflows/vn2-helloworld.yml
     with:
       location: northeurope
-      resource_group: mchamarthy-aks-ci-northeurope
-      aks_cluster_name: aks-ci-northeurope
+      resource_group: vn2-aks-northeurope
+      aks_cluster_name: vn2-aks-northeurope
