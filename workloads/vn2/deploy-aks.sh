@@ -15,7 +15,7 @@ SUBNET_NAME="cg"                  # Subnet name
 SUBNET_PREFIX="10.225.0.0/24"     # Address range for the new subnet (starting from 10.225.0.0)
 AKS_IDENTITY_SUFFIX="agentpool"   # Expected suffix of the AKS managed identity
 ROLE="Contributor"                # Role to assign
-NODE_VM_SIZE="Standard_D4as_v5"   # Node size for AKS cluster
+NODE_VM_SIZE="Standard_DC4as_cc_v5"   # Node size for AKS cluster
 MIN_COUNT=1                       # Minimum number of nodes (for autoscaler, Dev/Test)
 MAX_COUNT=3                       # Maximum number of nodes (for autoscaler, Dev/Test)
 
@@ -50,6 +50,7 @@ else
         --max-count $MAX_COUNT \
         --auto-upgrade-channel patch \
         --node-os-upgrade-channel NodeImage \
+        --nodepool-name "vn2np" \
         --nodepool-labels "environment=devtest" \
         --os-sku AzureLinux
 fi
