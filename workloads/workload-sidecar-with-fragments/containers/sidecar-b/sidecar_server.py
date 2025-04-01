@@ -1,16 +1,13 @@
-import sys
-from http.server import SimpleHTTPRequestHandler, HTTPServer
+from fastapi import FastAPI
+from fastapi.responses import PlainTextResponse
 
-class MyHandler(SimpleHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header('Content-type', 'text/plain')
-        self.end_headers()
-        self.wfile.write(b"Hello from sidecar B\n")
+app = FastAPI()
+@app.get("/{anything:path}", response_class=PlainTextResponse)
+async def index():
+    return "Hello from sidecar B\n"
 
 if __name__ == "__main__":
     print("Sidecar started")
-    sys.stdout.flush()
-    server = HTTPServer(('', 8000), MyHandler)
-    print("Starting http server on port 8000")
-    server.serve_forever()
+    print("Starting http server on port 8000", flush=True)
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
