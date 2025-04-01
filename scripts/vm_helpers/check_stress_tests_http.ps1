@@ -8,7 +8,7 @@ try {
     $ip=(crictl inspectp $podId | ConvertFrom-Json).info.cniResult.Interfaces.eth0.IPConfigs.IP
     echo "Checking $podName - $ip"
     try {
-      $res=Invoke-RestMethod -TimeoutSec 5 -Uri "http://${ip}:8000/index.txt"
+      $res=Invoke-RestMethod -TimeoutSec 5 -Uri "http://${ip}:80/index.txt"
       if ($res.Trim() -ne "Hello") {
         Write-Output "ERROR: unexpected response: $res"
       }
