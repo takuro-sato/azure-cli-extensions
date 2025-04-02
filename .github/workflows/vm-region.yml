@@ -33,15 +33,15 @@ jobs:
       winFlavor: ws2025
       vmSize: ${{ inputs.location != 'centraluseuap' && 'Standard_DC8as_cc_v5' || 'Standard_DC8as_cc_v6' }}
 
-  vm-stress-curr-ws2022:
-    if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2022_VM_REGIONS, inputs.location) }}
+  vm-stress-curr-hard-ws2025:
+    if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2025_VM_REGIONS, inputs.location) }}
     secrets: inherit
-    uses: ./.github/workflows/vm-workload-stress-tests.yml
+    uses: ./.github/workflows/vm-workload-stress-tests-hard.yml
     with:
-      id: vm-stress-curr-ws2022-6.1
+      id: vm-stress-curr-hard-ws2025-6.1
       location: ${{ inputs.location }}
       cplatBlobName: ${{ vars.CPLAT_CURR_BLOB_NAME }}
-      winFlavor: ws2022
+      winFlavor: ws2025
       vmSize: ${{ inputs.location != 'centraluseuap' && 'Standard_DC8as_cc_v5' || 'Standard_DC8as_cc_v6' }}
 
   vm-stress-next-6-1-ws2025:
