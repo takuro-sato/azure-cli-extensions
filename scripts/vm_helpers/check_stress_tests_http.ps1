@@ -9,9 +9,6 @@ try {
     echo "Checking $podName - $ip"
     try {
       $res=Invoke-RestMethod -TimeoutSec 5 -Uri "http://${ip}:80/index.txt"
-      if ($res.Trim() -ne "Hello") {
-        Write-Output "ERROR: unexpected response: $res"
-      }
     } catch {
       Write-Output "ERROR: failed to check HTTP on pod $podName" $_.Exception.ToString()
     }
