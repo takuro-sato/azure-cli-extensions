@@ -109,7 +109,7 @@ env:
   RESOURCE_GROUP: c-aci-dashboard
   REGISTRY: ghcr.io
   REPOSITORY: ${{ github.repository }}/test-containers/stress-tests-server-alpine
-  TAG: 20250321
+  TAG: latest
   MANAGED_IDENTITY: cacidashboard
   LOCATION: ${{ inputs.location || 'westus' }}
   CPU: ${{ inputs.cpu || 4 }}
