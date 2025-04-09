@@ -1,35 +1,44 @@
 #!/bin/bash
 
-version="1.1.2"
-tgz_url="https://github.com/microsoft/confidential-aci-testing/releases/download/$version/c_aci_testing-$version.tar.gz"
-tgz_name="c-aci-testing.tar.gz"
+# Temporary fix for workflow failing due to error with missing bicep binary
+# -------------------------------------------------------------------------
+#
+#  This file is using a custom branch of c-aci-testing while we figure out
+#  what is the actual cause of the issue. See
+#  https://github.com/microsoft/confidential-aci-dashboard/pull/214 for details.
+#
 
-attempts=0
-while :; do
-    echo "Downloading $tgz_url"
-    curl -sL --fail -o "$tgz_name" "$tgz_url"
-    if [ $? -eq 0 ]; then
-        break
-    else
-        echo "Download failed."
-        attempts=$((attempts + 1))
-        if [ $attempts -ge 3 ]; then
-            echo "Failed to download after 3 attempts."
-            exit 1
-        fi
-        echo Retrying in 5s
-        sleep 5
-    fi
-done
 
-set -e
+# version="1.1.2"
+# tgz_url="https://github.com/microsoft/confidential-aci-testing/releases/download/$version/c_aci_testing-$version.tar.gz"
+# tgz_name="c-aci-testing.tar.gz"
 
-pip install "$tgz_name"
-rm "$tgz_name"
+# attempts=0
+# while :; do
+#     echo "Downloading $tgz_url"
+#     curl -sL --fail -o "$tgz_name" "$tgz_url"
+#     if [ $? -eq 0 ]; then
+#         break
+#     else
+#         echo "Download failed."
+#         attempts=$((attempts + 1))
+#         if [ $attempts -ge 3 ]; then
+#             echo "Failed to download after 3 attempts."
+#             exit 1
+#         fi
+#         echo Retrying in 5s
+#         sleep 5
+#     fi
+# done
+
+# set -e
+
+# pip install "$tgz_name"
+# rm "$tgz_name"
 
 # Uncomment for private branch testing
-# BRANCH=???
-# git clone 'https://github.com/microsoft/confidential-aci-testing.git' --branch $BRANCH /tmp/c-aci-testing
-# cd /tmp/c-aci-testing
-# pip install flit
-# flit install
+BRANCH="tingmao/deploy-with-arm"
+git clone 'https://github.com/microsoft/confidential-aci-testing.git' --branch $BRANCH /tmp/c-aci-testing
+cd /tmp/c-aci-testing
+pip install flit
+flit install
