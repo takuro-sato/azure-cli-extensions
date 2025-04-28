@@ -95,7 +95,8 @@ env:
   CLEANUP: ${{ inputs.cleanup }}
   USE_NORMAL_SIDECAR: true
   VM_SIZE: ${{ inputs.vmSize || 'Standard_DC8as_cc_v5' }}
-  VM_IMAGE: ${{ inputs.vmImage || ( inputs.winFlavor == 'ws2022' && secrets.VM_IMAGE_WS2022 || secrets.VM_IMAGE_WS2025 ) }}
+  VM_IMAGE: ${{ inputs.vmImage || '' }}
+  USE_OFFICIAL_IMAGES: ${{ inputs.vmImage == '' && 'true' || '' }}
   CPLAT_BLOB_NAME: ${{ inputs.cplatBlobName || vars.CPLAT_6_1_BLOB_NAME }}
   WIN_FLAVOR: ${{ inputs.winFlavor || 'ws2025' }}
   CONTAINER_CPUS: 4
