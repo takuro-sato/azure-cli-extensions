@@ -4,6 +4,7 @@ VERSION="$1"
 
 attempts=0
 while :; do
+    az config set core.collect_telemetry=false --only-show-errors
     az extension add -n confcom --version "$VERSION" --upgrade
     if [ $? -eq 0 ]; then
         break
