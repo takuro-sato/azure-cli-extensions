@@ -1,0 +1,127 @@
+name: Workload - SKR
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - workloads/skr/**
+      - .github/workflows/workload-skr.yml
+      - scripts/init_run.sh
+      - scripts/install-c-aci-testing.sh
+  push:
+    paths:
+      - workloads/skr/**
+      - .github/workflows/workload-skr.yml
+      - scripts/init_run.sh
+      - scripts/install-c-aci-testing.sh
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      id:
+        type: string
+        description: ID of the run
+      location:
+        type: string
+        description: Where to deploy to
+        required: true
+      cleanup:
+        type: boolean
+        description: Whether to cleanup the container group after testing
+        default: true
+      policy_type:
+        type: string
+        description: The type of policy to use
+        default: generated
+  workflow_call:
+    inputs:
+      id:
+        type: string
+        description: ID of the run
+      location:
+        type: string
+        description: Where to deploy to
+        required: true
+      cleanup:
+        type: boolean
+        description: Whether to cleanup the container group after testing
+        default: true
+      policy_type:
+        type: string
+        description: The type of policy to use
+        default: generated
+
+env:
+  KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
+  KUSTO_DATABASE: ${{ secrets.KUSTO_DATABASE }}
+  KUSTO_TABLE: CACITestStepTrace
+  TEST_TYPE: aci
+  TEST_NAME: SKR
+  RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+  DEPLOYMENT_NAME: ${{ inputs.id || 'skr' }}-${{ inputs.location }}-${{ github.run_number }}
+  SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
+  RESOURCE_GROUP: c-aci-dashboard
+  REGISTRY: cacidashboard.azurecr.io
+  MANAGED_IDENTITY: cacidashboard
+  TAG: "2.9"
+  LOCATION: ${{ inputs.location || 'westeurope' }}
+  CLEANUP: ${{ inputs.cleanup }}
+  POLICY_TYPE: ${{ inputs.policy_type || 'generated' }}
+  ATTESTATION_ENDPOINT: ${{ vars.ATTESTATION_ENDPOINT }}
+  HSM_ENDPOINT: ${{ vars.HSM_ENDPOINT }}
+
+jobs:
+  server:
+    name: ${{ inputs.id || 'skr' }}
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log into Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION }}
+
+      - name: Initialize Run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/init_run.sh
+
+      # Deployment is separated from testing to avoid the AZ CLI login timeout
+      - name: Deploy the SKR container group
+        env:
+          ID: ${{ env.DEPLOYMENT_NAME }}
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Deploy the SKR container group'
+          c-aci-testing target run workloads/skr \
+            --deployment-name $ID \
+            --prefer-pull \
+            --no-cleanup
+
+      - name: Log into Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION }}
+
+      # This python test uses target_run, and it will handle monitoring the
+      # container output and doing cleanup.
+      - name: Test SKR
+        env:
+          ID: ${{ env.DEPLOYMENT_NAME }}
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Test SKR'
+          python -m unittest discover -s workloads/skr
+
+      - name: Report result
+        if: always()
+        run: |
+          ./scripts/trace_run_result.sh ${{ job.status }}

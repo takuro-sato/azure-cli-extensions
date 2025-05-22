@@ -1,0 +1,10 @@
+version: '3'
+services:
+  proxy:
+    image: $REGISTRY/skr/proxy:$TAG
+    network_mode: "host"
+    build:
+      context: .
+      dockerfile: proxy.Dockerfile
+  sidecar:
+    image: mcr.microsoft.com/aci/skr:$TAG
