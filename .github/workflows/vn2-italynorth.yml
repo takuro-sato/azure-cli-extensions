@@ -15,7 +15,7 @@ on:
 jobs:
   vn2-italynorth:
     secrets: inherit
-    uses: ./.github/workflows/vn2-helloworld.yml
+    uses: ./.github/workflows/vn2-region.yml
     with:
       location: italynorth
       resource_group: vn2-aks-italynorth

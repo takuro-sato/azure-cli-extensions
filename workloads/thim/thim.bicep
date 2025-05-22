@@ -39,11 +39,20 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
               cpu: cpu
             }
           }
+          environmentVariables: [
+            {
+              name: 'VN2_THIM_ENDPOINT'
+              value: '===VIRTUALNODE2.CC.THIM.ENDPOINT==='
+            }
+          ]
           command: [
             'sh'
             '-c'
             '''
-            set -e
+            set +e
+            has_error=0
+            echo "env:"
+            env
             echo "Provided UVM_SECURITY_CONTEXT_DIR=$UVM_SECURITY_CONTEXT_DIR"
             if [ -z "$UVM_SECURITY_CONTEXT_DIR" ]; then
               UVM_SECURITY_CONTEXT_DIR=$(echo /security-context-*)
@@ -52,30 +61,75 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
             ls -la / | grep security
             if [ ! -d "$UVM_SECURITY_CONTEXT_DIR" ]; then
               echo "ERROR: Security context directory $UVM_SECURITY_CONTEXT_DIR not found"
-              exit 1
+              has_error=1
             fi
             ls -la $UVM_SECURITY_CONTEXT_DIR
             for file in host-amd-cert-base64 reference-info-base64 security-policy-base64; do
               if [ ! -f "$UVM_SECURITY_CONTEXT_DIR/$file" ]; then
                 echo "ERROR: $UVM_SECURITY_CONTEXT_DIR/$file not found"
-                exit 1
+                has_error=1
               fi
             done
-            echo "THIM certification via Fabric_NodeIPOrFQDN:"
-            timeout 10s curl --fail-with-body "http://$Fabric_NodeIPOrFQDN:2377/metadata/THIM/amd/certification" -H "Metadata: true"
+
+            usable_certification_url=""
+
+            if [ -z "$Fabric_NodeIPOrFQDN" ]; then
+              echo "(no Fabric_NodeIPOrFQDN env)"
+            else
+              usable_certification_url="http://$Fabric_NodeIPOrFQDN:2377/metadata/THIM/amd/certification"
+              echo "THIM certification via Fabric_NodeIPOrFQDN:"
+              timeout 10s curl --fail-with-body "$usable_certification_url" -H "Metadata: true"
+              status=$?
+              echo
+              if [ $status -ne 0 ]; then
+                echo "ERROR: Failed to fetch certification from THIM via Fabric_NodeIPOrFQDN"
+                has_error=1
+              fi
+            fi
+
+            if [ -z "$VN2_THIM_ENDPOINT" ]; then
+              echo "(no VN2_THIM_ENDPOINT env)"
+            elif [ "$VN2_THIM_ENDPOINT" = "===VIRTUALNODE2.CC.THIM.ENDPOINT===" ]; then
+              echo "(VN2_THIM_ENDPOINT env not replaced)"
+            else
+              usable_certification_url="$VN2_THIM_ENDPOINT"
+              echo "THIM certification via VN2_THIM_ENDPOINT:"
+              timeout 10s curl --fail-with-body "$usable_certification_url" -H "Metadata: true"
+              status=$?
+              echo
+              if [ $status -ne 0 ]; then
+                echo "ERROR: Failed to fetch certification from THIM via VN2_THIM_ENDPOINT"
+                has_error=1
+              fi
+            fi
+
+            if [ -z "$usable_certification_url" ]; then
+              echo "ERROR: No usable environment variable for THIM endpoint"
+              has_error=1
+            fi
+
+            echo "SNP report:"
+            get-snp-report
             status=$?
-            echo
+            echo # the above doesn't print a newline
             if [ $status -ne 0 ]; then
-              echo "ERROR: Failed to fetch certification from THIM via Fabric_NodeIPOrFQDN"
+              echo "ERROR: Failed to get SNP report"
+              has_error=1
+            fi
+            if [ $has_error -ne 0 ]; then
+              echo "Exiting due to errors"
               exit 1
             fi
+            nb_repeat_errors=0
             while :; do
               echo "Doing repeat check: $(date)"
-              timeout 10s curl --fail "http://$Fabric_NodeIPOrFQDN:2377/metadata/THIM/amd/certification" -H "Metadata: true" -v > /dev/null 2>err.log
+              echo "URL: $usable_certification_url"
+              timeout 10s curl --fail "$usable_certification_url" -H "Metadata: true" -v > /dev/null 2>err.log
               if [ $? -ne 0 ]; then
-                echo "ERROR: Failed to fetch certification from THIM via Fabric_NodeIPOrFQDN:"
+                echo "ERROR: Failed to fetch certification from THIM via $usable_certification_url:"
                 cat err.log
-                exit 1
+                nb_repeat_errors=$((nb_repeat_errors + 1))
+                echo "$nb_repeat_errors errors encountered now"
               fi
               sleep 5
             done

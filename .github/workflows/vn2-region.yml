@@ -1,9 +1,9 @@
-name: VN2 - Hello World workload
+name: VN2 - Region
 
 # Due to permission issues we can only use pre-created AKSes, and we have one
 # per region.
 concurrency:
-  group: vn2-aks-${{ inputs.location }}
+  group: vn2-aks-${{ inputs.location || 'northeurope' }}
   cancel-in-progress: false
 
 permissions:
@@ -67,15 +67,16 @@ env:
   KUSTO_DATABASE: ${{ secrets.KUSTO_DATABASE }}
   KUSTO_TABLE: CACITestStepTrace
   TEST_TYPE: vn2
-  TEST_NAME: VN2 - Hello World
+  TEST_NAME: VN2 - Region
   RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-  DEPLOYMENT_NAME: ${{ inputs.id || 'vn2-hello' }}-${{ inputs.location }}-${{ github.run_number }}
+  DEPLOYMENT_NAME: ${{ inputs.id || 'vn2' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
   RESOURCE_GROUP: ${{ inputs.resource_group || 'vn2-aks-northeurope' }}
   LOCATION: ${{ inputs.location || 'northeurope' }}
   AKS_CLUSTER_NAME: ${{ inputs.aks_cluster_name || 'vn2-aks-northeurope' }}
   CLEANUP: ${{ inputs.cleanup || 'true' }}
-  YAML_FILE: workloads/vn2/sample-pod.yaml
+  MANAGED_IDENTITY: cacidashboard
+  ACI_EXPECTED_KERNEL_DATE: ${{ vars.ACI_EXPECTED_KERNEL_DATE }}
 
 jobs:
   deploy:
@@ -120,35 +121,61 @@ jobs:
           sleep 30
 
       - name: Deploy VN2 Helm Chart
+        id: vn2_deploy
         run: |
           ./scripts/tracing/trace_step.py --start 'Deploy VN2 Helm Chart'
           ./workloads/vn2/deploy-vn2-helm.sh $RESOURCE_GROUP $AKS_CLUSTER_NAME
-
-      - name: Deploy sample-pod.yaml and run checks
-        run: |
-          ./scripts/tracing/trace_step.py --start 'Deploy sample-pod.yaml and run checks'
-          set +e
-          ./workloads/vn2/create_vn2_deployment_checked.py $YAML_FILE
-          status=$?
-          cat test_output.json
-          if [ $status -ne 0 ]; then
-            cat test_output.json | ./scripts/tracing/trace_step.py --complete --strict --output-from-stdin --err "$(cat test_output.json | jq -r '.err_str')"
-            exit 1
-          else
-            cat test_output.json | ./scripts/tracing/trace_step.py --complete --strict --output-from-stdin
-            exit $?
-          fi
+          echo "VN2_READY=1" >> $GITHUB_ENV
 
       - name: Report result
         if: always()
         run: |
           ./scripts/trace_run_result.sh ${{ job.status }}
 
-      # Note this is not cleaning up the AKS cluster itself
-      - name: Cleanup pods
+      - name: 'Test case - sample-pod.yaml'
+        if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
+        env:
+          DEPLOYMENT_NAME: sample-pod
+          STEP_PREFIX: sample-pod
+        run: |
+          set +ex
+          cd workloads/vn2
+          ./vn2-test-single-yaml-deploy.sh sample-pod.yaml
+          if [ "$CLEANUP" != false ]; then
+            c-aci-testing vn2 remove --deployment-name sample-pod
+          fi
+
+      - name: 'Test case - stress test (4cpu, 16gb)'
+        if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
+        env:
+          CPU: 4
+          MEMORY_IN_GB: 16
+          DEPLOYMENT_NAME: stress-4cpu-16gb
+          REGISTRY: ghcr.io
+          REPOSITORY: ${{ github.repository }}/test-containers/stress-tests-server-alpine
+          TAG: latest
+          POLICY_TYPE: debug
+          STEP_PREFIX: stress-4cpu-16gb
+        run: |
+          ./workloads/vn2/stress_test.sh
+
+      - name: 'Test case - stress test (18cpu, 64gb)'
+        if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' && (inputs.location == 'eastus2euap') }}
+        env:
+          CPU: 18
+          MEMORY_IN_GB: 64
+          DEPLOYMENT_NAME: stress-18cpu-64gb
+          REGISTRY: ghcr.io
+          REPOSITORY: ${{ github.repository }}/test-containers/stress-tests-server-alpine
+          TAG: latest
+          POLICY_TYPE: debug
+          STEP_PREFIX: stress-18cpu-64gb
+        run: |
+          ./workloads/vn2/stress_test.sh
+
+      - name: Clean up VN2 Helm installation
         run: |
           if [ "$CLEANUP" != false ]; then
-            ./workloads/vn2/cleanup_vn2_deployment_checked.py $YAML_FILE
             ./workloads/vn2/cleanup-vn2-helm.sh $RESOURCE_GROUP $AKS_CLUSTER_NAME
           fi
 

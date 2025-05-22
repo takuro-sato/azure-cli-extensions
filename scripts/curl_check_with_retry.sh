@@ -12,7 +12,9 @@ fi
 
 set -e
 
-./scripts/tracing/trace_step.py --start 'Curl check with retry'
+TRACE_SCRIPT="$(realpath "$(dirname "$0")/tracing/trace_step.py")"
+
+$TRACE_SCRIPT --start 'Curl check with retry'
 
 attempts=0
 start_time=$(date +%s)
@@ -40,7 +42,7 @@ while [ $seconds_since_start -lt $timeout ]; do
     sleep 5
   else
     echo "curl failed $attempts times after $seconds_since_start seconds"
-    ./scripts/tracing/trace_step.py \
+    $TRACE_SCRIPT \
       --complete \
       --output "failedAttempts=$attempts" \
                "secondsSinceStart=$seconds_since_start" \
@@ -49,7 +51,7 @@ while [ $seconds_since_start -lt $timeout ]; do
     exit 1
   fi
 done
-./scripts/tracing/trace_step.py \
+$TRACE_SCRIPT \
   --complete \
   --output "failedAttempts=$attempts" \
            "secondsSinceStart=$seconds_since_start" \

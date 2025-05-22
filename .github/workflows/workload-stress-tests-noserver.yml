@@ -111,7 +111,6 @@ env:
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: ${{ inputs.policy_type || 'allow_all' }}
   SCRIPT: ${{ inputs.script || 'workload_fio' }}
-  REPO_BASE: stress_tests_noserver
   ACI_EXPECTED_KERNEL_DATE: ${{ vars.ACI_EXPECTED_KERNEL_DATE }}
 
 jobs:
@@ -172,9 +171,7 @@ jobs:
           ./scripts/parse_container_output.py --fail-on-error --error-count-threshold 15 output.log
 
       - name: Check correct kernel version
-        run: |
-          ./scripts/tracing/trace_step.py --start 'Check Kernel Version'
-          ./scripts/check_uname_in_output.sh output.log
+        run: scripts/check_uname_in_output.sh output.log
 
       - name: Check output and dmesg
         run: |

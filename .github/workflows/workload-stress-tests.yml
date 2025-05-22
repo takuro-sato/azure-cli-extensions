@@ -117,7 +117,6 @@ env:
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: ${{ inputs.policy_type || 'generated' }}
   SCRIPT: ${{ inputs.script || 'workload_fio' }}
-  REPO_BASE: stress_tests
   ACI_EXPECTED_KERNEL_DATE: ${{ vars.ACI_EXPECTED_KERNEL_DATE }}
 
 jobs:
@@ -142,7 +141,7 @@ jobs:
         run: ./scripts/init_run.sh
 
       - name: Pull Image
-        run: c-aci-testing images pull workloads/server
+        run: c-aci-testing images pull workloads/stress_tests
 
       - name: Set Parameters
         run: |

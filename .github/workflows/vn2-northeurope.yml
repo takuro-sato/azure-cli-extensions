@@ -15,7 +15,7 @@ on:
 jobs:
   vn2-northeurope:
     secrets: inherit
-    uses: ./.github/workflows/vn2-helloworld.yml
+    uses: ./.github/workflows/vn2-region.yml
     with:
       location: northeurope
       resource_group: vn2-aks-northeurope

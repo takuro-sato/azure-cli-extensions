@@ -15,7 +15,7 @@ on:
 jobs:
   vn2-eastus:
     secrets: inherit
-    uses: ./.github/workflows/vn2-helloworld.yml
+    uses: ./.github/workflows/vn2-region.yml
     with:
       location: eastus
       resource_group: vn2-aks-eastus

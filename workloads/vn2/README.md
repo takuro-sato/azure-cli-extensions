@@ -10,11 +10,11 @@ Run `deploy-vn2-helm.sh` to deploy VN2 Helm chart.
 
 ## Deploy a yaml deployment
 
-Run `./create_vn2_deployment_checked.py` with the yaml file as an argument. YAML must contain only one resource with `kind: Deployment`, and it must have valid pod labels and selector. The script will check if deployment is succeed, then check for a further 5 minute that the deployment is stable, no restarts etc.
+Run `c-aci-testing vn2 deploy . --yaml-path deployment_file.yaml --monitor-duration-secs 500`. YAML must contain only one resource with `kind: Deployment`, and it must have valid pod labels and selector. This will check if deployment is succeed, then check for a further 5 minute that the deployment is stable, no restarts etc.
 
 ## Tear down yaml deployment
 
-Run `./cleanup_vn2_deployment_checked.py` with the yaml file as an argument. Will wait for all pods to be deleted.
+Run `c-aci-testing vn2 remove`. Will wait for all pods to be deleted.
 
 ## Clean up VN2 Helm
 

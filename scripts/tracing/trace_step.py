@@ -10,6 +10,8 @@ from argparse import ArgumentParser
 from common import read_state, write_state, trace_step, STATUS_STARTED, STATUS_COMPLETED
 import json
 
+STEP_PREFIX = os.environ.get("STEP_PREFIX", "")
+
 
 args = ArgumentParser()
 args.add_argument("--start", type=str, nargs='?', help='Start a step, pass in step name')
@@ -62,6 +64,8 @@ if not step_name_to_complete and args.complete:
 
 if args.start:
     step_name = args.start
+    if STEP_PREFIX:
+        step_name = f"{STEP_PREFIX}: {step_name}"
     state["curr_step"] = step_name
     trace_step(state["run_info"], step_name, STATUS_STARTED)
     write_state(state)
