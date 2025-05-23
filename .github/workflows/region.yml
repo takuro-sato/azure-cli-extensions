@@ -219,3 +219,18 @@ jobs:
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
       has_managed_identity: ${{ matrix.has_managed_identity }}
+
+  skr:
+    if: ${{ !cancelled() }}
+    name: skr
+    secrets: inherit
+    needs: thim
+    uses: ./.github/workflows/workload-skr.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        policy_type: ['generated', 'debug', 'allow_all']
+    with:
+      id: skr-${{ matrix.policy_type }}
+      location: ${{ inputs.location }}
+      policy_type: ${{ matrix.policy_type }}

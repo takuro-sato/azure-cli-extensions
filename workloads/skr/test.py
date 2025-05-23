@@ -116,7 +116,11 @@ class SkrTest(unittest.TestCase):
     def setUpClass(cls):
 
         cls.target_dir = os.path.realpath(os.path.dirname(__file__))
-        cls.id = os.getenv("ID", str(uuid.uuid4()))
+
+        # This property is used to construct the key name.
+        # Key names can only contain alphanumeric characters and dashes.
+        cls.id = re.sub(r"[^a-zA-Z0-9\-]", "-", os.getenv("ID", str(uuid.uuid4())))
+
         cls.tag = os.getenv("TAG") or cls.id
 
         cls.attestation_endpoint = os.environ["ATTESTATION_ENDPOINT"]
