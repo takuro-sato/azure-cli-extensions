@@ -19,7 +19,7 @@ SERVER_PID=$!
 echo ------------- payload start sysbench --------------- | tee /dev/kmsg
 
 while :; do
-  nice -n +10 sysbench --threads=$(nproc) --time=60 --test=cpu --cpu-max-prime=15000 run
+  nice -n +10 sysbench --threads=$(nproc) --time=60 cpu --cpu-max-prime=15000 run
   status=$?
   if [ $status -ne 0 ]; then
     kill %1
