@@ -91,7 +91,6 @@ void thread_fn(int i)
     if (pin_listen_threads && get_cpu() != i)
     {
         printf_with_time("WARN: Thread %d is not running on CPU %d!!\n", i, i);
-        exit(1);
     }
 
     thread_report_cpu(i);
@@ -133,7 +132,6 @@ void thread_fn(int i)
         if (pin_listen_threads && get_cpu() != i)
         {
             printf_with_time("WARN: Thread %d is not running on CPU %d!!\n", i, i);
-            exit(1);
         }
         snprintf(buf, 1024, "CPU %d is alive\n", i);
         thread_report_cpu(i);
@@ -179,7 +177,6 @@ void check_thread_fn(int this_thread, int target_thread)
     if (pin_check_threads && get_cpu() != this_thread)
     {
         printf_with_time("WARN: Thread %d is not running on CPU %d!!\n", this_thread, this_thread);
-        exit(1);
     }
     printf_with_time("Thread %d checking thread %d\n", this_thread, target_thread);
     int port = base_port + this_thread;
@@ -192,7 +189,6 @@ void check_thread_fn(int this_thread, int target_thread)
         if (pin_check_threads && get_cpu() != this_thread)
         {
             printf_with_time("WARN: Check thread %d is not running on CPU %d!!\n", this_thread, this_thread);
-            exit(1);
         }
         int s = socket(AF_INET, SOCK_STREAM, 0);
         if (s < 0)
