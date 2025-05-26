@@ -23,7 +23,7 @@ on:
 
 jobs:
   vm-stress-curr-ws2025:
-    if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2025_VM_REGIONS, inputs.location) }}
+    if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2025_VM_REGIONS, inputs.location) && vars.CPLAT_CURR_BLOB_NAME != '' }}
     secrets: inherit
     uses: ./.github/workflows/vm-workload-stress-tests.yml
     with:
@@ -34,7 +34,7 @@ jobs:
       vmSize: ${{ inputs.location != 'centraluseuap' && 'Standard_DC8as_cc_v5' || 'Standard_DC8as_cc_v6' }}
 
   vm-stress-curr-hard-ws2025:
-    if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2025_VM_REGIONS, inputs.location) }}
+    if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2025_VM_REGIONS, inputs.location) && vars.CPLAT_CURR_BLOB_NAME != '' }}
     secrets: inherit
     uses: ./.github/workflows/vm-workload-stress-tests-hard.yml
     with:
@@ -67,7 +67,7 @@ jobs:
       vmSize: ${{ inputs.location != 'centraluseuap' && 'Standard_DC8as_cc_v5' || 'Standard_DC8as_cc_v6' }}
 
   vm-idle-curr-ws2025:
-    if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2025_VM_REGIONS, inputs.location) }}
+    if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2025_VM_REGIONS, inputs.location) && vars.CPLAT_CURR_BLOB_NAME != '' }}
     secrets: inherit
     uses: ./.github/workflows/vm-idle.yml
     with:
