@@ -13,7 +13,8 @@ fi
 SCRIPTS_DIR="$(realpath "$(dirname $0)/../../scripts")"
 TRACE_SCRIPT="$SCRIPTS_DIR/tracing/trace_step.py"
 
-set -ex
+set -exo pipefail
+
 cd workloads/stress_tests
 rm -f stress_tests.yaml
 c-aci-testing images pull .

@@ -1,5 +1,7 @@
 #!/usr/bin/bash
 
+set -o pipefail
+
 if [ -z "$MONITOR_SECS" ]; then
   MONITOR_SECS=300
 fi

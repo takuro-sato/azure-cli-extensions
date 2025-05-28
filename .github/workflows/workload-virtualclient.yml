@@ -147,6 +147,7 @@ jobs:
 
       - name: Follow run log
         run: |
+          set -eo pipefail
           ./scripts/tracing/trace_step.py --start 'Follow run log'
           rm -f output.log
           # Can't use az container logs --follow, because it implements follow

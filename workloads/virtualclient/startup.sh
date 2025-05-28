@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -o pipefail
+
 if [[ "$PROFILE_NAME" == "-" || "$PROFILE_NAME" == "*" ]]; then
   export PROFILE_NAME=""
 fi
