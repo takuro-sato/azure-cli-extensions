@@ -1,0 +1,21 @@
+name: High Spec - South Central US
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/high-spec-southcentralus.yml
+      - .github/workflows/high-spec.yml
+
+jobs:
+  high-spec-southcentralus:
+    uses: ./.github/workflows/high-spec.yml
+    secrets: inherit
+    with:
+      location: southcentralus
