@@ -50,6 +50,10 @@ on:
         options:
           - ws2022
           - ws2025
+      uvmBlobName:
+        type: string
+        description: The name of the blob for UVM image
+        default: ''
   workflow_call:
     inputs:
       id:
@@ -85,6 +89,10 @@ on:
         type: string
         description: The Windows version of the image
         default: ws2025
+      uvmBlobName:
+        type: string
+        description: The name of the blob for UVM image
+        default: ''
 
 env:
   KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
@@ -110,6 +118,8 @@ env:
   CPLAT_BLOB_NAME: ${{ inputs.cplatBlobName || vars.CPLAT_6_1_BLOB_NAME }}
   WIN_FLAVOR: ${{ inputs.winFlavor || 'ws2025' }}
   VM_ZONE: ${{ inputs.zone || '' }}
+  UVM_KERNEL: ${{ inputs.uvmBlobName != '' && format('{0}/kernel.vmgs', inputs.uvmBlobName) || '' }}
+  UVM_ROOTFS: ${{ inputs.uvmBlobName != '' && format('{0}/rootfs-verity.vhd', inputs.uvmBlobName) || '' }}
 
 jobs:
   vm-idle:
@@ -141,6 +151,18 @@ jobs:
           ./scripts/tracing/trace_step.py --start 'Fill in allow_all security policy'
           c-aci-testing policies gen workloads/stress_tests --deployment-name $DEPLOYMENT_NAME --policy-type allow_all
           cat workloads/stress_tests/policy_stress_tests.rego
+
+      - name: Download and extract UVM blob if specified
+        if: ${{ inputs.uvmBlobName != '' }}
+        run: |
+          az storage blob download \
+            --account-name $STORAGE_ACCOUNT \
+            --container-name container \
+            --name "${{ inputs.uvmBlobName }}" \
+            --file "${{ inputs.uvmBlobName }}.tar" \
+            --auth-mode login
+          mkdir -p ${{ inputs.uvmBlobName }}
+          tar -xf ${{ inputs.uvmBlobName }}.tar -C ${{ inputs.uvmBlobName }}
 
       - name: Deploy VM with containerplat
         run: |

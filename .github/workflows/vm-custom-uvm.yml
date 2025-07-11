@@ -1,0 +1,55 @@
+name: VM Custom UVM
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      uvmBlobName:
+        type: string
+        description: The name of the blob for UVM image
+        default: ''
+
+jobs:
+  virtualclient:
+    secrets: inherit
+    uses: ./.github/workflows/vm-virtualclient.yml
+    with:
+      id: custom-uvm-virtualclient
+      location: ${{ inputs.location }}
+      cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
+      winFlavor: ws2025
+      profileName: '-'
+      uvmBlobName: ${{ inputs.uvmBlobName }}
+
+  idle:
+    secrets: inherit
+    uses: ./.github/workflows/vm-idle.yml
+    with:
+      id: custom-uvm-idle
+      location: ${{ inputs.location }}
+      cplatBlobName: ${{ vars.CPLAT_CURR_BLOB_NAME }}
+      winFlavor: ws2025
+      uvmBlobName: ${{ inputs.uvmBlobName }}
+
+  stress-tests:
+    secrets: inherit
+    uses: ./.github/workflows/vm-workload-stress-tests.yml
+    with:
+      id: custom-uvm-stress-tests
+      location: ${{ inputs.location }}
+      cplatBlobName: ${{ vars.CPLAT_CURR_BLOB_NAME }}
+      winFlavor: ws2025
+      uvmBlobName: ${{ inputs.uvmBlobName }}
+
+  stress-tests-hard:
+    secrets: inherit
+    uses: ./.github/workflows/vm-workload-stress-tests-hard.yml
+    with:
+      id: custom-uvm-stress-tests-hard
+      location: ${{ inputs.location }}
+      cplatBlobName: ${{ vars.CPLAT_CURR_BLOB_NAME }}
+      winFlavor: ws2025
+      uvmBlobName: ${{ inputs.uvmBlobName }}
