@@ -13,16 +13,16 @@ on:
         default: ''
 
 jobs:
-  virtualclient:
-    secrets: inherit
-    uses: ./.github/workflows/vm-virtualclient.yml
-    with:
-      id: custom-uvm-virtualclient
-      location: ${{ inputs.location }}
-      cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
-      winFlavor: ws2025
-      profileName: '-'
-      uvmBlobName: ${{ inputs.uvmBlobName }}
+  # virtualclient:
+  #   secrets: inherit
+  #   uses: ./.github/workflows/vm-virtualclient.yml
+  #   with:
+  #     id: custom-uvm-virtualclient
+  #     location: ${{ inputs.location }}
+  #     cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
+  #     winFlavor: ws2025
+  #     profileName: '-'
+  #     uvmBlobName: ${{ inputs.uvmBlobName }}
 
   idle:
     secrets: inherit
