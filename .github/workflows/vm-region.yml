@@ -103,13 +103,14 @@ jobs:
       location: ${{ inputs.location }}
       vmSize: Standard_${{ matrix.vmSize }}
 
-  virtualclient:
-    if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2025_VM_REGIONS, inputs.location) }}
-    secrets: inherit
-    uses: ./.github/workflows/vm-virtualclient.yml
-    with:
-      id: vm-vc-${{ inputs.location }}
-      location: ${{ inputs.location }}
-      cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
-      winFlavor: ws2025
-      profileName: '-'
+  # Disabled as it's currently broken
+  # virtualclient:
+  #   if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2025_VM_REGIONS, inputs.location) }}
+  #   secrets: inherit
+  #   uses: ./.github/workflows/vm-virtualclient.yml
+  #   with:
+  #     id: vm-vc-${{ inputs.location }}
+  #     location: ${{ inputs.location }}
+  #     cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
+  #     winFlavor: ws2025
+  #     profileName: '-'
