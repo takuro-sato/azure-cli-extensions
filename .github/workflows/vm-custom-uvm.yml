@@ -11,6 +11,12 @@ on:
         type: string
         description: The name of the blob for UVM image
         default: ''
+  workflow_call:
+    inputs:
+      uvmBlobName:
+        type: string
+        description: The name of the blob for UVM image
+        default: ''
 
 jobs:
   # virtualclient:

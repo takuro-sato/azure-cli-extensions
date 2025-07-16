@@ -1,0 +1,16 @@
+name: VM Custom UVM (Daily)
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+
+jobs:
+  vm-custom-uvm:
+    uses: ./.github/workflows/vm-custom-uvm.yml
+    secrets: inherit
+    with:
+      uvmBlobName: "azurelinux-uvm"
