@@ -1,5 +1,6 @@
 param location string
 param registry string
+param repository string
 param tag string
 param ccePolicies object
 param managedIDGroup string = resourceGroup().name
@@ -34,13 +35,41 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
       {
         name: 'primary'
         properties: {
-          image: '${registry}/hello-world:${empty(tag) ? 'latest': tag}'
+          image: '${registry}/${repository}:${empty(tag) ? 'latest': tag}'
           resources: {
             requests: {
               memoryInGB: memoryInGb
               cpu: cpu
             }
           }
+          command: [
+            '/bin/bash'
+            '-c'
+            '''
+            set +e
+            echo "Testing managed identity..."
+            tries=0
+            success=false
+            while [ "$tries" -lt 5 ]; do
+              tries=$((tries + 1))
+              timeout 30 az login --identity > /dev/null
+              if [ $? -eq 0 ]; then
+                success=true
+                break
+              fi
+              echo "Attempt $tries failed, retrying..."
+              sleep 5
+            done
+            if [ "$success" = "false" ]; then
+              echo "ERROR: Failed to az login after $tries attempts"
+              echo "OUTPUT: {\"attempts\": $tries, \"success\": false}"
+              exit 1
+            fi
+            echo "az login successful"
+            echo "OUTPUT: {\"attempts\": $tries, \"success\": true}"
+            sleep infinity
+            '''
+          ]
         }
       }
     ]
