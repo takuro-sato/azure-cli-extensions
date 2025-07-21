@@ -1,0 +1,21 @@
+name: High Spec - Sweden Central
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/high-spec-swedencentral.yml
+      - .github/workflows/high-spec.yml
+
+jobs:
+  high-spec-swedencentral:
+    uses: ./.github/workflows/high-spec.yml
+    secrets: inherit
+    with:
+      location: swedencentral

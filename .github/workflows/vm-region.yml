@@ -31,7 +31,7 @@ jobs:
       location: ${{ inputs.location }}
       cplatBlobName: ${{ vars.CPLAT_CURR_BLOB_NAME }}
       winFlavor: ws2025
-      vmSize: ${{ inputs.location != 'centraluseuap' && 'Standard_DC8as_cc_v5' || 'Standard_DC8as_cc_v6' }}
+      vmSize: 'Standard_DC8as_cc_v5'
 
   vm-stress-curr-hard-ws2025:
     if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2025_VM_REGIONS, inputs.location) && vars.CPLAT_CURR_BLOB_NAME != '' }}
@@ -42,7 +42,29 @@ jobs:
       location: ${{ inputs.location }}
       cplatBlobName: ${{ vars.CPLAT_CURR_BLOB_NAME }}
       winFlavor: ws2025
-      vmSize: ${{ inputs.location != 'centraluseuap' && 'Standard_DC8as_cc_v5' || 'Standard_DC8as_cc_v6' }}
+      vmSize: 'Standard_DC8as_cc_v5'
+
+  vm-stress-genoa-curr-ws2025:
+    if: ${{ !cancelled() && inputs.location != '' && contains(vars.V6_SKU_REGIONS, inputs.location) }}
+    secrets: inherit
+    uses: ./.github/workflows/vm-workload-stress-tests.yml
+    with:
+      id: vm-stress-genoa-curr-ws2025-6.1
+      location: ${{ inputs.location }}
+      cplatBlobName: ${{ vars.CPLAT_CURR_BLOB_NAME }}
+      winFlavor: ws2025
+      vmSize: 'Standard_DC8as_cc_v6'
+
+  vm-stress-genoa-curr-hard-ws2025:
+    if: ${{ !cancelled() && inputs.location != '' && contains(vars.V6_SKU_REGIONS, inputs.location) }}
+    secrets: inherit
+    uses: ./.github/workflows/vm-workload-stress-tests-hard.yml
+    with:
+      id: vm-stress-genoa-curr-hard-ws2025-6.1
+      location: ${{ inputs.location }}
+      cplatBlobName: ${{ vars.CPLAT_CURR_BLOB_NAME }}
+      winFlavor: ws2025
+      vmSize: 'Standard_DC8as_cc_v6'
 
   vm-stress-next-6-1-ws2025:
     if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2025_VM_REGIONS, inputs.location) }}
@@ -53,7 +75,7 @@ jobs:
       location: ${{ inputs.location }}
       cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
       winFlavor: ws2025
-      vmSize: ${{ inputs.location != 'centraluseuap' && 'Standard_DC8as_cc_v5' || 'Standard_DC8as_cc_v6' }}
+      vmSize: 'Standard_DC8as_cc_v5'
 
   vm-stress-next-hard-6-1-ws2025:
     if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2025_VM_REGIONS, inputs.location) }}
@@ -64,7 +86,29 @@ jobs:
       location: ${{ inputs.location }}
       cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
       winFlavor: ws2025
-      vmSize: ${{ inputs.location != 'centraluseuap' && 'Standard_DC8as_cc_v5' || 'Standard_DC8as_cc_v6' }}
+      vmSize: 'Standard_DC8as_cc_v5'
+
+  vm-stress-genoa-next-6-1-ws2025:
+    if: ${{ !cancelled() && inputs.location != '' && contains(vars.V6_SKU_REGIONS, inputs.location) }}
+    secrets: inherit
+    uses: ./.github/workflows/vm-workload-stress-tests.yml
+    with:
+      id: vm-stress-genoa-next-ws2025-6.1
+      location: ${{ inputs.location }}
+      cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
+      winFlavor: ws2025
+      vmSize: 'Standard_DC8as_cc_v6'
+
+  vm-stress-genoa-next-hard-6-1-ws2025:
+    if: ${{ !cancelled() && inputs.location != '' && contains(vars.V6_SKU_REGIONS, inputs.location) }}
+    secrets: inherit
+    uses: ./.github/workflows/vm-workload-stress-tests-hard.yml
+    with:
+      id: vm-stress-genoa-next-hard-ws2025-6.1
+      location: ${{ inputs.location }}
+      cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
+      winFlavor: ws2025
+      vmSize: 'Standard_DC8as_cc_v6'
 
   vm-idle-curr-ws2025:
     if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2025_VM_REGIONS, inputs.location) && vars.CPLAT_CURR_BLOB_NAME != '' }}
@@ -75,7 +119,18 @@ jobs:
       location: ${{ inputs.location }}
       cplatBlobName: ${{ vars.CPLAT_CURR_BLOB_NAME }}
       winFlavor: ws2025
-      vmSize: ${{ inputs.location != 'centraluseuap' && 'Standard_DC8as_cc_v5' || 'Standard_DC8as_cc_v6' }}
+      vmSize: 'Standard_DC8as_cc_v5'
+
+  vm-idle-genoa-curr-ws2025:
+    if: ${{ !cancelled() && inputs.location != '' && contains(vars.V6_SKU_REGIONS, inputs.location) }}
+    secrets: inherit
+    uses: ./.github/workflows/vm-idle.yml
+    with:
+      id: vm-idle-genoa-curr-ws2025-6.1
+      location: ${{ inputs.location }}
+      cplatBlobName: ${{ vars.CPLAT_CURR_BLOB_NAME }}
+      winFlavor: ws2025
+      vmSize: 'Standard_DC8as_cc_v6'
 
   perf-cvm:
     if: ${{ !cancelled() && inputs.location == 'uaenorth' }}
