@@ -59,7 +59,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
       {
         name: 'sidecar'
         properties: {
-          image: 'mcr.microsoft.com/aci/skr:2.7'
+          image: 'mcr.microsoft.com/aci/skr:2.10'
           ports: [
             {
               protocol: 'TCP'

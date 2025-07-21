@@ -58,7 +58,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
       {
         name: 'http-sidecar'
         properties: {
-          image: 'mcr.microsoft.com/aci/skr:${empty(tag) ? '2.9': tag}'
+          image: 'mcr.microsoft.com/aci/skr:${empty(tag) ? '2.10': tag}'
           ports: [
             {
               protocol: 'TCP'
@@ -76,7 +76,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
       {
         name: 'grpc-sidecar'
         properties: {
-          image: 'mcr.microsoft.com/aci/skr:${empty(tag) ? '2.9': tag}'
+          image: 'mcr.microsoft.com/aci/skr:${empty(tag) ? '2.10': tag}'
           environmentVariables: [
             {
               name: 'ServerType'

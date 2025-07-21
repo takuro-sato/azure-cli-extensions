@@ -41,7 +41,7 @@ spec:
               fi
             done
       - name: skr
-        image: mcr.microsoft.com/aci/skr:2.9
+        image: mcr.microsoft.com/aci/skr:2.10
         resources:
           requests:
             memory: "0.5G"
