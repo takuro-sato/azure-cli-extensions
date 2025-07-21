@@ -141,9 +141,11 @@ jobs:
           set +ex
           cd workloads/vn2
           ./vn2-test-single-yaml-deploy.sh sample-pod.yaml
+          status=$?
           if [ "$CLEANUP" != false ]; then
             c-aci-testing vn2 remove --deployment-name sample-pod
           fi
+          exit $status
 
       - name: 'Test case - stress test (4cpu, 16gb)'
         if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
