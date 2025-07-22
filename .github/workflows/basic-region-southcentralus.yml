@@ -1,0 +1,20 @@
+name: Region (Basic) - South Central US
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/basic-region-southcentralus.yml
+
+jobs:
+  basic-southcentralus:
+    secrets: inherit
+    uses: ./.github/workflows/basic-region.yml
+    with:
+      location: southcentralus

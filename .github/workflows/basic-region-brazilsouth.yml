@@ -1,0 +1,20 @@
+name: Region (Basic) - Brazil South
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/basic-region-brazilsouth.yml
+
+jobs:
+  basic-brazilsouth:
+    secrets: inherit
+    uses: ./.github/workflows/basic-region.yml
+    with:
+      location: brazilsouth

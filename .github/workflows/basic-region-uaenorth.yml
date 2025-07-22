@@ -1,0 +1,20 @@
+name: Region (Basic) - UAE North
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/basic-region-uaenorth.yml
+
+jobs:
+  basic-uaenorth:
+    secrets: inherit
+    uses: ./.github/workflows/basic-region.yml
+    with:
+      location: uaenorth

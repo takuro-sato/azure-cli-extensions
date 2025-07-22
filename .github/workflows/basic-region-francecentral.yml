@@ -1,0 +1,20 @@
+name: Region (Basic) - France Central
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/basic-region-francecentral.yml
+
+jobs:
+  basic-francecentral:
+    secrets: inherit
+    uses: ./.github/workflows/basic-region.yml
+    with:
+      location: francecentral

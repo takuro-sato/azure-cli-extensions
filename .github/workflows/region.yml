@@ -35,6 +35,8 @@ jobs:
       id: minimal-${{ matrix.policy_type }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
+      cpu: 1
+      memory_in_gb: 1
 
   managed-id:
     if: ${{ !cancelled() }}
@@ -81,26 +83,11 @@ jobs:
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
 
-  server:
-    if: ${{ !cancelled() }}
-    name: server
-    secrets: inherit
-    needs: many-layers
-    uses: ./.github/workflows/workload-server.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        policy_type: ['generated', 'debug', 'allow_all']
-    with:
-      id: server-${{ matrix.policy_type }}
-      location: ${{ inputs.location }}
-      policy_type: ${{ matrix.policy_type }}
-
   non-confidential:
     if: ${{ !cancelled() }}
     name: non-confidential
     secrets: inherit
-    needs: server
+    needs: many-layers
     uses: ./.github/workflows/workload-non-confidential.yml
     strategy:
       fail-fast: false
@@ -128,41 +115,11 @@ jobs:
       policy_type: ${{ matrix.policy_type }}
       script: workload_${{ matrix.script }}
 
-  info:
-    if: ${{ !cancelled() }}
-    name: info
-    secrets: inherit
-    needs: stress-tests
-    uses: ./.github/workflows/workload-info.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        policy_type: ['generated', 'debug', 'allow_all']
-    with:
-      id: info-${{ matrix.policy_type }}
-      location: ${{ inputs.location }}
-      policy_type: ${{ matrix.policy_type }}
-
-  vnet:
-    if: ${{ !cancelled() }}
-    name: vnet
-    secrets: inherit
-    needs: info
-    uses: ./.github/workflows/workload-vnet.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        policy_type: ['generated', 'debug', 'allow_all']
-    with:
-      id: vnet-${{ matrix.policy_type }}
-      location: ${{ inputs.location }}
-      policy_type: ${{ matrix.policy_type }}
-
   common-images:
     if: ${{ !cancelled() }}
     name: common-images
     secrets: inherit
-    needs: vnet
+    needs: stress-tests
     uses: ./.github/workflows/workload-common-images.yml
     strategy:
       fail-fast: false

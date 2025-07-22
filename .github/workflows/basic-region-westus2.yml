@@ -1,0 +1,20 @@
+name: Region (Basic) - West US 2
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/basic-region-westus2.yml
+
+jobs:
+  basic-westus2:
+    secrets: inherit
+    uses: ./.github/workflows/basic-region.yml
+    with:
+      location: westus2

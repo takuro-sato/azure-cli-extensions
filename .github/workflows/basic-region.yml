@@ -1,0 +1,67 @@
+name: Region (Basic)
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/basic-region.yml
+  workflow_call:
+    inputs:
+      location:
+        type: string
+        required: true
+        description: 'The location of the Azure Container Instances'
+  workflow_dispatch:
+    inputs:
+      location:
+        type: string
+        required: true
+        description: 'The location of the Azure Container Instances'
+
+jobs:
+  info:
+    if: ${{ !cancelled() }}
+    name: info
+    secrets: inherit
+    uses: ./.github/workflows/workload-info.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        policy_type: ['generated', 'debug', 'allow_all']
+    with:
+      id: info-${{ matrix.policy_type }}
+      location: ${{ inputs.location }}
+      policy_type: ${{ matrix.policy_type }}
+
+  server:
+    if: ${{ !cancelled() }}
+    name: server
+    secrets: inherit
+    needs: info
+    uses: ./.github/workflows/workload-server.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        policy_type: ['generated', 'debug', 'allow_all']
+    with:
+      id: server-${{ matrix.policy_type }}
+      location: ${{ inputs.location }}
+      policy_type: ${{ matrix.policy_type }}
+
+  vnet:
+    if: ${{ !cancelled() }}
+    name: vnet
+    secrets: inherit
+    needs: server
+    uses: ./.github/workflows/workload-vnet.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        policy_type: ['generated', 'debug', 'allow_all']
+    with:
+      id: vnet-${{ matrix.policy_type }}
+      location: ${{ inputs.location }}
+      policy_type: ${{ matrix.policy_type }}

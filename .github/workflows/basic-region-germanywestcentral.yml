@@ -1,0 +1,20 @@
+name: Region (Basic) - Germany West Central
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/basic-region-germanywestcentral.yml
+
+jobs:
+  basic-germanywestcentral:
+    secrets: inherit
+    uses: ./.github/workflows/basic-region.yml
+    with:
+      location: germanywestcentral

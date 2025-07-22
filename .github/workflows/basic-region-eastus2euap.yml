@@ -1,0 +1,20 @@
+name: Region (Basic) - East US 2 EUAP
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/basic-region-eastus2euap.yml
+
+jobs:
+  basic-eastus2euap:
+    secrets: inherit
+    uses: ./.github/workflows/basic-region.yml
+    with:
+      location: eastus2euap
