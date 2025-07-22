@@ -1,6 +1,6 @@
 FROM mcr.microsoft.com/mirror/docker/library/ubuntu:24.04
 RUN apt-get update -y && \
-    apt-get install -y --no-install-recommends python3 python3-fastapi uvicorn curl tcpdump net-tools && \
+    apt-get install -y --no-install-recommends python3 python3-fastapi uvicorn curl tcpdump net-tools bind9-host ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 COPY *.sh *.py /usr/local/bin/
 EXPOSE 80
