@@ -178,6 +178,9 @@ Deploys but doesn't remove, checks that containers live at least 48 hours withou
 [![VM - East US 2 EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-eastus2euap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-eastus2euap.yml)
 [![VM - Central US EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-centraluseuap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-centraluseuap.yml)
 
+### Custom AzureLinux UVM
+
+[![VM Custom UVM (Daily)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-azurelinux-uvm.yml/badge.svg)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-azurelinux-uvm.yml)
 
 ## Adding new regions
 
