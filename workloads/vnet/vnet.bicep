@@ -27,7 +27,14 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
           // difficult to test the server from the runner.  We just do curl
           // check within the container instead.
           command: [
-            'curl_from_container.sh'
+            'bash'
+            '-c'
+            '''
+            uname -a
+            dmesg | grep "Kernel command line"
+            dmesg | grep "Host Build"
+            curl_from_container.sh
+            '''
           ]
           resources: {
             requests: {
