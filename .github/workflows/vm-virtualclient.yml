@@ -194,23 +194,19 @@ jobs:
       - name: Print info
         run: scripts/vm_print_info.sh
 
-      - name: Stream output
-        run: ./scripts/vm_check_container_output_until_container_terminate.sh
+      - name: Do check loop on VM
+        run: |
+          mkdir -p ./logs
+          ./scripts/vm_do_check_loop.py --check-for-secs 3600 --out-dir ./logs --expect-to-terminate
 
       - name: Push result to Kusto
         run: |
           ./scripts/tracing/trace_step.py --start 'Push results to Kusto'
-          KUSTO_TABLE=CACIVirtualClientResult ./scripts/tracing/trace_virtualclient.py "container_output.log"
+          KUSTO_TABLE=CACIVirtualClientResult ./scripts/tracing/trace_virtualclient.py ./logs/container_log_*.log
           ./scripts/tracing/trace_step.py --complete --output \
             vmSize=$VM_SIZE \
             containerCpus=$CPU \
             containerMemoryGb=$MEMORY_IN_GB
-
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: ${{ env.DEPLOYMENT_NAME }}-container_output.log
-          path: container_output.log
 
       - name: Report result
         if: always()
@@ -219,12 +215,28 @@ jobs:
 
       - name: Check dmesg
         if: always()
-        run: ./scripts/vm_check_dmesg.sh
-
-      - name: Report result
-        if: always()
         run: |
-          ./scripts/trace_run_result.sh ${{ job.status }}
+          ./scripts/tracing/trace_step.py --start "Check dmesg"
+          set +e
+          has_error=0
+          echo -n '' > combined_dmesg.log
+          cd logs
+          for file in $(find . -name 'dmesg*.log'); do
+            echo "$file:"
+            cat "$file"
+            echo
+            echo
+            cat "$file" >> ../combined_dmesg.log
+          done
+          cd ..
+          # will call trace --complete
+          ./scripts/_check_dmesg.sh combined_dmesg.log
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ${{ env.DEPLOYMENT_NAME }}-container_output.log
+          path: container_output.log
 
       - name: Remove VM
         if: always()

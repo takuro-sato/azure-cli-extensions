@@ -6,7 +6,8 @@ try {
     $podId=$_.id
     $podName=$_.metadata.name
     $ip=(crictl inspectp $podId | ConvertFrom-Json).info.cniResult.Interfaces.eth0.IPConfigs.IP
-    echo "Checking $podName - $ip"
+    $d=(Get-Date -Format "o")
+    echo "[$d] Checking $podName - $ip"
     try {
       $res=Invoke-RestMethod -TimeoutSec 5 -Uri "http://${ip}:80/index.txt"
     } catch {

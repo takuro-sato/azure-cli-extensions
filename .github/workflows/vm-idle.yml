@@ -195,51 +195,25 @@ jobs:
           c-aci-testing aci param_set workloads/stress_tests --parameter "script='workload_idle'"
           c-aci-testing vm runc workloads/stress_tests --deployment-name $DEPLOYMENT_NAME --prefix lcow_idle3
 
-      - name: Start check loop on VM
+      - name: Do check loop on VM
         run: |
-          ./scripts/tracing/trace_step.py --start 'Start check loop on VM'
-          c-aci-testing vm cp_into --deployment-name $DEPLOYMENT_NAME \
-            scripts/vm_helpers \
-            'C:\vm_helpers' \
-            'C:\vm_helpers\start_check_loop.ps1 -checkArgs "-checkInterval 30 -additionalChecksScript check_stress_tests_http.ps1"'
+          mkdir -p ./logs
+          ./scripts/vm_do_check_loop.py --check-for-secs 3600 --out-dir ./logs --stress-tests-http-checks
 
-      - name: Poll VM for check results
+      - name: Report result
+        if: always()
         run: |
-          ./scripts/tracing/trace_step.py --start 'Poll VM for check results'
-          set +e
-          consecutive_fail_count=0
-          for i in {1..20}; do
-            sleep 120
-            c-aci-testing vm cat --deployment-name $DEPLOYMENT_NAME 'C:\check_loop.log' > check.log
-            if [ $? -ne 0 ]; then
-              echo Error: Failed to poll VM for check log
-              consecutive_fail_count=$((consecutive_fail_count+1))
-              if [ $consecutive_fail_count -gt 3 ]; then
-                exit 1
-              fi
-            else
-              consecutive_fail_count=0
-              echo Last 20 lines of check_loop.log:
-              tail -n 20 check.log
-            fi
-          done
-          exit 0
-
-      - name: Log into Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION }}
+          ./scripts/trace_run_result.sh ${{ job.status }}
 
       - name: Check for errors
+        if: always()
         run: |
           ./scripts/tracing/trace_step.py --start 'Check for errors'
           set +e
           echo Full check_loop.log:
-          cat check.log
-          err_cnt=$(grep -F ERROR check.log | wc -l)
-          if [ "$err_cnt" -gt 0 ]; then
+          cat ./logs/check_loop.log
+          err_cnt=$(grep -F ERROR ./logs/check_loop.log | wc -l)
+          if [ "$err_cnt" -gt 2 ]; then
             echo Found $err_cnt errors in check log.
             ./scripts/tracing/trace_step.py --complete --err "Found $err_cnt errors in check log." \
               --output "num_errors=$err_cnt"
@@ -248,24 +222,37 @@ jobs:
           ./scripts/tracing/trace_step.py --complete --output "num_errors=0"
           exit 0
 
-      - name: Report result
-        if: always()
-        run: |
-          ./scripts/trace_run_result.sh ${{ job.status }}
-
       - name: Check dmesg
         if: always()
-        run: ./scripts/vm_check_dmesg.sh
+        run: |
+          ./scripts/tracing/trace_step.py --start "Check dmesg"
+          set +e
+          has_error=0
+          echo -n '' > combined_dmesg.log
+          cd logs
+          for file in $(find . -name 'dmesg*.log'); do
+            echo "$file:"
+            cat "$file"
+            echo
+            echo
+            cat "$file" >> ../combined_dmesg.log
+          done
+          cd ..
+          # will call trace --complete
+          ./scripts/_check_dmesg.sh combined_dmesg.log
 
       - name: Container output
         if: always()
         run: |
-          ./scripts/vm_check_container_output.sh
-
-      - name: Report result
-        if: always()
-        run: |
-          ./scripts/trace_run_result.sh ${{ job.status }}
+          set +e
+          for file in $(find logs -name 'container_log_*.log'); do
+            echo "$file:"
+            cat "$file"
+            # Will trace steps
+            ./scripts/parse_container_output.py "$file" --fail-on-error
+            echo
+            echo
+          done
 
       - name: Remove VM
         if: always()

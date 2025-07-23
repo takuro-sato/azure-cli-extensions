@@ -39,8 +39,6 @@ with open(args.container_log_file, "rt") as f:
         elif csv_line_count == 0:
             csv_line_count += 1
             # do nothing to skip the header
-        elif "ALL-CONTAINERS-TERMINATED" in line:
-            continue
         else:
             csv_line_count += 1
             # Check if output is in azcri format

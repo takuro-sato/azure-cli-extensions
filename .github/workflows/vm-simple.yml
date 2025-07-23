@@ -185,7 +185,13 @@ jobs:
 
       - name: Check dmesg
         if: always()
-        run: ./scripts/vm_check_dmesg.sh
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Check dmesg'
+          c-aci-testing vm exec --deployment-name $DEPLOYMENT_NAME 'Get-Item C:\*\dmesg*.log | foreach { echo ""; echo ""; echo $_.FullName; cat -Raw $_ } > C:\all-dmesg.log'
+          c-aci-testing vm cat --deployment-name $DEPLOYMENT_NAME 'C:\all-dmesg.log' > dmesg.log
+          cat dmesg.log
+          # will call trace --complete
+          ./scripts/_check_dmesg.sh "dmesg.log"
 
       - name: Container output
         if: always()

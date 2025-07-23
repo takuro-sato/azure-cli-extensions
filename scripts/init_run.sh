@@ -2,8 +2,8 @@
 
 set -e
 
-echo Install azure-kusto-data
-pip install azure-kusto-data
+echo Install required azure-sdk
+pip install azure-kusto-data azure-storage-blob
 
 echo Start run trace
 ./scripts/tracing/new_run.py
