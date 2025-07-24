@@ -6,8 +6,7 @@ permissions:
 
 on:
   schedule:
-    - cron: '0 2 * * *'
-
+    - cron: '55 6 * * *'  # managed by scripts/spread_out_schedules.py
 jobs:
   vm-custom-uvm:
     uses: ./.github/workflows/vm-custom-uvm.yml
