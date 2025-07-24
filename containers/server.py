@@ -10,17 +10,28 @@ from fastapi.responses import PlainTextResponse
 from subprocess import check_output, STDOUT, CalledProcessError
 from os import getenv
 from datetime import datetime, timezone
+from glob import glob
 
 
 def checked_exec_get_output(cmd: str) -> bytes:
     return check_output(cmd, shell=True, stderr=STDOUT)
 
+kern_cmdline = checked_exec_get_output('dmesg | grep "Kernel command line"').decode('utf-8').strip()
+hv_host_build = checked_exec_get_output('dmesg | grep "Hyper-V: Host Build"').decode('utf-8').strip()
+
+ref_info_sha = "(not found)"
+ref_info_glob = glob("/security-context-*/reference-info-base64")
+if ref_info_glob:
+    ref_info_sha = checked_exec_get_output(f'base64 -d < {ref_info_glob[0]} | sha256sum').decode('utf-8').split()[0]
 
 startup_time = datetime.now(timezone.utc)
 startup_str = (
     f"Server started at {startup_time.isoformat()}\n\n"
-    + f"uptime:\n{checked_exec_get_output('uptime').decode('utf-8')}\n"
-    + f"uname -a:\n{checked_exec_get_output('uname -a').decode('utf-8')}\n"
+    + f"uptime:\n{checked_exec_get_output('uptime').decode('utf-8').strip()}\n"
+    + f"uname -a:\n{checked_exec_get_output('uname -a').decode('utf-8').strip()}\n"
+    + f"{kern_cmdline}\n"
+    + f"{hv_host_build}\n"
+    + f"Reference info SHA256SUM: {ref_info_sha}\n\n"
 )
 req_count = 0
 

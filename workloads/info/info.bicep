@@ -20,13 +20,14 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
         properties: {
           image: 'mcr.microsoft.com/mirror/docker/library/ubuntu:24.04'
           command: [
-            'sh'
+            'bash'
             '-c'
             '''
             set -e
             uname -a
             dmesg | grep "Kernel command line"
-            dmesg | grep "Host Build"
+            dmesg | grep "Hyper-V: Host Build"
+            echo Reference info SHA256SUM: $(base64 -d < /security-context-*/reference-info-base64 | sha256sum)
             cat /proc/cpuinfo
             echo Building snp-report binary...
             set +e

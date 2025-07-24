@@ -32,8 +32,11 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
             '''
             uname -a
             dmesg | grep "Kernel command line"
-            dmesg | grep "Host Build"
+            dmesg | grep "Hyper-V: Host Build"
+            echo Reference info SHA256SUM: $(base64 -d < /security-context-*/reference-info-base64 | sha256sum)
+            cat /proc/cpuinfo
             curl_from_container.sh
+            sleep infinity
             '''
           ]
           resources: {

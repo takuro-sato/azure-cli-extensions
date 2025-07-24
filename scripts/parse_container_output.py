@@ -9,6 +9,8 @@ import subprocess
 import os
 import sys
 import json
+import re
+
 from argparse import ArgumentParser, FileType
 from typing import TextIO
 
@@ -28,7 +30,7 @@ args.add_argument(
 )
 args = args.parse_args()
 
-out_file: TextIO = args.container_log_file
+log_file: TextIO = args.container_log_file
 write_output_to: TextIO = args.write_output_to
 must_have_output = args.must_have_output
 fail_on_error = args.fail_on_error
@@ -58,8 +60,29 @@ def fail(msg: str):
     )
     sys.exit(1)
 
+KERNEL_CMDLINE_LINE_RE = re.compile(r"Kernel command line: (.+)$", re.MULTILINE)
+HOST_BUILD_RE = re.compile(r"Hyper-V: Host Build (.+)$", re.MULTILINE)
+LINUX_UNAME_RE = re.compile(r"(Linux .+ \#.+)$", re.MULTILINE)
+REFERENCE_INFO_SHA256_RE = re.compile(r"\WReference info SHA256SUM: ([0-9a-fA-F]+)", re.MULTILINE)
 
-for line in out_file:
+extractions = [
+    ("kernel_cmdline", KERNEL_CMDLINE_LINE_RE),
+    ("host_build", HOST_BUILD_RE),
+    ("uname", LINUX_UNAME_RE),
+    ("reference_info_sha256", REFERENCE_INFO_SHA256_RE),
+]
+
+container_log_str = log_file.read()
+log_file.close()
+
+for key, pattern in extractions:
+    match = pattern.search(container_log_str)
+    if match:
+        value = match.group(1)
+        output[key] = value
+        print(f"Found {key}: {value}")
+
+for line in container_log_str.splitlines():
     error_prefix = "ERROR:"
     err_idx = line.find(error_prefix)
     if err_idx >= 0:
@@ -79,8 +102,6 @@ for line in out_file:
             output_seen = True
         except json.JSONDecodeError as e:
             fail(f"Failed to decode JSON in OUTPUT: {output_msg}")
-
-out_file.close()
 
 output["error_count"] = len(err_msgs)
 output["errors"] = err_msgs

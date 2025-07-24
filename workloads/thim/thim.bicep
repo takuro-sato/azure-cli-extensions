@@ -51,6 +51,10 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
             '''
             set +e
             has_error=0
+
+            uname -a
+            # no dmesg in this container
+
             echo "env:"
             env
             echo "Provided UVM_SECURITY_CONTEXT_DIR=$UVM_SECURITY_CONTEXT_DIR"
@@ -68,6 +72,8 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
               if [ ! -f "$UVM_SECURITY_CONTEXT_DIR/$file" ]; then
                 echo "ERROR: $UVM_SECURITY_CONTEXT_DIR/$file not found"
                 has_error=1
+              elif [ "$file" = "reference-info-base64" ]; then
+                echo Reference info SHA256SUM: $(base64 -d < $UVM_SECURITY_CONTEXT_DIR/$file | sha256sum)
               fi
             done
 

@@ -143,6 +143,10 @@ jobs:
           c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME --follow | tee output.log
           cat output.log | jq -R -s '{info: .}' | ./scripts/tracing/trace_step.py --complete --strict --output-from-stdin
 
+      - name: Parse output
+        run: |
+          ./scripts/parse_container_output.py --fail-on-error output.log
+
       - name: Get Container States
         if: always()
         continue-on-error: true

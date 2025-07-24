@@ -153,14 +153,14 @@ jobs:
           ./scripts/tracing/trace_step.py --start 'Monitor Container Group'
           c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME 2>&1 | tee monitor.log
 
-      - name: Check for errors
+      - name: Parse output
+        if: always()
         run: |
-          ./scripts/tracing/trace_step.py --start 'Check for errors'
-          if grep -q 'ERROR' monitor.log; then
-            echo "Error found in container log"
-            ./scripts/tracing/trace_step.py --complete --err 'Error found in container log'
-            exit 1
-          fi
+          ./scripts/parse_container_output.py --fail-on-error monitor.log
+
+      - name: Check container log contains curl checks
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Check container log contains curl checks'
           if ! grep -q 'Doing repeat check' monitor.log; then
             echo "Incomplete container log"
             ./scripts/tracing/trace_step.py --complete --err 'Incomplete container log'
