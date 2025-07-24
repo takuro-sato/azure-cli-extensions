@@ -13,14 +13,14 @@ permissions:
 on:
   pull_request:
     paths:
-      - .github/workflows/vn2-helloworld.yml
+      - .github/workflows/vn2-region.yml
       - scripts/init_run.sh
       - workloads/vn2/**
   push:
     branches:
       - main
     paths:
-      - .github/workflows/vn2-helloworld.yml
+      - .github/workflows/vn2-region.yml
       - scripts/init_run.sh
       - workloads/vn2/**
   workflow_call:
