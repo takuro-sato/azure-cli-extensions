@@ -126,6 +126,7 @@ env:
   VM_ZONE: ${{ inputs.zone || '' }}
   UVM_KERNEL: ${{ inputs.uvmBlobName != '' && format('{0}/kernel.vmgs', inputs.uvmBlobName) || '' }}
   UVM_ROOTFS: ${{ inputs.uvmBlobName != '' && format('{0}/rootfs-verity.vhd', inputs.uvmBlobName) || '' }}
+  UVM_CONTAINERD_SHIM: ${{ inputs.uvmBlobName != '' && format('{0}/containerd-shim-runhcs-v1.exe', inputs.uvmBlobName) || '' }}
 
 jobs:
   vm-simple:
