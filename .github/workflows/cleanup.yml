@@ -143,6 +143,6 @@ jobs:
           for deployment in $(az deployment group list -g c-aci-dashboard --query "[].name" -o tsv); do
               echo "Deleting deployment: ${deployment}"
               az deployment group delete --name $deployment -g c-aci-dashboard &
-              sleep 5
+              sleep 0.5
           done
           wait
