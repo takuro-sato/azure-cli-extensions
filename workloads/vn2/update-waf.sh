@@ -13,14 +13,32 @@ NODE_PORT="$3"
 
 cd "$(dirname "$0")"
 
+curr_ctx_name=$(kubectl config current-context)
+if [[ $curr_ctx_name != $CLUSTER_NAME ]]; then
+    echo "Wrong kubectl context - expected to be $CLUSTER_NAME, but currently is $curr_ctx_name" >&2
+    exit 1
+fi
+
 aks_info="$(az aks show --resource-group "$AKS_RESOURCE_GROUP" --name "$CLUSTER_NAME" -o json)"
 location=$(echo "$aks_info" | jq -r '.location')
 mc_resource_group=$(echo "$aks_info" | jq -r '.nodeResourceGroup')
 nodepool_name=$(echo "$aks_info" | jq -r '.agentPoolProfiles[0].name')
 aks_machines="$(az aks machine list --resource-group "$AKS_RESOURCE_GROUP" --cluster-name "$CLUSTER_NAME" --nodepool-name "$nodepool_name" -o json)"
 node_ips=(
-    $(echo "$aks_machines" | jq -r '.[].properties.network.ipAddresses[0].ip')
+    $(echo "$aks_machines" | jq -r '.[].properties.network.ipAddresses[0].ip|select(. != null)')
 )
+if [[ ${#node_ips[@]} -eq 0 ]]; then
+    # az aks machine list/show sometimes returns null IP even when the node in
+    # fact have an IP.  Try getting via kubectl instead.
+    node_ips=(
+        $(
+            kubectl get nodes -o json |
+            jq -r '.items[]|select(.metadata.name|contains("virtualnode")|not)
+                    |.metadata.annotations["alpha.kubernetes.io/provided-node-ip"]
+                    |select(. != null and . != "")'
+        )
+    )
+fi
 if [[ ${#node_ips[@]} -eq 0 ]]; then
     echo "No node IPs found." >&2
     exit 1
@@ -35,11 +53,6 @@ vnet_id=$(az network vnet list --resource-group "$mc_resource_group" --query "[0
 WAF_NAME="vn2-aks-waf-$location"
 
 if [[ "$NODE_PORT" == svc/* ]]; then
-    curr_ctx_name=$(kubectl config current-context)
-    if [[ $curr_ctx_name != $CLUSTER_NAME ]]; then
-        echo "Wrong kubectl context - expected to be $CLUSTER_NAME, but currently is $curr_ctx_name" >&2
-        exit 1
-    fi
     svc_name="${NODE_PORT#svc/}"
     svc_info="$(kubectl get svc "$svc_name" -o json)"
     if [[ -z "$svc_info" ]]; then
