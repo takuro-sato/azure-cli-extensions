@@ -6,11 +6,8 @@ permissions:
 
 on:
   schedule:
-    - cron: '40 6 * * *'  # managed by scripts/spread_out_schedules.py
+    - cron: '17 6 * * *'  # managed by scripts/spread_out_schedules.py
   workflow_dispatch:
-  pull_request:
-    paths:
-      - .github/workflows/uptime-eastus.yml
 
 jobs:
   uptime:

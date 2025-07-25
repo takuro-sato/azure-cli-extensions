@@ -6,12 +6,8 @@ permissions:
 
 on:
   schedule:
-    - cron: '45 6 * * *'  # managed by scripts/spread_out_schedules.py
+    - cron: '52 6 * * *'  # managed by scripts/spread_out_schedules.py
   workflow_dispatch:
-  pull_request:
-    paths:
-      - .github/workflows/high-spec-uaenorth.yml
-      - .github/workflows/high-spec.yml
 
 jobs:
   high-spec-uaenorth:

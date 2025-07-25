@@ -28,14 +28,22 @@ on:
         type: string
         description: Where to deploy to
         required: true
+      zone:
+        type: string
+        description: The availability zone to deploy to
+        default: ''
+      use_vnet:
+        type: boolean
+        description: Whether to use a virtual network for the container group
+        default: false
       cpu:
         type: number
         description: The number of CPU cores in container
-        default: 2
+        default: 1
       memory_in_gb:
         type: number
         description: The memory in container in Gb
-        default: 4
+        default: 1
       cleanup:
         type: boolean
         description: Whether to cleanup the container group after testing
@@ -53,14 +61,22 @@ on:
         type: string
         description: Where to deploy to
         required: true
+      zone:
+        type: string
+        description: The availability zone to deploy to
+        default: ''
+      use_vnet:
+        type: boolean
+        description: Whether to use a virtual network for the container group
+        default: false
       cpu:
         type: number
         description: The number of CPU cores in container
-        default: 2
+        default: 1
       memory_in_gb:
         type: number
         description: The memory in container in Gb
-        default: 4
+        default: 1
       cleanup:
         type: boolean
         description: Whether to cleanup the container group after testing
@@ -83,8 +99,10 @@ env:
   REGISTRY: cacidashboard.azurecr.io
   MANAGED_IDENTITY: cacidashboard
   LOCATION: ${{ inputs.location || 'westeurope' }}
-  CPU: ${{ inputs.cpu || 2 }}
-  MEMORY_IN_GB: ${{ inputs.memory_in_gb || 4 }}
+  ZONE: ${{ inputs.zone }}
+  USE_VNET: ${{ inputs.use_vnet || false }}
+  CPU: ${{ inputs.cpu || 1 }}
+  MEMORY_IN_GB: ${{ inputs.memory_in_gb || 1 }}
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: ${{ inputs.policy_type || 'generated' }}
 
@@ -114,6 +132,8 @@ jobs:
 
       - name: Set Parameters
         run: |
+          c-aci-testing aci param_set workloads/info --parameter "zone='$ZONE'"
+          c-aci-testing aci param_set workloads/info --parameter useVnet=$USE_VNET
           c-aci-testing aci param_set workloads/info --parameter cpu=$CPU
           c-aci-testing aci param_set workloads/info --parameter memoryInGb=$MEMORY_IN_GB
 

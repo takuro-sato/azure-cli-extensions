@@ -6,11 +6,8 @@ permissions:
 
 on:
   schedule:
-    - cron: '5 7 * * *'  # managed by scripts/spread_out_schedules.py
+    - cron: '52 7 * * *'  # managed by scripts/spread_out_schedules.py
   workflow_dispatch:
-  pull_request:
-    paths:
-      - .github/workflows/vm-southeastasia.yml
 
 jobs:
   vm-southeastasia:

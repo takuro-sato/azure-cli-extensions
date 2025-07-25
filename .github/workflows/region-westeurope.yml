@@ -6,11 +6,8 @@ permissions:
 
 on:
   schedule:
-    - cron: '40 5 * * *'  # managed by scripts/spread_out_schedules.py
+    - cron: '12 5 * * *'  # managed by scripts/spread_out_schedules.py
   workflow_dispatch:
-  pull_request:
-    paths:
-      - .github/workflows/region-westeurope.yml
 
 jobs:
   westeurope:

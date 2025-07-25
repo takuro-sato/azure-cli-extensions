@@ -6,11 +6,8 @@ permissions:
 
 on:
   schedule:
-    - cron: '40 4 * * *'  # managed by scripts/spread_out_schedules.py
+    - cron: '10 4 * * *'  # managed by scripts/spread_out_schedules.py
   workflow_dispatch:
-  pull_request:
-    paths:
-      - .github/workflows/region-swedencentral.yml
 
 jobs:
   swedencentral:

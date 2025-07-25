@@ -22,46 +22,35 @@ on:
         description: 'The location of the Azure Container Instances'
 
 jobs:
-  info:
+  info-nonzoned:
     if: ${{ !cancelled() }}
-    name: info
+    name: info-nonzoned
     secrets: inherit
     uses: ./.github/workflows/workload-info.yml
     strategy:
       fail-fast: false
       matrix:
-        policy_type: ['generated', 'debug', 'allow_all']
+        use_vnet: [false, true]
     with:
-      id: info-${{ matrix.policy_type }}
+      id: info-${{ matrix.use_vnet && 'vnet-' || '' }}allow_all
       location: ${{ inputs.location }}
-      policy_type: ${{ matrix.policy_type }}
+      use_vnet: ${{ matrix.use_vnet }}
+      policy_type: allow_all
 
-  server:
-    if: ${{ !cancelled() }}
-    name: server
+  info-zoned:
+    if: ${{ !cancelled() && contains(vars.ACI_ZONED_REGIONS, format(',{0},', inputs.location)) }}
+    name: info-zoned
     secrets: inherit
-    needs: info
-    uses: ./.github/workflows/workload-server.yml
+    uses: ./.github/workflows/workload-info.yml
     strategy:
       fail-fast: false
       matrix:
-        policy_type: ['generated', 'debug', 'allow_all']
+        # only vnets are supported for zonal deployments
+        use_vnet: [true]
+        zone: ["1", "2", "3"]
     with:
-      id: server-${{ matrix.policy_type }}
+      id: info-zone${{ matrix.zone }}-${{ matrix.use_vnet && 'vnet-' || '' }}allow_all
       location: ${{ inputs.location }}
-      policy_type: ${{ matrix.policy_type }}
-
-  vnet:
-    if: ${{ !cancelled() }}
-    name: vnet
-    secrets: inherit
-    needs: server
-    uses: ./.github/workflows/workload-vnet.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        policy_type: ['generated', 'debug', 'allow_all']
-    with:
-      id: vnet-${{ matrix.policy_type }}
-      location: ${{ inputs.location }}
-      policy_type: ${{ matrix.policy_type }}
+      use_vnet: ${{ matrix.use_vnet }}
+      zone: ${{ matrix.zone }}
+      policy_type: allow_all

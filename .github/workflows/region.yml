@@ -38,11 +38,56 @@ jobs:
       cpu: 1
       memory_in_gb: 1
 
+  info:
+    if: ${{ !cancelled() }}
+    name: info
+    secrets: inherit
+    needs: minimal
+    uses: ./.github/workflows/workload-info.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        policy_type: ['generated', 'debug', 'allow_all']
+    with:
+      id: info-${{ matrix.policy_type }}
+      location: ${{ inputs.location }}
+      policy_type: ${{ matrix.policy_type }}
+
+  server:
+    if: ${{ !cancelled() }}
+    name: server
+    secrets: inherit
+    needs: info
+    uses: ./.github/workflows/workload-server.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        policy_type: ['generated', 'debug', 'allow_all']
+    with:
+      id: server-${{ matrix.policy_type }}
+      location: ${{ inputs.location }}
+      policy_type: ${{ matrix.policy_type }}
+
+  vnet:
+    if: ${{ !cancelled() }}
+    name: vnet
+    secrets: inherit
+    needs: server
+    uses: ./.github/workflows/workload-vnet.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        policy_type: ['generated', 'debug', 'allow_all']
+    with:
+      id: vnet-${{ matrix.policy_type }}
+      location: ${{ inputs.location }}
+      policy_type: ${{ matrix.policy_type }}
+
   managed-id:
     if: ${{ !cancelled() }}
     name: managed-id
     secrets: inherit
-    needs: minimal
+    needs: vnet
     uses: ./.github/workflows/workload-managed-identity.yml
     strategy:
       fail-fast: false

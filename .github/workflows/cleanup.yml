@@ -106,6 +106,9 @@ jobs:
       - name: Cleanup VNETs
         run: |
           for VNET in $(az network vnet list -g c-aci-dashboard --query "[].name" -o tsv); do
+              if [[ "$VNET" == aci-long-lived-vnet* ]]; then
+                  continue
+              fi
               az network vnet delete --no-wait -g c-aci-dashboard -n $VNET || true
           done
 
@@ -124,6 +127,9 @@ jobs:
       - name: Cleanup NSGs
         run: |
           for NSG in $(az network nsg list -g c-aci-dashboard --query "[].name" -o tsv); do
+              if [[ "$NSG" == *aci-long-lived-vnet* ]]; then
+                  continue
+              fi
               az network nsg delete --no-wait -g c-aci-dashboard -n $NSG || true
           done
 

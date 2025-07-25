@@ -6,11 +6,8 @@ permissions:
 
 on:
   schedule:
-    - cron: '40 2 * * *'  # managed by scripts/spread_out_schedules.py
+    - cron: '17 1-23 * * *'  # managed by scripts/spread_out_schedules.py
   workflow_dispatch:
-  pull_request:
-    paths:
-      - .github/workflows/basic-region-southafricanorth.yml
 
 jobs:
   basic-southafricanorth:
