@@ -8,3 +8,4 @@ param location='westeurope'
 param ccePolicies={
   attestation: ''
 }
+param attestationEndpoint=''

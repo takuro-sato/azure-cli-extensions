@@ -1,0 +1,18 @@
+name: Attestation - Japan East
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '17 1-23 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  attestation-japaneast:
+    secrets: inherit
+    uses: ./.github/workflows/workload-attestation.yml
+    with:
+      location: japaneast
+      policy_type: allow_all

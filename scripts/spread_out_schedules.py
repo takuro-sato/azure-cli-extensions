@@ -34,14 +34,17 @@ test_types = [
     TestType("perf", 120, 20, 1, 10),
 ]
 
-# This test is special - it runs every hour for continuous monitoring
-basic_test = TestType("basic-region", 20, 50, 1, 0)
+# These tests are special - it runs every hour for continuous monitoring
+continuous_test_types = [
+    TestType("basic-region", 5, 50, 1, 0),
+    TestType("attestation-", 3, 50, 1, 1),
+]
 
 tests = []
-basic_tests = []
+continuous_tests = {}
 
 # Don't run on 0:00-0:59 UTC as that's when cleanup would be happening.
-BASIC_TEST_HOURS = "1-23"
+CONTINUOUS_TEST_HOURS = "1-23"
 
 def find_test_type(workflow_name: str) -> TestType:
     for test_type in test_types:
@@ -56,9 +59,14 @@ for wf in workflows:
     add_to_list = tests
 
     t = find_test_type(wf)
-    if not t and wf.startswith(basic_test.ty):
-        t = basic_test
-        add_to_list = basic_tests
+    if not t:
+        for ct in continuous_test_types:
+            if wf.startswith(ct.ty):
+                t = ct
+                if ct.ty not in continuous_tests:
+                    continuous_tests[ct.ty] = []
+                add_to_list = continuous_tests[t.ty]
+                break
     if not t:
         print(f"Skipping {wf}")
         continue
@@ -124,12 +132,17 @@ for wf, t in sorted(tests, key=lambda x: (x[1].priority, x[0])):
 if curr_concurrency > 0:
     accumulated_time += last_t.rough_time_mins
 
-# schedule the basic tests
-basic_test_minute = 0
-for wf, t in sorted(basic_tests, key=lambda x: x[0]):
-    cron = f"{basic_test_minute} {BASIC_TEST_HOURS} * * *"
-    print(f"Setting {wf} to {cron}")
-    write_cron(wf, cron)
-    basic_test_minute = (basic_test_minute + t.shift) % 60
+# schedule the continuous tests
+
+cont_start_min = 0
+for ty in continuous_test_types:
+    tests = continuous_tests[ty.ty]
+    accu_minutes = cont_start_min % 60
+    cont_start_min += continuous_test_types[0].rough_time_mins
+    for wf, t in sorted(tests, key=lambda x: x[0]):
+        cron = f"{accu_minutes} {CONTINUOUS_TEST_HOURS} * * *"
+        print(f"Setting {wf} to {cron}")
+        write_cron(wf, cron)
+        accu_minutes = (accu_minutes + t.shift) % 60
 
 print(f"Tests expected to finish around {accumulated_time // 60 + 2}:{accumulated_time % 60} UTC")

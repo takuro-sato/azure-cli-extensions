@@ -1,0 +1,18 @@
+name: Attestation - West US 3
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '31 1-23 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  attestation-westus3:
+    secrets: inherit
+    uses: ./.github/workflows/workload-attestation.yml
+    with:
+      location: westus3
+      policy_type: allow_all

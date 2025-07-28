@@ -1,6 +1,7 @@
 param location string
 param tag string
 param ccePolicies object
+param attestationEndpoint string
 
 param cpu int = 1
 param memoryInGb int = 4
@@ -26,6 +27,12 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
               cpu: cpu
             }
           }
+          environmentVariables: [
+            {
+              name: 'ATTESTATION_ENDPOINT'
+              value: attestationEndpoint
+            }
+          ]
           command: [
             'sh'
             '-c'
@@ -36,7 +43,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
               -X POST \
               -H "Content-Type: application/json" \
               -d '{
-                "maa_endpoint": "cacidashboard.weu.attest.azure.net",
+                "maa_endpoint": "'$ATTESTATION_ENDPOINT'",
                 "runtime_data": "'$(echo '{
                   "keys": [
                     {

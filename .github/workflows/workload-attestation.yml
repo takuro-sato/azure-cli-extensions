@@ -44,6 +44,10 @@ on:
         type: string
         description: The type of policy to use
         default: generated
+      attestation_endpoint:
+        type: string
+        description: The MAA endpoint host name, or empty to use regional default
+        default: ''
   workflow_call:
     inputs:
       id:
@@ -69,6 +73,10 @@ on:
         type: string
         description: The type of policy to use
         default: generated
+      attestation_endpoint:
+        type: string
+        description: The MAA endpoint host name, or empty to use regional default
+        default: ''
 
 env:
   KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
@@ -88,6 +96,7 @@ env:
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: ${{ inputs.policy_type || 'generated' }}
   TAG: "2.10"
+  ATTESTATION_ENDPOINT: ${{ inputs.attestation_endpoint }}
 
 jobs:
   attestation:
@@ -113,10 +122,26 @@ jobs:
         if: ${{ env.POLICY_TYPE != 'allow_all' }}
         run: c-aci-testing images pull workloads/attestation
 
+      - name: Set Attestation Endpoint
+        if: ${{ env.ATTESTATION_ENDPOINT == '' }}
+        run: |
+          ATTESTATION_ENDPOINT=$(cat azure/MAA-endpoints.csv | grep -vE '^#|^$' | grep -E '^${{ env.LOCATION }},' | cut -d, -f2)
+          if [ -z "$ATTESTATION_ENDPOINT" ]; then
+            echo "No MAA endpoint found for location ${{ env.LOCATION }}"
+            exit 1
+          fi
+          # Strip https:// and trailing slash
+          ATTESTATION_ENDPOINT=${ATTESTATION_ENDPOINT#https://}
+          ATTESTATION_ENDPOINT=${ATTESTATION_ENDPOINT%/}
+          echo "Using MAA endpoint: $ATTESTATION_ENDPOINT"
+          echo "ATTESTATION_ENDPOINT=$ATTESTATION_ENDPOINT" >> $GITHUB_ENV
+
       - name: Set Parameters
         run: |
-          c-aci-testing aci param_set workloads/attestation --parameter cpu=$CPU
-          c-aci-testing aci param_set workloads/attestation --parameter memoryInGb=$MEMORY_IN_GB
+          c-aci-testing aci param_set workloads/attestation --parameter \
+            cpu=$CPU \
+            memoryInGb=$MEMORY_IN_GB \
+            attestationEndpoint=$ATTESTATION_ENDPOINT
 
       - name: Generate Security Policy
         run: |

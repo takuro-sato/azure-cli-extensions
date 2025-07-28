@@ -1,0 +1,18 @@
+name: Attestation - New Zealand North
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '19 1-23 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  attestation-newzealandnorth:
+    secrets: inherit
+    uses: ./.github/workflows/workload-attestation.yml
+    with:
+      location: newzealandnorth
+      policy_type: allow_all
