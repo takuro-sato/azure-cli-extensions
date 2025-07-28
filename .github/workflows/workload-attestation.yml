@@ -110,6 +110,7 @@ jobs:
         run: ./scripts/init_run.sh
 
       - name: Pull Image
+        if: ${{ env.POLICY_TYPE != 'allow_all' }}
         run: c-aci-testing images pull workloads/attestation
 
       - name: Set Parameters
