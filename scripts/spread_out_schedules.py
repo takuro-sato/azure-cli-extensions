@@ -34,8 +34,8 @@ test_types = [
     TestType("perf", 120, 20, 1, 10),
 ]
 
-# This test is special - it runs continuously (every 15 mins)
-basic_test = TestType("basic-region", 15, 50, 1, 0)
+# This test is special - it runs every hour for continuous monitoring
+basic_test = TestType("basic-region", 20, 50, 1, 0)
 
 tests = []
 basic_tests = []
@@ -127,8 +127,7 @@ if curr_concurrency > 0:
 # schedule the basic tests
 basic_test_minute = 0
 for wf, t in sorted(basic_tests, key=lambda x: x[0]):
-    minutes = sorted((basic_test_minute + offset) % 60 for offset in range(0, 60, 15))
-    cron = f"{','.join(map(str, minutes))} {BASIC_TEST_HOURS} * * *"
+    cron = f"{basic_test_minute} {BASIC_TEST_HOURS} * * *"
     print(f"Setting {wf} to {cron}")
     write_cron(wf, cron)
     basic_test_minute = (basic_test_minute + t.shift) % 60
