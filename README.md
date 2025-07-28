@@ -2,10 +2,6 @@
 
 Suite of tests to monitor reliability and performance of Confidential ACI.
 
-To see graphs of the results over time, see:
-
-https://microsoft.github.io/confidential-aci-dashboard/
-
 ## Region Status
 
 Deploys to many regions to gather data about region health
@@ -13,6 +9,7 @@ Deploys to many regions to gather data about region health
 ### Stable
 
 [![Region (Basic) - Brazil South](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-brazilsouth.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-brazilsouth.yml)
+[![Region (Basic) - Central India](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-centralindia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-centralindia.yml)
 [![Region (Basic) - Chile Central](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-chilecentral.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-chilecentral.yml)
 [![Region (Basic) - East Asia](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-eastasia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-eastasia.yml)
 [![Region (Basic) - East US 2](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-eastus2.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-eastus2.yml)
@@ -38,12 +35,14 @@ Deploys to many regions to gather data about region health
 [![Region (Basic) - West US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-westus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-westus.yml)
 
 ### Canary
-[![Region (Basic) - East US 2 EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-eastus2euap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-eastus2euap.yml)
+
 [![Region (Basic) - Central US EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-centraluseuap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-centraluseuap.yml)
+[![Region (Basic) - East US 2 EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-eastus2euap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-eastus2euap.yml)
 
 ## MAA
 
 [![Attestation - Brazil South](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-brazilsouth.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-brazilsouth.yml)
+[![Attestation - Central India](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-centralindia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-centralindia.yml)
 [![Attestation - Chile Central](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-chilecentral.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-chilecentral.yml)
 [![Attestation - East Asia](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-eastasia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-eastasia.yml)
 [![Attestation - East US 2](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-eastus2.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-eastus2.yml)
@@ -68,155 +67,20 @@ Deploys to many regions to gather data about region health
 [![Attestation - West US 3](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-westus3.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-westus3.yml)
 [![Attestation - West US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-westus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-westus.yml)
 
-[![Attestation - East US 2 EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-eastus2euap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-eastus2euap.yml)
 [![Attestation - Central US EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-centraluseuap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-centraluseuap.yml)
+[![Attestation - East US 2 EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-eastus2euap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-eastus2euap.yml)
 
-## More complex test cases
+---
 
-### Stable
-
-[![Region - East US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-eastus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-eastus.yml)
-[![Region - North Europe](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-northeurope.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-northeurope.yml)
-[![Region - East Asia](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-eastasia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-eastasia.yml)
-[![Region - Germany West Central](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-germanywestcentral.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-germanywestcentral.yml)
-[![Region - Italy North](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-italynorth.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-italynorth.yml)
-[![Region - UAE North](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-uaenorth.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-uaenorth.yml)
-[![Region - Japan East](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-japaneast.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-japaneast.yml)
-[![Region - Switzerland North](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-switzerlandnorth.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-switzerlandnorth.yml)
-[![Region - South East Asia](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-southeastasia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-southeastasia.yml)
-[![Region - South Central US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-southcentralus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-southcentralus.yml)
-[![Region - Sweden Central](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-swedencentral.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-swedencentral.yml)
-[![Region - West Europe](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-westeurope.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-westeurope.yml)
-[![Region - West US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-westus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-westus.yml)
-
-### Canary
-[![Region - East US 2 EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-eastus2euap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-eastus2euap.yml)
-[![Region - Central US EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-centraluseuap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-centraluseuap.yml)
-
-## High Spec Containers
-
-Deploys with container with high specification (varies by region)
-
-### Stable
-
-[![High Spec - East US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-eastus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-eastus.yml)
-[![High Spec - North Europe](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-northeurope.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-northeurope.yml)
-[![High Spec - East Asia](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-eastasia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-eastasia.yml)
-[![High Spec - Germany West Central](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-germanywestcentral.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-germanywestcentral.yml)
-[![High Spec - Italy North](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-italynorth.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-italynorth.yml)
-[![High Spec - UAE North](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-uaenorth.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-uaenorth.yml)
-[![High Spec - Japan East](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-japaneast.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-japaneast.yml)
-[![High Spec - Switzerland North](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-switzerlandnorth.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-switzerlandnorth.yml)
-[![High Spec - South East Asia](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-southeastasia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-southeastasia.yml)
-[![High Spec - Central US EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-centraluseuap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-centraluseuap.yml)
-[![High Spec - South Central US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-southcentralus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-southcentralus.yml)
-[![High Spec - Sweden Central](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-swedencentral.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-swedencentral.yml)
-[![High Spec - West Europe](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-westeurope.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-westeurope.yml)
-[![High Spec - West US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-westus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-westus.yml)
-
-### Canary
-
-[![High Spec - East US 2 EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-eastus2euap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-eastus2euap.yml)
-
-## Deployment with VN2
-
-Deploys confidential containers with VN2
-
-[![VN2 - East US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-eastus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-eastus.yml)
-[![VN2 - North Europe](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-northeurope.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-northeurope.yml)
-[![VN2 - East Asia](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-eastasia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-eastasia.yml)
-[![VN2 - Germany West Central](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-germanywestcentral.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-germanywestcentral.yml)
-[![VN2 - Italy North](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-italynorth.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-italynorth.yml)
-[![VN2 - UAE North](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-uaenorth.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-uaenorth.yml)
-[![VN2 - Japan East](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-japaneast.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-japaneast.yml)
-[![VN2 - Switzerland North](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-switzerlandnorth.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-switzerlandnorth.yml)
-[![VN2 - South East Asia](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-southeastasia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-southeastasia.yml)
-[![VN2 - South Central US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-southcentralus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-southcentralus.yml)
-[![VN2 - Sweden Central](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-swedencentral.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-swedencentral.yml)
-[![VN2 - West Europe](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-westeurope.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-westeurope.yml)
-[![VN2 - West US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-westus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-westus.yml)
-
-[![VN2 - East US 2 EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-eastus2euap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-eastus2euap.yml)
-
-## Performance
-
-### Stable
-
-[![Perf - East US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-eastus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-eastus.yml)
-[![Perf - North Europe](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-northeurope.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-northeurope.yml)
-[![Perf - East Asia](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-eastasia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-eastasia.yml)
-[![Perf - Germany West Central](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-germanywestcentral.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-germanywestcentral.yml)
-[![Perf - Italy North](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-italynorth.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-italynorth.yml)
-[![Perf - UAE North](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-uaenorth.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-uaenorth.yml)
-[![Perf - Japan East](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-japaneast.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-japaneast.yml)
-[![Perf - Switzerland North](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-switzerlandnorth.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-switzerlandnorth.yml)
-[![Perf - South East Asia](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-southeastasia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-southeastasia.yml)
-[![Perf - South Central US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-southcentralus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-southcentralus.yml)
-[![Perf - Sweden Central](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-swedencentral.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-swedencentral.yml)
-[![Perf - West Europe](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-westeurope.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-westeurope.yml)
-[![Perf - West US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-westus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-westus.yml)
-
-### Canary
-[![Region - East US 2 EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-eastus2euap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-eastus2euap.yml)
-[![Region - Central US EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-centraluseuap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-centraluseuap.yml)
-
-## Uptime
-
-Deploys but doesn't remove, checks that containers live at least 48 hours without entering a bad state
-
-### Stable
-
-[![Uptime - East US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-eastus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-eastus.yml)
-[![Uptime - North Europe](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-northeurope.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-northeurope.yml)
-[![Uptime - East Asia](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-eastasia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-eastasia.yml)
-[![Uptime - Germany West Central](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-germanywestcentral.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-germanywestcentral.yml)
-[![Uptime - Italy North](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-italynorth.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-italynorth.yml)
-[![Uptime - UAE North](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-uaenorth.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-uaenorth.yml)
-[![Uptime - Japan East](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-japaneast.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-japaneast.yml)
-[![Uptime - Switzerland North](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-switzerlandnorth.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-switzerlandnorth.yml)
-[![Uptime - South East Asia](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-southeastasia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-southeastasia.yml)
-[![Uptime - Central US EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-centraluseuap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-centraluseuap.yml)
-[![Uptime - South Central US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-southcentralus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-southcentralus.yml)
-[![Uptime - Sweden Central](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-swedencentral.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-swedencentral.yml)
-[![Uptime - West Europe](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-westeurope.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-westeurope.yml)
-[![Uptime - West US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-westus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-westus.yml)
-
-### Canary
-
-[![Uptime - East US 2 EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-eastus2euap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-eastus2euap.yml)
-
-## VM tests
-
-### Stable
-
-[![VM - East US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-eastus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-eastus.yml)
-[![VM - North Europe](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-northeurope.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-northeurope.yml)
-[![VM - East Asia](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-eastasia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-eastasia.yml)
-[![VM - Germany West Central](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-germanywestcentral.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-germanywestcentral.yml)
-[![VM - Italy North](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-italynorth.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-italynorth.yml)
-[![VM - UAE North](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-uaenorth.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-uaenorth.yml)
-<!-- [![VM - Japan East](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-japaneast.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-japaneast.yml) -->
-<!-- [![VM - Switzerland North](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-switzerlandnorth.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-switzerlandnorth.yml) -->
-[![VM - South East Asia](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-southeastasia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-southeastasia.yml)
-[![VM - Central US EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-centraluseuap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-centraluseuap.yml)
-[![VM - South Central US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-southcentralus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-southcentralus.yml)
-[![VM - Sweden Central](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-swedencentral.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-swedencentral.yml)
-[![VM - West Europe](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-westeurope.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-westeurope.yml)
-<!-- [![VM - West US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-westus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-westus.yml) -->
-
-### Canary
-[![VM - East US 2 EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-eastus2euap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-eastus2euap.yml)
-[![VM - Central US EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-centraluseuap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-centraluseuap.yml)
-
-### Custom AzureLinux UVM
-
-[![VM Custom UVM (Daily)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-azurelinux-uvm.yml/badge.svg)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vm-azurelinux-uvm.yml)
+[**See further tests**](./MORE-TESTS.md)
 
 ## Adding new regions
 
-To add a new region, simply copy high-spec-<anyregion>.yml, region-<anyregion>.yml and uptime-<anyregion>.yml files and change <anyregion> to the name of your region, including the title case workflow names.
+To add a new region, use scripts/add_region.sh like this:
 
-Then update `README.md` to point to the three new workflows.
+```bash
+scripts/add_region.sh southcentralus "South Central US"
+```
 
 ## Updating custom test containers
 
