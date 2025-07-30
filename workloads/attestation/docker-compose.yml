@@ -1,7 +1,7 @@
 version: '3'
 services:
   primary:
-    image: quay.io/curl/curl:8.11.0
+    image: mcr.microsoft.com/azurelinux/base/core:3.0
     command: >
       sh -c "
         timeout 30 sh -c 'until curl -s http://localhost:8080/status > /dev/null 2>&1; do sleep 1; done'

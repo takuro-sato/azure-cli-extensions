@@ -20,7 +20,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
       {
         name: 'primary'
         properties: {
-          image: 'quay.io/curl/curl:8.11.0'
+          image: 'mcr.microsoft.com/azurelinux/base/core:3.0'
           resources: {
             requests: {
               memoryInGB: memoryInGb
