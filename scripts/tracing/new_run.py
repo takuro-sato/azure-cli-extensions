@@ -18,6 +18,12 @@ ZONE = os.getenv("ZONE", "")
 VALID_ZONE_RE = re.compile(r"^[0-9]$")
 if ZONE and not VALID_ZONE_RE.fullmatch(ZONE):
     raise ValueError(f"ZONE must be a single digit, got {ZONE}")
+TEST_SCHEDULE = os.getenv("TEST_SCHEDULE", "")
+
+# vnet, managed_identity etc
+RUN_FEATURES = os.getenv("RUN_FEATURES", "")
+runFeatures = RUN_FEATURES.split(",")
+runFeatures = [f for f in runFeatures if f]
 
 unique_run_id = str(uuid.uuid4())
 
@@ -29,6 +35,8 @@ run_info = {
     "AvailabilityZone": ZONE,
     "TestType": TEST_TYPE,
     "TestName": TEST_NAME,
+    "TestSchedule": TEST_SCHEDULE,
+    "RunFeatures": runFeatures,
     "RunLink": RUN_LINK,
     "Branch": BRANCH,
 }

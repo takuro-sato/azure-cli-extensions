@@ -100,6 +100,10 @@ on:
         type: string
         description: The name of the blob for UVM image
         default: ''
+      test_schedule:
+        type: string
+        description: Trace marker by scheduled runs only
+        default: ''
 
 env:
   KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
@@ -127,6 +131,7 @@ env:
   UVM_KERNEL: ${{ inputs.uvmBlobName != '' && format('{0}/kernel.vmgs', inputs.uvmBlobName) || '' }}
   UVM_ROOTFS: ${{ inputs.uvmBlobName != '' && format('{0}/rootfs-verity.vhd', inputs.uvmBlobName) || '' }}
   UVM_CONTAINERD_SHIM: ${{ inputs.uvmBlobName != '' && format('{0}/containerd-shim-runhcs-v1.exe', inputs.uvmBlobName) || '' }}
+  TEST_SCHEDULE: ${{ inputs.test_schedule }}
 
 jobs:
   vm-simple:

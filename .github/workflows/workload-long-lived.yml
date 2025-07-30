@@ -69,6 +69,10 @@ on:
         type: string
         description: The type of policy to use
         default: generated
+      test_schedule:
+        type: string
+        description: Trace marker by scheduled runs only
+        default: ''
 
 env:
   KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
@@ -88,6 +92,8 @@ env:
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: ${{ inputs.policy_type || 'generated' }}
   TAG: 20.04
+  TEST_SCHEDULE: ${{ inputs.test_schedule }}
+  RUN_FEATURES: 'managed_identity'
 
 jobs:
   long-lived:

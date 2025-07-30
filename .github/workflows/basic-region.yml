@@ -36,6 +36,7 @@ jobs:
       location: ${{ inputs.location }}
       use_vnet: ${{ matrix.use_vnet }}
       policy_type: allow_all
+      test_schedule: gh-hourly
 
   info-zoned:
     if: ${{ !cancelled() && contains(vars.ACI_ZONED_REGIONS, format(',{0},', inputs.location)) }}
@@ -54,3 +55,4 @@ jobs:
       use_vnet: ${{ matrix.use_vnet }}
       zone: ${{ matrix.zone }}
       policy_type: allow_all
+      test_schedule: gh-hourly

@@ -90,6 +90,10 @@ on:
         type: string
         description: The script to run
         default: workload_fio
+      test_schedule:
+        type: string
+        description: Trace marker by scheduled runs only
+        default: ''
 
 env:
   KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
@@ -112,6 +116,8 @@ env:
   POLICY_TYPE: ${{ inputs.policy_type || 'allow_all' }}
   SCRIPT: ${{ inputs.script || 'workload_fio' }}
   ACI_EXPECTED_KERNEL_DATE: ${{ vars.ACI_EXPECTED_KERNEL_DATE }}
+  TEST_SCHEDULE: ${{ inputs.test_schedule }}
+  RUN_FEATURES: ''
 
 jobs:
   stress-tests-noserver:

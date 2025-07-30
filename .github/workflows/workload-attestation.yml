@@ -77,6 +77,10 @@ on:
         type: string
         description: The MAA endpoint host name, or empty to use regional default
         default: ''
+      test_schedule:
+        type: string
+        description: Trace marker by scheduled runs only
+        default: ''
 
 env:
   KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
@@ -97,6 +101,8 @@ env:
   POLICY_TYPE: ${{ inputs.policy_type || 'generated' }}
   TAG: "2.10"
   ATTESTATION_ENDPOINT: ${{ inputs.attestation_endpoint }}
+  TEST_SCHEDULE: ${{ inputs.test_schedule }}
+  RUN_FEATURES: ''
 
 jobs:
   attestation:

@@ -81,6 +81,10 @@ on:
         type: string
         description: The profile to run, can be '-' for all
         default: 'PERF-CPU-OPENSSL.json'
+      test_schedule:
+        type: string
+        description: Trace marker by scheduled runs only
+        default: ''
 
 env:
   KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
@@ -102,6 +106,8 @@ env:
   REPO_BASE: virtualclient
   TAG: "20250225"
   PROFILE_NAME: ${{ inputs.profileName || 'PERF-CPU-OPENSSL.json' }}
+  TEST_SCHEDULE: ${{ inputs.test_schedule }}
+  RUN_FEATURES: 'managed_identity,public_ip'
 
 jobs:
   virtualclient:

@@ -61,12 +61,16 @@ on:
         type: boolean
         description: Whether to cleanup the container group after testing
         default: true
+      test_schedule:
+        type: string
+        description: Trace marker by scheduled runs only
+        default: ''
 
 env:
   KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
   KUSTO_DATABASE: ${{ secrets.KUSTO_DATABASE }}
   KUSTO_TABLE: CACITestStepTrace
-  TEST_TYPE: aci-perf
+  TEST_TYPE: aci-perfnon-confidential
   TEST_NAME: perf-nonconf
   RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
   DEPLOYMENT_NAME: ${{ inputs.id || 'perf-nonconf' }}-${{ inputs.location }}-${{ github.run_number }}
@@ -78,6 +82,8 @@ env:
   CPU: ${{ inputs.cpu || 2 }}
   MEMORY_IN_GB: ${{ inputs.memory_in_gb || 4 }}
   CLEANUP: ${{ inputs.cleanup }}
+  TEST_SCHEDULE: ${{ inputs.test_schedule }}
+  RUN_FEATURES: ''
 
 jobs:
   perf-nonconf:

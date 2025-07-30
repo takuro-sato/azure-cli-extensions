@@ -37,6 +37,7 @@ jobs:
       policy_type: ${{ matrix.policy_type }}
       cpu: 1
       memory_in_gb: 1
+      test_schedule: gh-daily
 
   info:
     if: ${{ !cancelled() }}
@@ -52,6 +53,7 @@ jobs:
       id: info-${{ matrix.policy_type }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
+      test_schedule: gh-daily
 
   server:
     if: ${{ !cancelled() }}
@@ -67,6 +69,7 @@ jobs:
       id: server-${{ matrix.policy_type }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
+      test_schedule: gh-daily
 
   vnet:
     if: ${{ !cancelled() }}
@@ -82,6 +85,7 @@ jobs:
       id: vnet-${{ matrix.policy_type }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
+      test_schedule: gh-daily
 
   managed-id:
     if: ${{ !cancelled() }}
@@ -97,6 +101,7 @@ jobs:
       id: managed-id-${{ matrix.policy_type }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
+      test_schedule: gh-daily
 
   attestation:
     if: ${{ !cancelled() }}
@@ -112,6 +117,7 @@ jobs:
       id: attestation-${{ matrix.policy_type }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
+      test_schedule: gh-daily
 
   many-layers:
     if: ${{ !cancelled() }}
@@ -127,6 +133,7 @@ jobs:
       id: many-layers-${{ matrix.policy_type }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
+      test_schedule: gh-daily
 
   non-confidential:
     if: ${{ !cancelled() }}
@@ -142,6 +149,7 @@ jobs:
       id: non-confidential-${{ matrix.policy_type }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
+      test_schedule: gh-daily
 
   stress-tests:
     if: ${{ !cancelled() }}
@@ -159,6 +167,7 @@ jobs:
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
       script: workload_${{ matrix.script }}
+      test_schedule: gh-daily
 
   common-images:
     if: ${{ !cancelled() }}
@@ -174,6 +183,7 @@ jobs:
       id: common-images-${{ matrix.policy_type }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
+      test_schedule: gh-daily
 
   workload-sidecar-with-fragments:
     if: ${{ !cancelled() }}
@@ -189,6 +199,7 @@ jobs:
       id: sidecar-fragment-${{ matrix.policy_type }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
+      test_schedule: gh-daily
 
   workload-sidecar-with-fragments-with-wait:
     if: ${{ !cancelled() }}
@@ -204,6 +215,7 @@ jobs:
       id: sidecar-fragment-wait-${{ matrix.policy_type }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
+      test_schedule: gh-daily
 
   thim:
     if: ${{ !cancelled() }}
@@ -221,6 +233,7 @@ jobs:
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
       has_managed_identity: ${{ matrix.has_managed_identity }}
+      test_schedule: gh-daily
 
   skr:
     if: ${{ !cancelled() }}
@@ -236,3 +249,4 @@ jobs:
       id: skr-${{ matrix.policy_type }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
+      test_schedule: gh-daily

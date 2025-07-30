@@ -77,6 +77,10 @@ on:
         type: boolean
         description: Whether to use managed identity
         default: false
+      test_schedule:
+        type: string
+        description: Trace marker by scheduled runs only
+        default: ''
 
 env:
   KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
@@ -96,6 +100,8 @@ env:
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: ${{ inputs.policy_type || 'generated' }}
   TAG: "2.10"
+  TEST_SCHEDULE: ${{ inputs.test_schedule }}
+  RUN_FEATURES: ${{ inputs.has_managed_identity && 'managed_identity' || '' }}
 
 jobs:
   thim:

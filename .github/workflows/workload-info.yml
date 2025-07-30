@@ -85,6 +85,10 @@ on:
         type: string
         description: The type of policy to use
         default: generated
+      test_schedule:
+        type: string
+        description: Trace marker by scheduled runs only
+        default: ''
 
 env:
   KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
@@ -105,6 +109,8 @@ env:
   MEMORY_IN_GB: ${{ inputs.memory_in_gb || 1 }}
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: ${{ inputs.policy_type || 'generated' }}
+  TEST_SCHEDULE: ${{ inputs.test_schedule }}
+  RUN_FEATURES: ${{ inputs.use_vnet && 'vnet' || '' }}
 
 jobs:
   info:
