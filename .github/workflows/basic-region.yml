@@ -60,7 +60,7 @@ jobs:
 # Only zones 2 and 3 exist in east us 2 euap. Note that this will change
 # when we run in a different subscription.
   info-two-zones:
-    if: ${{ !cancelled() && inputs.location != 'eastus2euap' }}
+    if: ${{ !cancelled() && inputs.location == 'eastus2euap' }}
     name: info-two-zones
     secrets: inherit
     uses: ./.github/workflows/workload-info.yml
