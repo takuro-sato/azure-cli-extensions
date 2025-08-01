@@ -8,6 +8,7 @@ Deploys to many regions to gather data about region health
 
 ### Stable
 
+[![Region (Basic) - Australia Central 2](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-australiacentral2.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-australiacentral2.yml)
 [![Region (Basic) - Brazil South](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-brazilsouth.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-brazilsouth.yml)
 [![Region (Basic) - Central India](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-centralindia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-centralindia.yml)
 [![Region (Basic) - Chile Central](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-chilecentral.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-chilecentral.yml)
@@ -41,6 +42,7 @@ Deploys to many regions to gather data about region health
 
 ## MAA
 
+[![Attestation - Australia Central 2](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-australiacentral2.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-australiacentral2.yml)
 [![Attestation - Brazil South](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-brazilsouth.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-brazilsouth.yml)
 [![Attestation - Central India](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-centralindia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-centralindia.yml)
 [![Attestation - Chile Central](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-chilecentral.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-chilecentral.yml)
