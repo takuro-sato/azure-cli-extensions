@@ -1,0 +1,18 @@
+name: Attestation - Australia East
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '28 1-23 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  attestation-australiaeast:
+    secrets: inherit
+    uses: ./.github/workflows/workload-attestation.yml
+    with:
+      location: australiaeast
+      policy_type: allow_all
