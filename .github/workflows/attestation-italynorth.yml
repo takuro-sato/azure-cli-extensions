@@ -16,3 +16,4 @@ jobs:
     with:
       location: italynorth
       policy_type: allow_all
+      test_schedule: gh-hourly

@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  basic-brazilsouth:
+  basic-australiacentral2:
     secrets: inherit
     uses: ./.github/workflows/basic-region.yml
     with:

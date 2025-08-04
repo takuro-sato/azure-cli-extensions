@@ -16,3 +16,4 @@ jobs:
     with:
       location: westus
       policy_type: allow_all
+      test_schedule: gh-hourly

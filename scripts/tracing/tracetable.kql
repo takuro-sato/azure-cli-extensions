@@ -26,6 +26,7 @@
         DeploymentName=take_any(DeploymentName),
         Branch=take_any(Branch),
         Location=take_any(Location),
+        AvailabilityZone=take_any(AvailabilityZone),
         TestType=take_any(TestType),
         TestName=take_any(TestName),
         TestSchedule=take_any(TestSchedule),

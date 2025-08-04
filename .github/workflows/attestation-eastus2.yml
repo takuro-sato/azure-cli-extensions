@@ -16,3 +16,4 @@ jobs:
     with:
       location: eastus2
       policy_type: allow_all
+      test_schedule: gh-hourly

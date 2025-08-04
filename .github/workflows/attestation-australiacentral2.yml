@@ -10,9 +10,10 @@ on:
   workflow_dispatch:
 
 jobs:
-  attestation-brazilsouth:
+  attestation-australiacentral2:
     secrets: inherit
     uses: ./.github/workflows/workload-attestation.yml
     with:
       location: australiacentral2
       policy_type: allow_all
+      test_schedule: gh-hourly
