@@ -71,7 +71,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
           ]
           resources: {
             requests: {
-              memoryInGB: 4
+              memoryInGB: 1
               cpu: 1
             }
           }
