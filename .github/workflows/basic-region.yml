@@ -23,8 +23,7 @@ on:
 
 jobs:
   info-nonzoned-nonvnet:
-    # don't do non-vnet for australiacentral2 for now
-    if: ${{ !cancelled() && inputs.location != 'australiacentral2' }}
+    if: ${{ !cancelled() }}
     name: info-nonzoned-nonvnet
     secrets: inherit
     uses: ./.github/workflows/workload-info.yml
