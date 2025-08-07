@@ -45,3 +45,99 @@
     | project-away _LastStep, _LastStepStatus
     | sort by StartTime desc
 }
+
+.create-or-alter function with (folder = "C-ACI") CACIMonitoringIcMTriggers() {
+    let failureLookbackHours=3;
+    let showRunsLookbackHours=10;
+    let errorCountThreshold=2;
+    let regions = dynamic([
+        'australiacentral2',
+        'australiaeast',
+        'brazilsouth',
+        'centralindia',
+        'centraluseuap',
+        'chilecentral',
+        'eastasia',
+        'eastus',
+        'eastus2',
+        'eastus2euap',
+        'francecentral',
+        'germanywestcentral',
+        'indonesiacentral',
+        'israelcentral',
+        'italynorth',
+        'japaneast',
+        'koreacentral',
+        'newzealandnorth',
+        'northeurope',
+        'polandcentral',
+        'southafricanorth',
+        'southcentralus',
+        'southeastasia',
+        'swedencentral',
+        'switzerlandnorth',
+        'uaenorth',
+        'uksouth',
+        'westeurope',
+        'westus',
+        'westus2',
+        'westus3'
+    ]);
+    let branch = "main";
+    // let testData = datatable (Location: string, AvailabilityZone: string, TestVariant: string, StartTime: datetime, DeploymentName: string, RunLink: string, Error: string) [
+    //     "australiacentral2", "2", "fake zonal test", "2025-08-07 11:00:00", "test1", "https://github.com", "!",
+    //     "australiacentral2", "3", "fake zonal test", "2025-08-07 12:01:00", "test2", "https://github.com", "!!",
+    //     "westeurope", "", "fake non-zonal test", "2025-08-07 13:02:00", "test3", "https://github.com", "!!!",
+    // ];
+    let currentTime=now();
+    getCACITestSummary(currentTime-make_timespan(showRunsLookbackHours, 0), currentTime)
+    | where Location in (regions) and Branch == branch and TestType == "aci" and TestSchedule == "gh-hourly"
+    | project
+        Location,
+        AvailabilityZone,
+        TestVariant=case(
+            array_length(RunFeatures) == 0,
+                iff(TestName contains "attestation", "MAA monitoring", "non-vnet test"),
+            array_index_of(RunFeatures, "vnet") >= 0, "vnet test",
+            "(unknown)"
+        ),
+        StartTime,
+        DeploymentName,
+        RunLink,
+        Error
+    | extend ErrorJson=parse_json(extract("\\nERROR: (\\{.+\\})\\n", 1, Error))
+    | extend ErrDetail=coalesce(ErrorJson["error"]["details"][0], ErrorJson["error"])
+    | extend Error=coalesce(iff(isnotempty(ErrDetail), strcat(tostring(ErrDetail["code"]), ": ", tostring(ErrDetail["message"])), dynamic(null)), Error)
+    // | union testData
+    | order by StartTime desc
+    | extend CountAsError=isnotempty(Error) and StartTime >= currentTime-make_timespan(failureLookbackHours, 0)
+    | summarize
+        Tests=make_list(bag_pack_columns(Location, AvailabilityZone, StartTime, DeploymentName, RunLink, Error)),
+        ErrorCountInLookbackTimeRange=countif(CountAsError),
+        FaultyZones=make_set_if(iff(isnotempty(AvailabilityZone), strcat("zone ", AvailabilityZone), "(no zone)"), CountAsError)
+        by Location, TestVariant
+    | order by ErrorCountInLookbackTimeRange desc
+    | summarize
+        Variants=make_list(bag_pack("TestVariant", TestVariant, "Tests", Tests)),
+        ErrorCountInLookbackTimeRange=sum(ErrorCountInLookbackTimeRange),
+        FaultyZones=make_set(FaultyZones),
+        FaultyTests=make_set_if(TestVariant, ErrorCountInLookbackTimeRange > 0)
+        by Location
+    | order by Location asc
+    | extend
+        FaultyZones=array_sort_asc(FaultyZones),
+        FaultyTests=array_sort_asc(FaultyTests)
+    | extend
+        IcmTitle=iff(
+            ErrorCountInLookbackTimeRange >= errorCountThreshold,
+            strcat(
+                "[C-ACI E2E Monitor] ", strcat_array(FaultyTests, ", "),
+                " in region ", Location,
+                " has failed total ", ErrorCountInLookbackTimeRange,
+                " times in ", strcat_array(FaultyZones, ", "),
+                " over the last ", failureLookbackHours, " hours"
+            ),
+            ""
+        ),
+        IcmCorrelationName=strcat("c-aci-dashboard-", Location)
+}
