@@ -1,0 +1,17 @@
+name: High Spec - Australia Central 2
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '36 7 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  high-spec-australiacentral2:
+    uses: ./.github/workflows/high-spec.yml
+    secrets: inherit
+    with:
+      location: australiacentral2

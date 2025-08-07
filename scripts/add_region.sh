@@ -24,21 +24,20 @@ do
   echo "Processed $FILE to $NEW_FILE"
 done
 
-# Update README.md
-README="README.md"
-
 # Add new region workflows to README
-while IFS= read -r line
-do
-  # Replace both lowercase and title case occurrences of the old region
-  if echo "$line" | grep -q "$OLD_REGION\|$OLD_REGION_TITLE"; then
-    newline="${line//$OLD_REGION/$NEW_REGION}"
-    newline="${newline//$OLD_REGION_TITLE/$NEW_REGION_TITLE}"
-    echo "$newline" >> temp_readme.md
-  fi
-  echo "$line" >> temp_readme.md
-done < $README
+for README in "README.md" "MORE-TESTS.md"; do
+  while IFS= read -r line
+  do
+    # Replace both lowercase and title case occurrences of the old region
+    if echo "$line" | grep -q "$OLD_REGION\|$OLD_REGION_TITLE"; then
+      newline="${line//$OLD_REGION/$NEW_REGION}"
+      newline="${newline//$OLD_REGION_TITLE/$NEW_REGION_TITLE}"
+      echo "$newline" >> temp_readme.md
+    fi
+    echo "$line" >> temp_readme.md
+  done < $README
 
-mv temp_readme.md $README
+  mv temp_readme.md $README
+done
 
 echo "All region specific workflows have been copied, renamed, and README.md updated."

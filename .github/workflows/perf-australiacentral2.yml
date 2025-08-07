@@ -1,4 +1,4 @@
-name: Perf - Germany West Central
+name: Perf - Australia Central 2
 
 permissions:
   id-token: write
@@ -6,12 +6,12 @@ permissions:
 
 on:
   schedule:
-    - cron: '19 9 * * *'  # managed by scripts/spread_out_schedules.py
+    - cron: '13 9 * * *'  # managed by scripts/spread_out_schedules.py
   workflow_dispatch:
 
 jobs:
-  perf-germanywestcentral:
+  perf-australiacentral2:
     secrets: inherit
     uses: ./.github/workflows/perf-region.yml
     with:
-      location: germanywestcentral
+      location: australiacentral2

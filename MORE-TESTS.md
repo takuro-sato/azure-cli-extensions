@@ -2,6 +2,7 @@
 
 ### Stable
 
+[![Region - Australia Central 2](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-australiacentral2.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-australiacentral2.yml)
 [![Region - Central India](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-centralindia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-centralindia.yml)
 [![Region - East Asia](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-eastasia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-eastasia.yml)
 [![Region - East US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-eastus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-eastus.yml)
@@ -28,7 +29,7 @@ Deploys with container with high specification (varies by region)
 
 ### Stable
 
-[![High Spec - Central US EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-centraluseuap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-centraluseuap.yml)
+[![High Spec - Australia Central 2](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-australiacentral2.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-australiacentral2.yml)
 [![High Spec - East Asia](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-eastasia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-eastasia.yml)
 [![High Spec - East US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-eastus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-eastus.yml)
 [![High Spec - Germany West Central](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-germanywestcentral.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-germanywestcentral.yml)
@@ -45,6 +46,7 @@ Deploys with container with high specification (varies by region)
 
 ### Canary
 
+[![High Spec - Central US EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-centraluseuap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-centraluseuap.yml)
 [![High Spec - East US 2 EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-eastus2euap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/high-spec-eastus2euap.yml)
 
 ## Deployment with VN2
@@ -69,12 +71,14 @@ Deploys confidential containers with VN2
 [![VN2 - West Europe](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-westeurope.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-westeurope.yml)
 [![VN2 - West US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-westus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-westus.yml)
 
+[![VN2 - Central US EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-centraluseuap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-centraluseuap.yml)
 [![VN2 - East US 2 EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-eastus2euap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-eastus2euap.yml)
 
 ## Performance
 
 ### Stable
 
+[![Perf - Australia Central 2](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-australiacentral2.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-australiacentral2.yml)
 [![Perf - East Asia](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-eastasia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-eastasia.yml)
 [![Perf - East US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-eastus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-eastus.yml)
 [![Perf - Germany West Central](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-germanywestcentral.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-germanywestcentral.yml)
@@ -100,6 +104,7 @@ Deploys but doesn't remove, checks that containers live at least 48 hours withou
 
 ### Stable
 
+[![Uptime - Australia Central 2](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-australiacentral2.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-australiacentral2.yml)
 [![Uptime - Central US EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-centraluseuap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-centraluseuap.yml)
 [![Uptime - East Asia](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-eastasia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-eastasia.yml)
 [![Uptime - East US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-eastus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/uptime-eastus.yml)

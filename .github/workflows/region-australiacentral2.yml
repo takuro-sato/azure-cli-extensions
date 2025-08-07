@@ -1,4 +1,4 @@
-name: Region - Sweden Central
+name: Region - Australia Central 2
 
 permissions:
   id-token: write
@@ -6,12 +6,12 @@ permissions:
 
 on:
   schedule:
-    - cron: '10 5 * * *'  # managed by scripts/spread_out_schedules.py
+    - cron: '1 2 * * *'  # managed by scripts/spread_out_schedules.py
   workflow_dispatch:
 
 jobs:
-  swedencentral:
+  australiacentral2:
     secrets: inherit
     uses: ./.github/workflows/region.yml
     with:
-      location: swedencentral
+      location: australiacentral2
