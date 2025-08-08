@@ -52,7 +52,12 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
             success=false
             while [ "$tries" -lt 5 ]; do
               tries=$((tries + 1))
-              timeout 30 az login --identity > /dev/null
+              # Important: do not expose output to stdout as the container log
+              # is fetched and displayed by the pipeline.
+              timeout 10 \
+                curl --fail -s -H "Metadata: true" -v \
+                "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://storage.azure.com/" \
+                -o /dev/null
               if [ $? -eq 0 ]; then
                 success=true
                 break
@@ -61,11 +66,11 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
               sleep 5
             done
             if [ "$success" = "false" ]; then
-              echo "ERROR: Failed to az login after $tries attempts"
+              echo "ERROR: Failed to retrieve token from IMDS after $tries attempts"
               echo "OUTPUT: {\"attempts\": $tries, \"success\": false}"
               exit 1
             fi
-            echo "az login successful"
+            echo "IMDS request successful"
             echo "OUTPUT: {\"attempts\": $tries, \"success\": true}"
             sleep infinity
             '''

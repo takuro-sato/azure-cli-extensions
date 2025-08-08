@@ -1,7 +1,7 @@
 version: '3'
 services:
-  ubuntu-with-az-cli:
-    image: ${REGISTRY:-cacidashboard.azurecr.io}/${REPOSITORY:-ubuntu-with-az-cli}:${TAG:-24.04}
+  ubuntu-with-curl:
+    image: ${REGISTRY:-cacidashboard.azurecr.io}/${REPOSITORY:-ubuntu-with-curl}:${TAG:-24.04}
     build:
       context: .
-      dockerfile: ubuntu-with-az-cli.Dockerfile
+      dockerfile: ubuntu-with-curl.Dockerfile

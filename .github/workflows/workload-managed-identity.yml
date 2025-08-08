@@ -85,7 +85,7 @@ env:
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
   RESOURCE_GROUP: c-aci-dashboard
   REGISTRY: cacidashboard.azurecr.io
-  REPOSITORY: ubuntu-with-az-cli
+  REPOSITORY: ubuntu-with-curl
   TAG: "24.04"
   MANAGED_IDENTITY: cacidashboard
   LOCATION: ${{ inputs.location || 'westeurope' }}
