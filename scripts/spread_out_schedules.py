@@ -43,6 +43,8 @@ continuous_test_types = [
 tests = []
 continuous_tests = {}
 
+ignore_list = ["vn2-australiacentral2.yml"]
+
 # Don't run on 0:00-0:59 UTC as that's when cleanup would be happening.
 CONTINUOUS_TEST_HOURS = "1-23"
 
@@ -53,6 +55,9 @@ def find_test_type(workflow_name: str) -> TestType:
     return None
 
 for wf in workflows:
+    if wf in ignore_list:
+        continue
+
     with open(os.path.join(workflows_dir, wf), "rt") as f:
         doc = yaml.safe_load(f)
 

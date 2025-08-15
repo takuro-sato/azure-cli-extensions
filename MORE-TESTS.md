@@ -53,8 +53,8 @@ Deploys with container with high specification (varies by region)
 
 Deploys confidential containers with VN2
 
+[![VN2 - Australia Central 2](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-australiacentral2.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-australiacentral2.yml)
 [![VN2 - Australia East](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-australiaeast.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-australiaeast.yml)
-[![VN2 - Brazil Southeast](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-brazilsoutheast.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-brazilsoutheast.yml)
 [![VN2 - East Asia](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-eastasia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-eastasia.yml)
 [![VN2 - East US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-eastus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-eastus.yml)
 [![VN2 - Germany West Central](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-germanywestcentral.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-germanywestcentral.yml)

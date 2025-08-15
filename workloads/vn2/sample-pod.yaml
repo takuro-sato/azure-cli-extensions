@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: sample-pod
 spec:
-  replicas: 16
+  replicas: 8
   selector:
     matchLabels:
       app: sample-pod
