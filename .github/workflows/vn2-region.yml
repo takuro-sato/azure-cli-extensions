@@ -194,6 +194,7 @@ jobs:
       # Only do this if we haven't got any errors (implied by no `if`) and also we want to do cleanup
       - name: Stop AKS
         continue-on-error: true
+        if: success() && inputs.location != 'australiacentral2'
         run: |
           if [ "$CLEANUP" != false ]; then
             az aks stop --name $AKS_CLUSTER_NAME --resource-group $RESOURCE_GROUP
