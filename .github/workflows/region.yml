@@ -49,10 +49,12 @@ jobs:
       fail-fast: false
       matrix:
         policy_type: ['generated', 'debug', 'allow_all']
+        use_vnet: [true, false]
     with:
-      id: info-${{ matrix.policy_type }}
+      id: info-${{ matrix.policy_type }}${{ matrix.use_vnet && '-vnet' || '' }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
+      use_vnet: ${{ matrix.use_vnet }}
       test_schedule: gh-daily
 
   server:
@@ -97,10 +99,12 @@ jobs:
       fail-fast: false
       matrix:
         policy_type: ['generated', 'debug', 'allow_all']
+        use_vnet: [true, false]
     with:
-      id: managed-id-${{ matrix.policy_type }}
+      id: managed-id-${{ matrix.policy_type }}${{ matrix.use_vnet && '-vnet' || '' }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
+      use_vnet: ${{ matrix.use_vnet }}
       test_schedule: gh-daily
 
   attestation:

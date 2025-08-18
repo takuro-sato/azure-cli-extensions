@@ -3,11 +3,21 @@ param registry string
 param repository string
 param tag string
 param ccePolicies object
+param useVnet bool
 param managedIDGroup string = resourceGroup().name
 param managedIDName string
 
 param cpu int = 1
 param memoryInGb int = 4
+
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' existing = {
+  name: 'aci-long-lived-vnet-${location}'
+}
+
+resource subnet 'Microsoft.Network/virtualNetworks/subnets@2021-02-01' existing = {
+  parent: virtualNetwork
+  name: 'acisubnet'
+}
 
 resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01' = {
   name: deployment().name
@@ -21,6 +31,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
   properties: {
     osType: 'Linux'
     sku: 'Confidential'
+    subnetIds: useVnet ? [{ id: subnet.id }] : []
     restartPolicy: 'Never'
     confidentialComputeProperties: {
       ccePolicy: ccePolicies.managed_identity
@@ -68,7 +79,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
             if [ "$success" = "false" ]; then
               echo "ERROR: Failed to retrieve token from IMDS after $tries attempts"
               echo "OUTPUT: {\"attempts\": $tries, \"success\": false}"
-              exit 1
+              sleep infinity
             fi
             echo "IMDS request successful"
             echo "OUTPUT: {\"attempts\": $tries, \"success\": true}"

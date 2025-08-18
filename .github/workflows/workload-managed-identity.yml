@@ -28,6 +28,10 @@ on:
         type: string
         description: Where to deploy to
         required: true
+      use_vnet:
+        type: boolean
+        description: Whether to use a virtual network for the container group
+        default: true
       cpu:
         type: number
         description: The number of CPU cores in container
@@ -53,6 +57,10 @@ on:
         type: string
         description: Where to deploy to
         required: true
+      use_vnet:
+        type: boolean
+        description: Whether to use a virtual network for the container group
+        default: false
       cpu:
         type: number
         description: The number of CPU cores in container
@@ -89,12 +97,13 @@ env:
   TAG: "24.04"
   MANAGED_IDENTITY: cacidashboard
   LOCATION: ${{ inputs.location || 'westeurope' }}
+  USE_VNET: ${{ inputs.use_vnet || false }}
   CPU: ${{ inputs.cpu || 2 }}
   MEMORY_IN_GB: ${{ inputs.memory_in_gb || 4 }}
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: ${{ inputs.policy_type || 'generated' }}
   TEST_SCHEDULE: ${{ inputs.test_schedule }}
-  RUN_FEATURES: 'managed_identity'
+  RUN_FEATURES: managed_identity${{ inputs.use_vnet && ',vnet' || '' }}
 
 jobs:
   managed-identity:
@@ -123,6 +132,7 @@ jobs:
 
       - name: Set Parameters
         run: |
+          c-aci-testing aci param_set workloads/managed_identity --parameter useVnet=$USE_VNET
           c-aci-testing aci param_set workloads/managed_identity --parameter cpu=$CPU
           c-aci-testing aci param_set workloads/managed_identity --parameter memoryInGb=$MEMORY_IN_GB
 
