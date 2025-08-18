@@ -58,11 +58,17 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
       {
         name: 'http-sidecar'
         properties: {
-          image: 'mcr.microsoft.com/aci/skr:${empty(tag) ? '2.10': tag}'
+          image: 'cacidashboard.azurecr.io/skr-next' // tingmao/next branch
           ports: [
             {
               protocol: 'TCP'
               port: 8080
+            }
+          ]
+          environmentVariables: [
+            {
+              name: 'LogLevel'
+              value: 'debug'
             }
           ]
           resources: {
@@ -76,7 +82,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
       {
         name: 'grpc-sidecar'
         properties: {
-          image: 'mcr.microsoft.com/aci/skr:${empty(tag) ? '2.10': tag}'
+          image: 'cacidashboard.azurecr.io/skr-next' // tingmao/next branch
           environmentVariables: [
             {
               name: 'ServerType'
@@ -85,6 +91,10 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
             {
               name: 'Port'
               value: '50000'
+            }
+            {
+              name: 'LogLevel'
+              value: 'debug'
             }
           ]
           ports: [

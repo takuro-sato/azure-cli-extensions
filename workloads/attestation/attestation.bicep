@@ -55,6 +55,8 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
                   ]
                 }' | base64 -w 0)'"
               }'
+            echo
+            sleep infinity
             '''
           ]
         }

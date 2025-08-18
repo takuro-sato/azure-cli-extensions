@@ -70,7 +70,7 @@ env:
   RESOURCE_GROUP: c-aci-dashboard
   REGISTRY: cacidashboard.azurecr.io
   MANAGED_IDENTITY: cacidashboard
-  TAG: "2.10"
+  TAG: "20250818"
   LOCATION: ${{ inputs.location || 'westeurope' }}
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: ${{ inputs.policy_type || 'generated' }}
@@ -124,10 +124,27 @@ jobs:
         env:
           ID: ${{ env.DEPLOYMENT_NAME }}
         run: |
-          ./scripts/tracing/trace_step.py --start 'Test SKR'
-          python -m unittest discover -s workloads/skr
+          set +e -o pipefail
+          ./scripts/tracing/trace_step.py --start 'Test SKR' || exit 1
+          python -m unittest discover -s workloads/skr 2>&1 | tee skr_test.log
+          status=$?
+          if [ $status -ne 0 ]; then
+            echo "SKR test failed"
+            maybe_err=(--err "SKR test failed")
+          else
+            maybe_err=()
+          fi
+          jq -Rs '{skrTestLog: .}' < skr_test.log | \
+            ./scripts/tracing/trace_step.py --complete ${maybe_err[@]} --output-from-stdin || exit 1
+          exit $status
 
       - name: Report result
         if: always()
         run: |
           ./scripts/trace_run_result.sh ${{ job.status }}
+
+      - name: Remove Container Group
+        run: |
+          if [ "$CLEANUP" != false ]; then
+            c-aci-testing aci remove --deployment-name $DEPLOYMENT_NAME
+          fi
