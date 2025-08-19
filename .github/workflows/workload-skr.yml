@@ -135,7 +135,7 @@ jobs:
             maybe_err=()
           fi
           jq -Rs '{skrTestLog: .}' < skr_test.log | \
-            ./scripts/tracing/trace_step.py --complete ${maybe_err[@]} --output-from-stdin || exit 1
+            ./scripts/tracing/trace_step.py --complete "${maybe_err[@]}" --output-from-stdin || exit 1
           exit $status
 
       - name: Report result
