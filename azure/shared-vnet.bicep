@@ -1,6 +1,6 @@
 param location string
 
-resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' = {
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-07-01' = {
   name: 'aci-long-lived-vnet-${location}'
   location: location
   properties: {
@@ -12,11 +12,12 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' = {
   }
 }
 
-resource subnet 'Microsoft.Network/virtualNetworks/subnets@2021-02-01' = {
+resource subnet 'Microsoft.Network/virtualNetworks/subnets@2024-07-01' = {
   parent: virtualNetwork
   name: 'acisubnet'
   properties: {
     addressPrefix: '10.0.0.0/24'
+    defaultOutboundAccess: false
     delegations: [
       {
         name: 'aciDelegation'

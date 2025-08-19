@@ -51,7 +51,29 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
   }
 }
 
-resource virtualNetwork 'Microsoft.Network/virtualNetworks@2021-02-01' = {
+resource networkSecurityGroup 'Microsoft.Network/networkSecurityGroups@2024-07-01' = {
+  name: '${deployment().name}-nsg'
+  location: location
+  properties: {
+    securityRules: [
+      {
+        name: 'AllowOutbound'
+        properties: {
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: '*'
+          destinationAddressPrefix: '*'
+          access: 'Allow'
+          priority: 300
+          direction: 'Outbound'
+        }
+      }
+    ]
+  }
+}
+
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2024-07-01' = {
   name: '${deployment().name}-vnet'
   location: location
   properties: {
@@ -63,7 +85,7 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2021-02-01' = {
   }
 }
 
-resource subnet 'Microsoft.Network/virtualNetworks/subnets@2021-02-01' = {
+resource subnet 'Microsoft.Network/virtualNetworks/subnets@2024-07-01' = {
   parent: virtualNetwork
   name: '${deployment().name}-subnet'
   properties: {
@@ -76,6 +98,10 @@ resource subnet 'Microsoft.Network/virtualNetworks/subnets@2021-02-01' = {
         }
       }
     ]
+    defaultOutboundAccess: false
+    networkSecurityGroup: {
+      id: networkSecurityGroup.id
+    }
   }
 }
 
