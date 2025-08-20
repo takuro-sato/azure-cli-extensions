@@ -10,11 +10,11 @@ import subprocess
 import sys
 import tempfile
 import requests
-import uuid
 import os
 import unittest
 import base64
 import json
+import random
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from attestation import SNP_REPORT_STRUCTURE
@@ -33,6 +33,7 @@ from c_aci_testing.args.parameters.subscription import parse_subscription
 from c_aci_testing.args.parameters.policy_type import parse_policy_type
 from c_aci_testing.tools.target_run import target_run_ctx
 from c_aci_testing.tools.aci_get_ips import aci_get_ips
+from c_aci_testing.tools.vn2_target_run import vn2_target_run_ctx
 
 def get_grpc_response(raw_response: bytes):
     return json.loads(
@@ -71,9 +72,10 @@ class SkrTest(unittest.TestCase):
 
         cls.target_dir = os.path.realpath(os.path.dirname(__file__))
 
-        # This property is used to construct the key name.
-        # Key names can only contain alphanumeric characters and dashes.
-        cls.id = re.sub(r"[^a-zA-Z0-9\-]", "-", os.getenv("ID", str(uuid.uuid4())))
+        cls.id = os.getenv("DEPLOYMENT_NAME", "skr")
+        cls.key_name_prefix = re.sub("_", "-", cls.id) + "-" + "".join(
+            random.choice("abcdefghijklmnopqrstuvwxyz") for _ in range(8)
+        )
 
         cls.tag = os.getenv("TAG") or cls.id
 
@@ -90,30 +92,54 @@ class SkrTest(unittest.TestCase):
         parse_policy_type(parser)
         args, _ = parser.parse_known_args()
 
-        cls.aci_context = target_run_ctx(
-            target_path=cls.target_dir,
-            deployment_name=cls.id,
-            tag=cls.tag,
-            cleanup=False,
-            prefer_pull=True,
-            **vars(args),
-        )
+        cls.vn2_mode = os.environ.get("VN2_MODE", "false").lower() == "true"
 
-        cls.skr_id, = cls.aci_context.__enter__()
-        cls.skr_ip = aci_get_ips(
-            deployment_name=cls.id,
-            subscription=args.subscription,
-            resource_group=args.resource_group,
-        )[0]
+        if not cls.vn2_mode:
+            cls.target_context = target_run_ctx(
+                target_path=cls.target_dir,
+                deployment_name=cls.id,
+                tag=cls.tag,
+                cleanup=False,
+                prefer_pull=True,
+                **vars(args),
+            )
+            cls.http_port = 8000
+        else:
+            cls.target_context = vn2_target_run_ctx(
+                target_path=cls.target_dir,
+                deployment_name=cls.id,
+                tag=cls.tag,
+                cleanup=False,
+                prefer_pull=True,
+                **vars(args),
+            )
+            cls.http_port = 80
+
+        cls.target_context.__enter__()
+
+        if not cls.vn2_mode:
+            cls.skr_ip = aci_get_ips(
+                deployment_name=cls.id,
+                subscription=args.subscription,
+                resource_group=args.resource_group,
+            )[0]
+        else:
+            workload_vn2_dir = os.path.join(os.path.dirname(__file__), "../vn2")
+            subprocess.check_call(
+                ["./update-waf.sh", os.getenv("AKS_RESOURCE_GROUP"), os.getenv("AKS_CLUSTER_NAME"), f"svc/{cls.id}"],
+                cwd=workload_vn2_dir,
+            )
+            with open(os.path.join(workload_vn2_dir, ".waf-frontend-ip.txt"), "rt") as f:
+                cls.skr_ip = f.read().strip()
 
     @classmethod
     def tearDownClass(cls):
-        cls.aci_context.__exit__(None, None, None)
+        cls.target_context.__exit__(None, None, None)
 
     def test_skr_http_status(self):
 
         status_response = requests.get(
-            f"http://{self.skr_ip}:8000/status",
+            f"http://{self.skr_ip}:{self.http_port}/status",
         )
         print(f"Response from status check: {status_response.content}")
         assert status_response.status_code == 200
@@ -122,7 +148,7 @@ class SkrTest(unittest.TestCase):
 
         input_report_data = b"EXAMPLE"
         attestation_resp = requests.post(
-            url=f"http://{self.skr_ip}:8000/attest/raw",
+            url=f"http://{self.skr_ip}:{self.http_port}/attest/raw",
             headers={
                 "Content-Type": "application/json",
             },
@@ -146,7 +172,7 @@ class SkrTest(unittest.TestCase):
 
         input_report_data = b"EXAMPLE_COMBINED"
         attestation_resp = requests.post(
-            url=f"http://{self.skr_ip}:8000/attest/combined",
+            url=f"http://{self.skr_ip}:{self.http_port}/attest/combined",
             headers={
                 "Content-Type": "application/json",
             },
@@ -163,7 +189,7 @@ class SkrTest(unittest.TestCase):
 
         # "evidence": here is be a base64 encoded version of the whole SNP report.
         # and will need to be made into hex to suit check_report_data
-        
+
         responseCombinedJSON = json.loads(attestation_resp.content.decode())
         print(f"JSON response: {responseCombinedJSON}")
         reportB64 = responseCombinedJSON["evidence"]
@@ -193,7 +219,7 @@ class SkrTest(unittest.TestCase):
             )
 
             maa_response = requests.post(
-                url=f"http://{self.skr_ip}:8000/attest/maa",
+                url=f"http://{self.skr_ip}:{self.http_port}/attest/maa",
                 headers={
                     "Content-Type": "application/json",
                 },
@@ -213,7 +239,7 @@ class SkrTest(unittest.TestCase):
     def test_skr_http_oct_key_release(self):
         if self.attestation_endpoint != "" and self.hsm_endpoint != "":
             # Deploy a Key to the mHSM
-            key_id = f"{self.id}-key"
+            key_id = self.key_name_prefix + "-key"
             with open(os.path.join(os.path.realpath(os.path.dirname(__file__)), "policy_skr.rego")) as f:
                 deploy_key(
                     key_id=key_id,
@@ -234,7 +260,7 @@ class SkrTest(unittest.TestCase):
     def test_skr_http_ec_key_release(self):
         if self.attestation_endpoint != "" and self.hsm_endpoint != "":
             # Generate a key in the HSM
-            key_id = f"{self.id}-ec-key"
+            key_id = self.key_name_prefix + "-ec-key"
             with open(os.path.join(os.path.realpath(os.path.dirname(__file__)), "policy_skr.rego")) as f:
                 security_policy = generate_release_policy(
                     attestation_endpoint=self.attestation_endpoint,
@@ -255,7 +281,7 @@ class SkrTest(unittest.TestCase):
 
     def _run_key_release_test(self, key_id, key_ops):
             skr_response = requests.post(
-                url=f"http://{self.skr_ip}:8000/key/release",
+                url=f"http://{self.skr_ip}:{self.http_port}/key/release",
                 headers={
                     "Content-Type": "application/json",
                 },
@@ -276,7 +302,7 @@ class SkrTest(unittest.TestCase):
     def test_skr_grpc_say_hello(self):
 
         response = requests.get(
-            f"http://{self.skr_ip}:8000/say_hello",
+            f"http://{self.skr_ip}:{self.http_port}/say_hello",
         )
         print(f"Response from say_hello check: {response.content.decode()}")
         assert response.status_code == 200
@@ -287,7 +313,7 @@ class SkrTest(unittest.TestCase):
 
         input_report_data = b"EXAMPLE"
         response = requests.get(
-            f"http://{self.skr_ip}:8000/get_report",
+            f"http://{self.skr_ip}:{self.http_port}/get_report",
             headers={
                 "Content-Type": "application/json",
             },
@@ -304,7 +330,7 @@ class SkrTest(unittest.TestCase):
 
         input_report_data = b"EXAMPLE"
         response = requests.get(
-            f"http://{self.skr_ip}:8000/get_attestation_data",
+            f"http://{self.skr_ip}:{self.http_port}/get_attestation_data",
             headers={
                 "Content-Type": "application/json",
             },
@@ -334,7 +360,7 @@ class SkrTest(unittest.TestCase):
     def test_skr_grpc_unwrap_key(self):
 
         # Generate a key in the HSM
-        key_id = f"{self.id}-wrapping-key"
+        key_id = self.key_name_prefix + "-wrapping-key"
         with open(os.path.join(os.path.realpath(os.path.dirname(__file__)), "policy_skr.rego")) as f:
             security_policy = generate_release_policy(
                 attestation_endpoint=self.attestation_endpoint,
@@ -387,7 +413,7 @@ class SkrTest(unittest.TestCase):
                 wrapped_payload = out_file.read()
 
         response = requests.get(
-            f"http://{self.skr_ip}:8000/unwrap_key",
+            f"http://{self.skr_ip}:{self.http_port}/unwrap_key",
             headers={
                 "Content-Type": "application/json",
             },

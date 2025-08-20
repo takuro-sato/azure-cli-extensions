@@ -3,7 +3,7 @@ param registry string
 param repository string
 param tag string
 param ccePolicies object
-param useVnet bool
+param useVnet bool = false
 param managedIDGroup string = resourceGroup().name
 param managedIDName string
 
@@ -31,7 +31,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
   properties: {
     osType: 'Linux'
     sku: 'Confidential'
-    subnetIds: useVnet ? [{ id: subnet.id }] : []
+    subnetIds: useVnet ? [{ id: subnet.id }] : null
     restartPolicy: 'Never'
     confidentialComputeProperties: {
       ccePolicy: ccePolicies.managed_identity

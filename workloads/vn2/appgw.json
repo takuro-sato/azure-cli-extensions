@@ -126,7 +126,15 @@
                             "Port": "[parameters('backendPort')]",
                             "Protocol": "Http",
                             "cookieBasedAffinity": "Disabled",
-                            "requestTimeout": 20
+                            "requestTimeout": 20,
+                            "probe": {
+                                "id": "[concat(variables('applicationGatewayId'), '/probes/http-probe-ignoreerr')]"
+                            },
+                            "requestRoutingRules": [
+                                {
+                                    "id": "[concat(variables('applicationGatewayId'), '/requestRoutingRules/rule')]"
+                                }
+                            ]
                         }
                     }
                 ],
@@ -169,7 +177,34 @@
                 "routingRules": [],
                 "enableHttp2": true,
                 "sslCertificates": [],
-                "probes": [],
+                "probes": [
+                    {
+                        "name": "http-probe-ignoreerr",
+                        "properties": {
+                            "protocol": "Http",
+                            "host": "[parameters('backendAddress')]",
+                            "port": "[parameters('backendPort')]",
+                            "path": "/",
+                            "interval": 30,
+                            "timeout": 30,
+                            "unhealthyThreshold": 3,
+                            "pickHostNameFromBackendHttpSettings": false,
+                            "minServers": 0,
+                            "match": {
+                                "body": "",
+                                "statusCodes": [
+                                    "100-599"
+                                ]
+                            },
+                            "backendHttpSettings": [
+                                {
+                                    "id": "[concat(variables('applicationGatewayId'), '/backendHttpSettingsCollection/backend-settings')]"
+                                }
+                            ]
+                        },
+                        "type": "Microsoft.Network/applicationGateways/probes"
+                    }
+                ],
                 "firewallPolicy": {
                     "id": "[resourceId('Microsoft.Network/applicationGatewayWebApplicationFirewallPolicies', parameters('wafPolicyName'))]"
                 }

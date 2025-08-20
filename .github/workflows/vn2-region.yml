@@ -138,7 +138,6 @@ jobs:
           DEPLOYMENT_NAME: sample-pod
           STEP_PREFIX: sample-pod
         run: |
-          set +ex
           cd workloads/vn2
           ./vn2-test-single-yaml-deploy.sh sample-pod.yaml
           status=$?
@@ -174,6 +173,72 @@ jobs:
           STEP_PREFIX: stress-18cpu-64gb
         run: |
           ./workloads/vn2/stress_test.sh
+
+      - name: 'Test case - managed identity'
+        if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
+        env:
+          DEPLOYMENT_NAME: managed-identity
+          STEP_PREFIX: managed-identity
+          REGISTRY: cacidashboard.azurecr.io
+          REPOSITORY: ubuntu-with-az-cli
+          TAG: "24.04"
+        run: |
+          set -exo pipefail
+
+          # Managed identity lives in the dashboard resource group
+          export AKS_RESOURCE_GROUP=$RESOURCE_GROUP
+          export RESOURCE_GROUP=c-aci-dashboard
+
+          WAIT_FOR_OUTPUT=true ./workloads/vn2/vn2-test-run.sh workloads/managed_identity
+          ./scripts/parse_container_output.py --must-have-output --fail-on-error output.log
+
+      - name: 'Test case - thim'
+        if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
+        env:
+          DEPLOYMENT_NAME: thim
+          STEP_PREFIX: thim
+          REGISTRY: cacidashboard.azurecr.io
+          TAG: "2.10"
+        run: |
+          set -ex
+          MONITOR_SECS=60 ./workloads/vn2/vn2-test-run.sh workloads/thim
+          ./scripts/tracing/trace_step.py --start 'Check for errors'
+          if grep -q 'ERROR' output.log; then
+            echo "Error found in container log"
+            ./scripts/tracing/trace_step.py --complete --err 'Error found in container log'
+            exit 1
+          fi
+          if ! grep -q 'Doing repeat check' output.log; then
+            echo "Incomplete container log"
+            ./scripts/tracing/trace_step.py --complete --err 'Incomplete container log'
+            exit 1
+          fi
+          ./scripts/tracing/trace_step.py --complete
+
+      - name: 'Test case - skr'
+        if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
+        env:
+          DEPLOYMENT_NAME: skr
+          STEP_PREFIX: skr
+          VN2_MODE: "true"
+          REGISTRY: cacidashboard.azurecr.io
+          TAG: "20250818"
+          POLICY_TYPE: generated
+          ATTESTATION_ENDPOINT: ${{ vars.ATTESTATION_ENDPOINT }}
+          HSM_ENDPOINT: ${{ vars.HSM_ENDPOINT }}
+        run: |
+          set -ex
+          ./scripts/tracing/trace_step.py --start 'Test SKR'
+
+          # Managed identity lives in the dashboard resource group
+          export AKS_RESOURCE_GROUP=$RESOURCE_GROUP
+          export RESOURCE_GROUP=c-aci-dashboard
+
+          # This is used as the key name - attempt to make it unique and
+          # identifiable
+          export DEPLOYMENT_NAME=vn2-${{ inputs.location || 'region' }}-skr-${{ github.run_number }}
+
+          python -m unittest discover -s workloads/skr
 
       - name: Clean up VN2 Helm installation
         run: |

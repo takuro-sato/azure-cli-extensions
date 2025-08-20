@@ -11,3 +11,5 @@ param ccePolicies={
   managed_identity: ''
 }
 param managedIDName='cacidashboard'
+
+param useVnet=false
