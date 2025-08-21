@@ -238,7 +238,23 @@ jobs:
           # identifiable
           export DEPLOYMENT_NAME=vn2-${{ inputs.location || 'region' }}-skr-${{ github.run_number }}
 
-          python -m unittest discover -s workloads/skr
+          set +e -o pipefail
+          python -m unittest discover -s workloads/skr 2>&1 | tee skr_test.log
+          status=$?
+          if [ $status -ne 0 ]; then
+            echo "SKR test failed"
+            maybe_err=(--err "SKR test failed")
+          else
+            maybe_err=()
+          fi
+          jq -Rs '{skrTestLog: .}' < skr_test.log | \
+            ./scripts/tracing/trace_step.py --complete "${maybe_err[@]}" --output-from-stdin || exit 1
+          exit $status
+
+      - name: Report result
+        if: always()
+        run: |
+          ./scripts/trace_run_result.sh ${{ job.status }}
 
       - name: Clean up VN2 Helm installation
         run: |
