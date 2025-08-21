@@ -15,3 +15,24 @@ jobs:
     uses: ./.github/workflows/basic-region.yml
     with:
       location: eastus2euap
+
+  # Only zones 2 and 3 exist in east us 2 euap. Note that this will change
+  # when we run in a different subscription.
+  info-two-zones:
+    if: ${{ !cancelled() }}
+    name: info-two-zones
+    secrets: inherit
+    uses: ./.github/workflows/workload-info.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        # only vnets are supported for zonal deployments
+        use_vnet: [true]
+        zone: ["1", "3"]
+    with:
+      id: info-two-zones${{ matrix.zone }}-${{ matrix.use_vnet && 'vnet-' || '' }}allow_all
+      location: eastus2euap
+      use_vnet: ${{ matrix.use_vnet }}
+      zone: ${{ matrix.zone }}
+      policy_type: allow_all
+      test_schedule: gh-hourly
