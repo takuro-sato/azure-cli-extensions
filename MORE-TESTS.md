@@ -3,6 +3,7 @@
 ### Stable
 
 [![Region - Australia Central 2](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-australiacentral2.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-australiacentral2.yml)
+[![Region - Brazil South](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-brazilsouth.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-brazilsouth.yml)
 [![Region - Central India](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-centralindia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-centralindia.yml)
 [![Region - East Asia](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-eastasia.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-eastasia.yml)
 [![Region - East US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-eastus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-eastus.yml)
