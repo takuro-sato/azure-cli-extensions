@@ -5,6 +5,9 @@ permissions:
   contents: read
 
 on:
+  pull_request:
+    paths:
+      - .github/workflows/attestation-eastasia.yml
   schedule:
     - cron: '12 1-23 * * *'  # managed by scripts/spread_out_schedules.py
   workflow_dispatch:
