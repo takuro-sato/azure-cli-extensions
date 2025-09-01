@@ -215,8 +215,8 @@ jobs:
           fi
           ./scripts/tracing/trace_step.py --complete
 
-          
       - name: 'Another log into Azure'
+        if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}

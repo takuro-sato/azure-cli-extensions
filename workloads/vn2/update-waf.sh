@@ -44,8 +44,8 @@ if [[ ${#node_ips[@]} -eq 0 ]]; then
     exit 1
 fi
 if [[ ${#node_ips[@]} -gt 1 ]]; then
-    echo "Multiple node IPs found - not supported." >&2
-    exit 1
+    echo "WARNING: Multiple node IPs found - using the first one." >&2
+    echo "All IPs found: ${node_ips[*]}" >&2
 fi
 node_ip="${node_ips[0]}"
 vnet_id=$(az network vnet list --resource-group "$mc_resource_group" --query "[0].id" -o tsv)
