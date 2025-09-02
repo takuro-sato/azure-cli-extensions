@@ -99,7 +99,7 @@ env:
   MEMORY_IN_GB: ${{ inputs.memory_in_gb || 4 }}
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: ${{ inputs.policy_type || 'generated' }}
-  TAG: "2.10"
+  TAG: "2.12"
   TEST_SCHEDULE: ${{ inputs.test_schedule }}
   RUN_FEATURES: ${{ inputs.has_managed_identity && 'managed_identity' || '' }}
 

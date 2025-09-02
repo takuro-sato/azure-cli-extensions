@@ -198,7 +198,7 @@ jobs:
           DEPLOYMENT_NAME: thim
           STEP_PREFIX: thim
           REGISTRY: cacidashboard.azurecr.io
-          TAG: "2.10"
+          TAG: "2.12"
         run: |
           set -ex
           MONITOR_SECS=60 ./workloads/vn2/vn2-test-run.sh workloads/thim
@@ -230,7 +230,7 @@ jobs:
           STEP_PREFIX: skr
           VN2_MODE: "true"
           REGISTRY: cacidashboard.azurecr.io
-          TAG: "20250818"
+          TAG: "2.12"
           POLICY_TYPE: generated
           ATTESTATION_ENDPOINT: ${{ vars.ATTESTATION_ENDPOINT }}
           HSM_ENDPOINT: ${{ vars.HSM_ENDPOINT }}

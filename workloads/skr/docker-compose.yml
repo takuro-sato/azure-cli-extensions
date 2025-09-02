@@ -7,4 +7,4 @@ services:
       context: .
       dockerfile: proxy.Dockerfile
   sidecar:
-    image: cacidashboard.azurecr.io/skr-next
+    image: mcr.microsoft.com/aci/skr:$TAG
