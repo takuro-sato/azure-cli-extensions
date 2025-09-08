@@ -87,7 +87,7 @@ env:
   REGISTRY: ghcr.io
   REPOSITORY: ${{ github.repository }}/test-containers
   TAG: latest
-  MANAGED_IDENTITY: cacidashboard
+  MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'westeurope' }}
   LOCATION: ${{ inputs.location || 'westeurope' }}
   CPU: ${{ inputs.cpu || 2 }}
   MEMORY_IN_GB: ${{ inputs.memory_in_gb || 4 }}

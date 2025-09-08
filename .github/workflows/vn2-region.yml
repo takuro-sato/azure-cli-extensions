@@ -75,7 +75,7 @@ env:
   LOCATION: ${{ inputs.location || 'northeurope' }}
   AKS_CLUSTER_NAME: ${{ inputs.aks_cluster_name || 'vn2-aks-northeurope' }}
   CLEANUP: ${{ inputs.cleanup || 'true' }}
-  MANAGED_IDENTITY: cacidashboard
+  MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'northeurope' }}
   ACI_EXPECTED_KERNEL_DATE: ${{ vars.ACI_EXPECTED_KERNEL_DATE }}
 
 jobs:

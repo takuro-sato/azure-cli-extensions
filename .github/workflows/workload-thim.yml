@@ -93,7 +93,7 @@ env:
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
   RESOURCE_GROUP: c-aci-dashboard
   REGISTRY: cacidashboard.azurecr.io
-  MANAGED_IDENTITY: ${{ inputs.has_managed_identity && 'cacidashboard' || '' }}
+  MANAGED_IDENTITY: ${{ inputs.has_managed_identity && format('cacidashboard-{0}', inputs.location || 'westeurope') || '' }}
   LOCATION: ${{ inputs.location || 'westeurope' }}
   CPU: ${{ inputs.cpu || 2 }}
   MEMORY_IN_GB: ${{ inputs.memory_in_gb || 4 }}

@@ -101,7 +101,7 @@ env:
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
   RESOURCE_GROUP: c-aci-dashboard
   REGISTRY: cacidashboard.azurecr.io
-  MANAGED_IDENTITY: cacidashboard
+  MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'westeurope' }}
   LOCATION: ${{ inputs.location || 'westeurope' }}
   ZONE: ${{ inputs.zone }}
   USE_VNET: ${{ inputs.use_vnet || false }}

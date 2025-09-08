@@ -69,7 +69,7 @@ env:
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
   RESOURCE_GROUP: c-aci-dashboard
   REGISTRY: cacidashboard.azurecr.io
-  MANAGED_IDENTITY: cacidashboard
+  MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'westeurope' }}
   TAG: "2.12"
   LOCATION: ${{ inputs.location || 'westeurope' }}
   CLEANUP: ${{ inputs.cleanup }}

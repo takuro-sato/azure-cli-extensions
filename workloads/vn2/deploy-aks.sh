@@ -24,6 +24,9 @@ RUNNER_IDENTITY_NAME="cacidashboard"
 
 RUNNER_CLIENT_ID="$(az identity show --resource-group "$RUNNER_IDENTITY_RESOURCE_GROUP" -n "$RUNNER_IDENTITY_NAME" --query 'clientId' -o tsv)"
 
+REGIONAL_IDENTITY_NAME="$RUNNER_IDENTITY_NAME-$LOCATION"
+# REGIONAL_IDENTITY_CLIENT_ID="$(az identity show --resource-group "$RUNNER_IDENTITY_RESOURCE_GROUP" -n "$REGIONAL_IDENTITY_NAME" --query 'clientId' -o tsv)"
+
 # 1) Check and Create Resource Group if it doesn't exist
 if az group show --name $RESOURCE_GROUP &>/dev/null; then
     echo "Resource group '$RESOURCE_GROUP' already exists. Moving to the next step..."
@@ -114,9 +117,9 @@ az role assignment create \
     --role $ROLE \
     --scope "$SCOPE"
 
-# Allow the AKS identity to have Managed Identity Operator on the cacidashboard identity so that we can test VN2 managed identity containers
-SCOPE="/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$RUNNER_IDENTITY_RESOURCE_GROUP/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$RUNNER_IDENTITY_NAME"
-echo "Assigning 'Managed Identity Operator' role to Managed Identity '$AKS_MANAGED_IDENTITY_CLIENT_ID' on '$RUNNER_IDENTITY_NAME'..."
+# Allow the AKS identity to have Managed Identity Operator on the cacidashboard-${region} identity so that we can test VN2 managed identity containers
+SCOPE="/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$RUNNER_IDENTITY_RESOURCE_GROUP/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$REGIONAL_IDENTITY_NAME"
+echo "Assigning 'Managed Identity Operator' role to Managed Identity '$AKS_MANAGED_IDENTITY_CLIENT_ID' on '$REGIONAL_IDENTITY_NAME'..."
 az role assignment create \
     --assignee $AKS_MANAGED_IDENTITY_CLIENT_ID \
     --role "Managed Identity Operator" \

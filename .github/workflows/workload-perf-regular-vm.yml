@@ -56,7 +56,7 @@ env:
   DEPLOYMENT_NAME: ${{ inputs.id || 'perf-regular-vm' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
   RESOURCE_GROUP: c-aci-dashboard
-  # MANAGED_IDENTITY: cacidashboard
+  # MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'uaenorth' }}
   # STORAGE_ACCOUNT: cacitestingstorage
   LOCATION: ${{ inputs.location || 'uaenorth' }}
   CLEANUP: ${{ inputs.cleanup }}

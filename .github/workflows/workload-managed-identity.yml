@@ -95,7 +95,7 @@ env:
   REGISTRY: cacidashboard.azurecr.io
   REPOSITORY: ubuntu-with-curl
   TAG: "24.04"
-  MANAGED_IDENTITY: cacidashboard
+  MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'westeurope' }}
   LOCATION: ${{ inputs.location || 'westeurope' }}
   USE_VNET: ${{ inputs.use_vnet || false }}
   CPU: ${{ inputs.cpu || 2 }}

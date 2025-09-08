@@ -111,9 +111,9 @@ env:
   REGISTRY: ghcr.io
   REPOSITORY: ${{ github.repository }}/test-containers/stress-tests-server-alpine
   TAG: latest
-  MANAGED_IDENTITY: cacidashboard
   STORAGE_ACCOUNT: cacitestingstorage
   LOCATION: ${{ inputs.location || 'uaenorth' }}
+  MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'uaenorth' }}
   CLEANUP: ${{ inputs.cleanup }}
   USE_NORMAL_SIDECAR: true
   VM_SIZE: ${{ inputs.vmSize || 'Standard_DC8as_cc_v5' }}
