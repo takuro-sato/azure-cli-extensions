@@ -23,7 +23,7 @@ on:
 
 jobs:
   info-nonzoned-nonvnet:
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && inputs.location != 'switzerlandnorth' }}
     name: info-nonzoned-nonvnet
     secrets: inherit
     uses: ./.github/workflows/workload-info.yml
