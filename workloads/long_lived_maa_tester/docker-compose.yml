@@ -1,0 +1,7 @@
+version: '3'
+services:
+  primary:
+    image: $REGISTRY/${REPOSITORY:-maa-tester}:${TAG:-latest}
+    build:
+      context: .
+      dockerfile: maa_tester.Dockerfile

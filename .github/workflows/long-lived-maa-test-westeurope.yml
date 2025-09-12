@@ -1,0 +1,21 @@
+name: Long lived MAA test - West Europe
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/long-lived-maa-test-westeurope.yml
+  schedule:
+    - cron: '0 1 * * *'
+  workflow_dispatch:
+
+jobs:
+  long-lived-maa-test-westeurope:
+    secrets: inherit
+    uses: ./.github/workflows/long-lived-maa-test.yml
+    with:
+      location: westeurope
+      test_schedule: gh-daily

@@ -1,0 +1,120 @@
+name: Long lived MAA test
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      id:
+        type: string
+        description: ID of the run
+      location:
+        type: string
+        required: true
+        description: 'The location of the Azure Container Instances'
+      policy_type:
+        type: string
+        description: The type of policy to use
+        default: allow_all
+  workflow_call:
+    inputs:
+      id:
+        type: string
+        description: ID of the run
+      location:
+        type: string
+        required: true
+        description: 'The location of the Azure Container Instances'
+      policy_type:
+        type: string
+        description: The type of policy to use
+        default: allow_all
+      test_schedule:
+        type: string
+        description: Trace marker by scheduled runs only
+        default: ''
+
+env:
+  KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
+  KUSTO_DATABASE: ${{ secrets.KUSTO_DATABASE }}
+  KUSTO_TABLE: CACITestStepTrace
+  TEST_TYPE: aci
+  TEST_NAME: 'Long lived MAA test'
+  RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+  DEPLOYMENT_NAME: ${{ inputs.id || 'long-lived-maa-test' }}-${{ inputs.location || 'westeurope' }}
+  SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
+  RESOURCE_GROUP: c-aci-dashboard
+  REGISTRY: cacidashboard.azurecr.io
+  MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'westeurope' }}
+  LOCATION: ${{ inputs.location || 'westeurope' }}
+  POLICY_TYPE: ${{ inputs.policy_type || 'allow_all' }}
+  TAG: latest
+  SKR_TAG: "2.12"
+  TEST_SCHEDULE: ${{ inputs.test_schedule }}
+  RUN_FEATURES: 'managed_identity'
+
+jobs:
+  long-lived-maa-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log into Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION }}
+
+      - name: Initialize Run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/init_run.sh
+
+      # Ensure we get a fresh container every day
+      - name: Remove previous deployments
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Remove previous deployments'
+          c-aci-testing aci remove --deployment-name $DEPLOYMENT_NAME
+
+      - name: Pull Image
+        if: ${{ env.POLICY_TYPE != 'allow_all' }}
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Pull Image'
+          c-aci-testing images pull workloads/long_lived_maa_tester
+
+      - name: Set Parameters
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Set Parameters'
+          c-aci-testing aci param_set workloads/long_lived_maa_tester --parameter \
+            skrTag=${{ env.SKR_TAG }}
+
+      - name: Generate Security Policy
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Generate Policy'
+          c-aci-testing policies gen workloads/long_lived_maa_tester --deployment-name $DEPLOYMENT_NAME
+          cat workloads/long_lived_maa_tester/policy_long_lived_maa_tester.rego
+
+      - name: Deploy Container Group
+        run: |
+          ./scripts/aci_deploy_traced.sh workloads/long_lived_maa_tester
+
+      - name: Report result
+        if: always()
+        run: |
+          ./scripts/trace_run_result.sh ${{ job.status }}
+
+      - name: Monitor Container Group
+        if: always()
+        continue-on-error: true
+        run: c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME
+
+      - name: Get Container States
+        if: always()
+        continue-on-error: true
+        run: |
+          sleep 60 # Ensure all states are up to date
+          ./scripts/trace_container_states.sh

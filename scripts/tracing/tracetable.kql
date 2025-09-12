@@ -46,9 +46,21 @@
     | sort by StartTime desc
 }
 
+.create table CACIMAATestTrace (
+    Time: datetime,
+    RandomId: guid,
+    Environment: string,
+    Region: string,
+    ClientRegion: string,
+    MAAEndpoint: string,
+    TEE: string,
+    Error: string,
+    Logs: string
+)
+
 .create-or-alter function with (folder = "C-ACI") CACIMonitoringIcMTriggers() {
     let failureLookbackHours=3;
-    let showRunsLookbackHours=10;
+    let showRunsLookbackHours=6;
     let errorCountThreshold=2;
     let regions = dynamic([
         'australiacentral2',
@@ -90,24 +102,39 @@
     //     "westeurope", "", "fake non-zonal test", "2025-08-07 13:02:00", "test3", "https://github.com", "!!!",
     // ];
     let currentTime=now();
-    getCACITestSummary(currentTime-make_timespan(showRunsLookbackHours, 0), currentTime)
-    | where Location in (regions) and Branch == branch and TestType == "aci" and TestSchedule == "gh-hourly"
-    | project
-        Location,
-        AvailabilityZone,
-        TestVariant=case(
-            array_length(RunFeatures) == 0,
-                iff(TestName contains "attestation", "MAA monitoring", "non-vnet test"),
-            array_index_of(RunFeatures, "vnet") >= 0, "vnet test",
-            "(unknown)"
-        ),
-        StartTime,
-        DeploymentName,
-        RunLink,
-        Error
-    | extend ErrorJson=parse_json(extract("\\nERROR: (\\{.+\\})\\n", 1, Error))
-    | extend ErrDetail=coalesce(ErrorJson["error"]["details"][0], ErrorJson["error"])
-    | extend Error=coalesce(iff(isnotempty(ErrDetail), strcat(tostring(ErrDetail["code"]), ": ", tostring(ErrDetail["message"])), dynamic(null)), Error)
+    let mainData=(
+        getCACITestSummary(currentTime-make_timespan(showRunsLookbackHours, 0), currentTime)
+        | where Location in (regions) and Branch == branch and TestType == "aci" and TestSchedule == "gh-hourly"
+        | project
+            Location,
+            AvailabilityZone,
+            TestVariant=case(
+                array_length(RunFeatures) == 0,
+                    iff(TestName contains "attestation", "MAA attestation from fresh ACI", "non-vnet test"),
+                array_index_of(RunFeatures, "vnet") >= 0, "vnet test",
+                "(unknown)"
+            ),
+            StartTime,
+            DeploymentName,
+            RunLink,
+            Error
+        | extend ErrorJson=parse_json(extract("\\nERROR: (\\{.+\\})\\n", 1, Error))
+        | extend ErrDetail=coalesce(ErrorJson["error"]["details"][0], ErrorJson["error"])
+        | extend Error=coalesce(iff(isnotempty(ErrDetail), strcat(tostring(ErrDetail["code"]), ": ", strcat(tostring(ErrDetail["message"]), "\n", tostring(ErrDetail['details']))), dynamic(null)), Error)
+    );
+    let maaData=(
+        CACIMAATestTrace
+        | where Time between (currentTime-make_timespan(showRunsLookbackHours, 0) .. currentTime)
+        | project
+            Location=Region,
+            AvailabilityZone='',
+            TestVariant='MAA attestation from long-lived ACI',
+            StartTime=Time,
+            DeploymentName=strcat('MAA tester from ', ClientRegion, ' testing ', MAAEndpoint, ' (', Region, ', TEE ', TEE, ')'),
+            RunLink=strcat('https://dataexplorer.azure.com/dashboards/d244d12c-7f39-475f-9f17-1f28a0848b9e?p-_randomID=v-', RandomId, '#228f4b7c-9b3f-4a2e-a3c6-513ec518c897'),
+            Error=Error
+    );
+    union mainData, maaData //, testData
     // | union testData
     | order by StartTime desc
     | extend CountAsError=isnotempty(Error) and StartTime >= currentTime-make_timespan(failureLookbackHours, 0)
