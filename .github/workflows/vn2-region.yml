@@ -264,6 +264,29 @@ jobs:
         run: |
           ./scripts/trace_run_result.sh ${{ job.status }}
 
+      - name: Download vn2 logs
+        if: always()
+        continue-on-error: true
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Download vn2 logs'
+          kubectl logs pod/vn2-virtualnode-0 -n vn2 | gzip > vn2.log.gz
+          ls -lh vn2.log.gz
+          ./scripts/tracing/trace_step.py --start 'Upload vn2 logs as artifact'
+
+      - name: Upload vn2 logs as artifact
+        if: always()
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
+        with:
+          name: vn2.log.gz
+          path: vn2.log.gz
+
+      - name: Report result
+        if: always()
+        continue-on-error: true
+        run: |
+          ./scripts/trace_run_result.sh ${{ job.status }}
+
       - name: Clean up VN2 Helm installation
         run: |
           if [ "$CLEANUP" != false ]; then
