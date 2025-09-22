@@ -12,7 +12,7 @@ echo Install c_aci_testing package
 ./scripts/install-c-aci-testing.sh
 
 echo Set Confcom Version
-./scripts/install-confcom.sh 1.2.1
+./scripts/install-confcom.sh 1.2.4
 
 if [ -e /opt/az-config/config ]; then
   echo "Fixup bad permission in github runner image:"
