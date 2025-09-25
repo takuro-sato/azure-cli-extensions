@@ -1,0 +1,38 @@
+name: Refresh cached venv package
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  push:
+    paths:
+      - scripts/init_run.sh
+      - scripts/install-c-aci-testing.sh
+      - scripts/venv/get-deps.sh
+      - scripts/venv/upload-venv-to-storage.sh
+    branches:
+      - main
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+
+jobs:
+  refresh-venv-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log into Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION }}
+
+      # Use the init_run script to ensure that there is one place for version
+      # numbers env vars
+      - name: Populate venv and upload
+        run: INIT_RUN_POPULATE_CACHE=1 ./scripts/init_run.sh
