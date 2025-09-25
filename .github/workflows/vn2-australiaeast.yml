@@ -5,8 +5,11 @@ permissions:
    contents: read
 
 on:
+  pull_request:
+    paths:
+      - .github/workflows/vn2-australiaeast.yml
   schedule:
-    - cron: '2 8 * * *'  # managed by scripts/spread_out_schedules.py
+    - cron: '3 7 * * *'  # managed by scripts/spread_out_schedules.py
   workflow_dispatch:
 
 jobs:
@@ -15,5 +18,5 @@ jobs:
     uses: ./.github/workflows/vn2-region.yml
     with:
       location: australiaeast
-      resource_group: vn2-aks-australiaeast
+      resource_group: c-aci-vn2
       aks_cluster_name: vn2-aks-australiaeast

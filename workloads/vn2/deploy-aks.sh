@@ -15,7 +15,35 @@ SUBNET_NAME="cg"                  # Subnet name
 SUBNET_PREFIX="10.225.0.0/24"     # Address range for the new subnet (starting from 10.225.0.0)
 AKS_IDENTITY_SUFFIX="agentpool"   # Expected suffix of the AKS managed identity
 ROLE="Contributor"                # Role to assign
-NODE_VM_SIZE="Standard_DC4as_cc_v5"   # Node size for AKS cluster
+NODE_VM_SIZES_TO_TRY=(
+    "Standard_DC4as_cc_v6"
+    "Standard_DC2as_cc_v6"
+    "Standard_DC4as_cc_v5"
+    "Standard_DC2as_cc_v5"
+    "Standard_DC8as_cc_v6"
+    "Standard_DC8as_cc_v5"
+
+    "Standard_EC4as_cc_v6"
+    "Standard_EC2as_cc_v6"
+    "Standard_EC4as_cc_v5"
+    "Standard_EC2as_cc_v5"
+    "Standard_EC8as_cc_v6"
+    "Standard_EC8as_cc_v5"
+
+    "Standard_D4as_v5"
+    "Standard_D4as_v6"
+    "Standard_D2as_v5"
+    "Standard_D2as_v6"
+    "Standard_D4s_v5"
+    "Standard_D4s_v6"
+    "Standard_D2s_v5"
+    "Standard_D2s_v6"
+
+    "Standard_E4s_v5"
+    "Standard_E4s_v6"
+    "Standard_E2s_v5"
+    "Standard_E2s_v6"
+)
 MIN_COUNT=1                       # Minimum number of nodes (for autoscaler, Dev/Test)
 MAX_COUNT=3                       # Maximum number of nodes (for autoscaler, Dev/Test)
 
@@ -26,6 +54,8 @@ RUNNER_CLIENT_ID="$(az identity show --resource-group "$RUNNER_IDENTITY_RESOURCE
 
 REGIONAL_IDENTITY_NAME="$RUNNER_IDENTITY_NAME-$LOCATION"
 # REGIONAL_IDENTITY_CLIENT_ID="$(az identity show --resource-group "$RUNNER_IDENTITY_RESOURCE_GROUP" -n "$REGIONAL_IDENTITY_NAME" --query 'clientId' -o tsv)"
+
+. "$(dirname "$0")/isolate_kube_config.inc.sh"
 
 # 1) Check and Create Resource Group if it doesn't exist
 if az group show --name $RESOURCE_GROUP &>/dev/null; then
@@ -39,23 +69,37 @@ fi
 if az aks show --resource-group $RESOURCE_GROUP --name $CLUSTER_NAME &>/dev/null; then
     echo "AKS cluster '$CLUSTER_NAME' already exists in resource group '$RESOURCE_GROUP'. Skipping creation."
 else
-    echo "Creating AKS cluster with Dev/Test preset..."
-    az aks create \
-        --resource-group $RESOURCE_GROUP \
-        --name $CLUSTER_NAME \
-        --node-count $NODE_COUNT \
-        --node-vm-size $NODE_VM_SIZE \
-        --generate-ssh-keys \
-        --location $LOCATION \
-        --enable-managed-identity \
-        --enable-cluster-autoscaler \
-        --min-count $MIN_COUNT \
-        --max-count $MAX_COUNT \
-        --auto-upgrade-channel patch \
-        --node-os-upgrade-channel NodeImage \
-        --nodepool-name "vn2np" \
-        --nodepool-labels "environment=devtest" \
-        --os-sku AzureLinux
+    success=0
+    for vm_sku in "${NODE_VM_SIZES_TO_TRY[@]}"; do
+        echo "Creating AKS cluster with $vm_sku..."
+        az aks create \
+            --resource-group $RESOURCE_GROUP \
+            --name $CLUSTER_NAME \
+            --node-count $NODE_COUNT \
+            --node-vm-size $vm_sku \
+            --generate-ssh-keys \
+            --location $LOCATION \
+            --enable-managed-identity \
+            --enable-cluster-autoscaler \
+            --min-count $MIN_COUNT \
+            --max-count $MAX_COUNT \
+            --auto-upgrade-channel patch \
+            --node-os-upgrade-channel NodeImage \
+            --nodepool-name "vn2np" \
+            --nodepool-labels "environment=devtest" \
+            --os-sku AzureLinux
+        if [[ $? -eq 0 ]]; then
+            echo "AKS cluster '$CLUSTER_NAME' created successfully with $vm_sku."
+            success=1
+            break
+        else
+            echo "Failed to create AKS cluster with $vm_sku. Trying next VM size..."
+        fi
+    done
+    if [[ $success -ne 1 ]]; then
+        echo "Error: Failed to create AKS cluster with all tried VM sizes."
+        exit 1
+    fi
 fi
 
 # wait until the resource group can be queried
@@ -154,6 +198,14 @@ else
         echo "Failed to create subnet 'waf'."
         exit 1
     fi
+fi
+
+echo "Getting AKS credentials..."
+echo az aks get-credentials --overwrite-existing --resource-group "$RESOURCE_GROUP" --name "$CLUSTER_NAME"
+az aks get-credentials --overwrite-existing --resource-group "$RESOURCE_GROUP" --name "$CLUSTER_NAME"
+if [[ $? -ne 0 ]]; then
+    echo "Failed to get AKS credentials."
+    exit 1
 fi
 
 WAF_NAME="vn2-aks-waf-$LOCATION"

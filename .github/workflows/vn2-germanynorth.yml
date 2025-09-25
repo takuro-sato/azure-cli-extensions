@@ -1,0 +1,19 @@
+name: VN2 - Germany North
+
+permissions:
+   id-token: write
+   contents: read
+
+on:
+  schedule:
+    - cron: '12 7 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  vn2-germanynorth:
+    secrets: inherit
+    uses: ./.github/workflows/vn2-region.yml
+    with:
+      location: germanynorth
+      resource_group: c-aci-vn2
+      aks_cluster_name: vn2-aks-germanynorth

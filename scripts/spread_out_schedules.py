@@ -96,9 +96,15 @@ def minutes_to_cron(minutes: int) -> str:
     hours += 2
     return f"{minutes} {hours} * * *"
 
-CRON_RE = re.compile(r"""^on:
-\s+schedule:
-\s+- cron: '(.+?)'(\s*(\#.+)?$)""", re.MULTILINE)
+CRON_RE = re.compile(
+    r"""^on:
+(\s+pull_request:
+\s+paths:
+(\s+- .+)+
+)?\s+schedule:
+\s+- cron: '(?P<cron>.+?)'(?P<comment>\s*(\#.+)?$)""",
+    re.MULTILINE
+)
 
 def write_cron(workflow: str, cron: str):
     # Use regex replace to preserve comments etc
@@ -108,9 +114,9 @@ def write_cron(workflow: str, cron: str):
     if not found_cron:
         print(f"Failed to replace cron in {workflow}")
         sys.exit(1)
-    str_span = found_cron.span(1)
+    str_span = found_cron.span("cron")
     orig_len = str_span[1] - str_span[0]
-    comment_span = found_cron.span(2)
+    comment_span = found_cron.span("comment")
     content = content[:str_span[0]] + cron + content[str_span[1]:]
     comment_span = (comment_span[0] - orig_len + len(cron), comment_span[1] - orig_len + len(cron))
     content = content[:comment_span[0]] + "  # managed by scripts/spread_out_schedules.py" + content[comment_span[1]:]

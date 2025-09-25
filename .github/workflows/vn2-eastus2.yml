@@ -1,0 +1,19 @@
+name: VN2 - East US 2
+
+permissions:
+   id-token: write
+   contents: read
+
+on:
+  schedule:
+    - cron: '10 7 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  vn2-eastus2:
+    secrets: inherit
+    uses: ./.github/workflows/vn2-region.yml
+    with:
+      location: eastus2
+      resource_group: c-aci-vn2
+      aks_cluster_name: vn2-aks-eastus2

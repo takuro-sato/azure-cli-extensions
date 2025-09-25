@@ -1,0 +1,19 @@
+name: VN2 - West US 3
+
+permissions:
+   id-token: write
+   contents: read
+
+on:
+  schedule:
+    - cron: '48 7 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  vn2-westus3:
+    secrets: inherit
+    uses: ./.github/workflows/vn2-region.yml
+    with:
+      location: westus3
+      resource_group: c-aci-vn2
+      aks_cluster_name: vn2-aks-westus3

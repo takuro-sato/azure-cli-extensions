@@ -6,7 +6,7 @@ permissions:
 
 on:
   schedule:
-    - cron: '8 8 * * *'  # managed by scripts/spread_out_schedules.py
+    - cron: '13 7 * * *'  # managed by scripts/spread_out_schedules.py
   workflow_dispatch:
 
 jobs:
@@ -15,5 +15,5 @@ jobs:
     uses: ./.github/workflows/vn2-region.yml
     with:
       location: germanywestcentral
-      resource_group: vn2-aks-germanywestcentral
+      resource_group: c-aci-vn2
       aks_cluster_name: vn2-aks-germanywestcentral

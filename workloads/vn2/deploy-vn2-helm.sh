@@ -11,6 +11,8 @@ RESOURCE_GROUP=$1
 AKS_CLUSTER_NAME=$2
 NAMESPACE=${3:-default}
 
+. "$(dirname "$0")/isolate_kube_config.inc.sh"
+
 # Set the AKS context for kubectl
 echo "Setting the AKS context for kubectl..."
 az aks get-credentials --overwrite-existing --resource-group "$RESOURCE_GROUP" --name "$AKS_CLUSTER_NAME"
