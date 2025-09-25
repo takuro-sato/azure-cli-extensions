@@ -41,13 +41,20 @@ on:
         description: The memory in container in Gb
         default: 1
       cleanup:
-        type: boolean
-        description: Whether to cleanup the container group after testing
-        default: true
+        type: choice
+        description: "Whether to cleanup the container group after testing (true/false/always)"
+        default: "true"
+        options:
+          - "true"
+          - "false"
+          - "always"
       policy_type:
         type: string
         description: The type of policy to use
         default: generated
+      is_big_containers_test:
+        type: boolean
+        default: false
   workflow_call:
     inputs:
       id:
@@ -70,9 +77,9 @@ on:
         description: The memory in container in Gb
         default: 1
       cleanup:
-        type: boolean
-        description: Whether to cleanup the container group after testing
-        default: true
+        type: string
+        description: "Whether to cleanup the container group after testing (true/false/always)"
+        default: "true"
       policy_type:
         type: string
         description: The type of policy to use
@@ -81,13 +88,16 @@ on:
         type: string
         description: Trace marker by scheduled runs only
         default: ''
+      is_big_containers_test:
+        type: boolean
+        default: false
 
 env:
   KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
   KUSTO_DATABASE: ${{ secrets.KUSTO_DATABASE }}
   KUSTO_TABLE: CACITestStepTrace
-  TEST_TYPE: aci
-  TEST_NAME: Managed Identity
+  TEST_TYPE: ${{ inputs.is_big_containers_test && 'aci-next' || 'aci' }}
+  TEST_NAME: ${{ inputs.is_big_containers_test && 'Managed Identity (BigContainers)' || 'Managed Identity' }}
   RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
   DEPLOYMENT_NAME: ${{ inputs.id || 'managed-identity' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
@@ -103,7 +113,7 @@ env:
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: ${{ inputs.policy_type || 'generated' }}
   TEST_SCHEDULE: ${{ inputs.test_schedule }}
-  RUN_FEATURES: managed_identity${{ inputs.use_vnet && ',vnet' || '' }}
+  RUN_FEATURES: managed_identity${{ inputs.use_vnet && ',vnet' || '' }}${{ inputs.is_big_containers_test && ',big_containers' || '' }}
 
 jobs:
   managed-identity:
@@ -180,7 +190,12 @@ jobs:
           ./scripts/trace_container_states.sh
 
       - name: Remove Container Group
+        if: (inputs.cleanup != 'false' && success()) || inputs.cleanup == 'always'
         run: |
-          if [ "$CLEANUP" != false ]; then
-            c-aci-testing aci remove --deployment-name $DEPLOYMENT_NAME
-          fi
+          c-aci-testing aci remove --deployment-name $DEPLOYMENT_NAME
+
+      - name: Be extra sure we removed the containers
+        if: (inputs.cleanup != 'false' && success()) || inputs.cleanup == 'always'
+        run: |
+          set +e
+          az container delete --name $DEPLOYMENT_NAME --resource-group $RESOURCE_GROUP --yes

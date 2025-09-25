@@ -123,7 +123,7 @@ env:
   SCRIPT: ${{ inputs.script || 'workload_fio' }}
   ACI_EXPECTED_KERNEL_DATE: ${{ vars.ACI_EXPECTED_KERNEL_DATE }}
   TEST_SCHEDULE: ${{ inputs.test_schedule }}
-  RUN_FEATURES: 'public_ip'
+  RUN_FEATURES: public_ip${{ inputs.is_big_containers_test && ',big_containers' || '' }}
 
 jobs:
   stress-tests:

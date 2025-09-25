@@ -43,7 +43,7 @@ jobs:
   stress-8cpu-16gb:
     secrets: inherit
     # BigContainers regions
-    if: ${{ !cancelled() && contains(vars.ACI_BIG_CONTAINERS_REGION, inputs.location) }}
+    if: ${{ !cancelled() && contains(vars.ACI_BIG_CONTAINERS_REGION, format(',{0},', inputs.location)) }}
     # Serializes execution
     needs: stress-4cpu-16gb
     uses: ./.github/workflows/workload-stress-tests.yml
@@ -55,12 +55,27 @@ jobs:
       cleanup: "always"
       is_big_containers_test: true
 
+  managed-identity-8cpu-16gb:
+    secrets: inherit
+    # BigContainers regions
+    if: ${{ !cancelled() && contains(vars.ACI_BIG_CONTAINERS_REGION, format(',{0},', inputs.location)) }}
+    # Serializes execution
+    needs: stress-8cpu-16gb
+    uses: ./.github/workflows/workload-managed-identity.yml
+    with:
+      id: msi-8cpu-16gb
+      location: ${{ inputs.location }}
+      cpu: 8
+      memory_in_gb: 16
+      cleanup: "always"
+      is_big_containers_test: true
+
   stress-16cpu-32gb:
     secrets: inherit
     # BigContainers regions
-    if: ${{ !cancelled() && contains(vars.ACI_BIG_CONTAINERS_REGION, inputs.location) }}
+    if: ${{ !cancelled() && contains(vars.ACI_BIG_CONTAINERS_REGION, format(',{0},', inputs.location)) }}
     # Serializes execution
-    needs: stress-8cpu-16gb
+    needs: managed-identity-8cpu-16gb
     uses: ./.github/workflows/workload-stress-tests.yml
     with:
       id: 16cpu-32gb
@@ -73,7 +88,7 @@ jobs:
   stress-17cpu-32gb:
     secrets: inherit
     # BigContainers regions
-    if: ${{ !cancelled() && contains(vars.ACI_BIG_CONTAINERS_REGION, inputs.location) }}
+    if: ${{ !cancelled() && contains(vars.ACI_BIG_CONTAINERS_REGION, format(',{0},', inputs.location)) }}
     # Serializes execution
     needs: stress-16cpu-32gb
     uses: ./.github/workflows/workload-stress-tests.yml
@@ -88,7 +103,7 @@ jobs:
   stress-18cpu-32gb:
     secrets: inherit
     # BigContainers regions
-    if: ${{ !cancelled() && contains(vars.ACI_BIG_CONTAINERS_REGION, inputs.location) }}
+    if: ${{ !cancelled() && contains(vars.ACI_BIG_CONTAINERS_REGION, format(',{0},', inputs.location)) }}
     # Serializes execution
     needs: stress-17cpu-32gb
     uses: ./.github/workflows/workload-stress-tests.yml
@@ -103,7 +118,7 @@ jobs:
   stress-20cpu-32gb:
     secrets: inherit
     # BigContainers regions
-    if: ${{ !cancelled() && contains(vars.ACI_BIG_CONTAINERS_REGION, inputs.location) }}
+    if: ${{ !cancelled() && contains(vars.ACI_BIG_CONTAINERS_REGION, format(',{0},', inputs.location)) }}
     # Serializes execution
     needs: stress-18cpu-32gb
     uses: ./.github/workflows/workload-stress-tests.yml
@@ -118,7 +133,7 @@ jobs:
   stress-24cpu-32gb:
     secrets: inherit
     # BigContainers regions
-    if: ${{ !cancelled() && contains(vars.ACI_BIG_CONTAINERS_REGION, inputs.location) }}
+    if: ${{ !cancelled() && contains(vars.ACI_BIG_CONTAINERS_REGION, format(',{0},', inputs.location)) }}
     # Serializes execution
     needs: stress-20cpu-32gb
     uses: ./.github/workflows/workload-stress-tests.yml
@@ -133,7 +148,7 @@ jobs:
   stress-28cpu-32gb:
     secrets: inherit
     # BigContainers regions
-    if: ${{ !cancelled() && contains(vars.ACI_BIG_CONTAINERS_REGION, inputs.location) }}
+    if: ${{ !cancelled() && contains(vars.ACI_BIG_CONTAINERS_REGION, format(',{0},', inputs.location)) }}
     # Serializes execution
     needs: stress-24cpu-32gb
     uses: ./.github/workflows/workload-stress-tests.yml
@@ -148,7 +163,7 @@ jobs:
   stress-18cpu-64gb:
     secrets: inherit
     # BigContainers regions
-    if: ${{ !cancelled() && contains(vars.ACI_BIG_CONTAINERS_REGION, inputs.location) }}
+    if: ${{ !cancelled() && contains(vars.ACI_BIG_CONTAINERS_REGION, format(',{0},', inputs.location)) }}
     # Serializes execution
     needs: stress-28cpu-32gb
     uses: ./.github/workflows/workload-stress-tests.yml
@@ -163,7 +178,7 @@ jobs:
   stress-18cpu-96gb:
     secrets: inherit
     # BigContainers regions
-    if: ${{ !cancelled() && contains(vars.ACI_BIG_CONTAINERS_REGION, inputs.location) }}
+    if: ${{ !cancelled() && contains(vars.ACI_BIG_CONTAINERS_REGION, format(',{0},', inputs.location)) }}
     # Serializes execution
     needs: stress-18cpu-64gb
     uses: ./.github/workflows/workload-stress-tests.yml
@@ -178,7 +193,7 @@ jobs:
   stress-18cpu-112gb:
     secrets: inherit
     # BigContainers regions
-    if: ${{ !cancelled() && contains(vars.ACI_BIG_CONTAINERS_REGION, inputs.location) }}
+    if: ${{ !cancelled() && contains(vars.ACI_BIG_CONTAINERS_REGION, format(',{0},', inputs.location)) }}
     # Serializes execution
     needs: stress-18cpu-96gb
     uses: ./.github/workflows/workload-stress-tests.yml
@@ -193,7 +208,7 @@ jobs:
   stress-18cpu-144gb:
     secrets: inherit
     # BigContainers regions
-    if: ${{ !cancelled() && contains(vars.ACI_BIG_CONTAINERS_REGION, inputs.location) }}
+    if: ${{ !cancelled() && contains(vars.ACI_BIG_CONTAINERS_REGION, format(',{0},', inputs.location)) }}
     # Serializes execution
     needs: stress-18cpu-112gb
     uses: ./.github/workflows/workload-stress-tests.yml
@@ -208,7 +223,7 @@ jobs:
   stress-18cpu-164gb:
     secrets: inherit
     # BigContainers regions
-    if: ${{ !cancelled() && contains(vars.ACI_BIG_CONTAINERS_REGION, inputs.location) }}
+    if: ${{ !cancelled() && contains(vars.ACI_BIG_CONTAINERS_REGION, format(',{0},', inputs.location)) }}
     # Serializes execution
     needs: stress-18cpu-144gb
     uses: ./.github/workflows/workload-stress-tests.yml
@@ -223,7 +238,7 @@ jobs:
   stress-28cpu-96gb:
     secrets: inherit
     # BigContainers regions
-    if: ${{ !cancelled() && contains(vars.ACI_BIG_CONTAINERS_REGION, inputs.location) }}
+    if: ${{ !cancelled() && contains(vars.ACI_BIG_CONTAINERS_REGION, format(',{0},', inputs.location)) }}
     # Serializes execution
     needs: stress-18cpu-164gb
     uses: ./.github/workflows/workload-stress-tests.yml
@@ -238,7 +253,7 @@ jobs:
   stress-28cpu-164gb:
     secrets: inherit
     # BigContainers regions
-    if: ${{ !cancelled() && contains(vars.ACI_BIG_CONTAINERS_REGION, inputs.location) }}
+    if: ${{ !cancelled() && contains(vars.ACI_BIG_CONTAINERS_REGION, format(',{0},', inputs.location)) }}
     # Serializes execution
     needs: stress-28cpu-96gb
     uses: ./.github/workflows/workload-stress-tests.yml
