@@ -8,7 +8,7 @@ param managedIDGroup string = resourceGroup().name
 param managedIDName string
 
 param cpu int = 1
-param memoryInGb int = 4
+param memoryInGb int = 1
 
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' existing = {
   name: 'aci-long-lived-vnet-${location}'
@@ -46,7 +46,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
       {
         name: 'primary'
         properties: {
-          image: '${registry}/${repository}:${empty(tag) ? 'latest': tag}'
+          image: '${registry}/${empty(repository) ? 'ubuntu-with-curl' : repository}:${empty(tag) ? '24.04': tag}'
           resources: {
             requests: {
               memoryInGB: memoryInGb
