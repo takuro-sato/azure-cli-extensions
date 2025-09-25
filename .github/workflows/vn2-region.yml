@@ -71,7 +71,7 @@ env:
   RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
   DEPLOYMENT_NAME: ${{ inputs.id || 'vn2' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
-  RESOURCE_GROUP: ${{ inputs.resource_group || 'vn2-aks-northeurope' }}
+  RESOURCE_GROUP: ${{ inputs.resource_group || 'c-aci-vn2' }}
   LOCATION: ${{ inputs.location || 'northeurope' }}
   AKS_CLUSTER_NAME: ${{ inputs.aks_cluster_name || 'vn2-aks-northeurope' }}
   CLEANUP: ${{ inputs.cleanup || 'true' }}
