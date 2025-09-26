@@ -33,6 +33,7 @@ sidecar_fragment.rego sidecar_fragment.rego.cose: sidecar_config.json ${CHAIN} $
 		--input ./sidecar_config.json \
 		--feed ${FEED} \
 		--upload-fragment \
+		--image-target ${SIDECAR_IMAGE} \
 		--no-print \
 		${MAYBE_DEBUG} \
 		${MAYBE_OMIT_ID} \
