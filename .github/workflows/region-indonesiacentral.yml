@@ -1,0 +1,17 @@
+name: Region - Indonesia Central
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '43 7 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  indonesiacentral:
+    secrets: inherit
+    uses: ./.github/workflows/region.yml
+    with:
+      location: indonesiacentral

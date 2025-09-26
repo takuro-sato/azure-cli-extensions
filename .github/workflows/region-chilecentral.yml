@@ -1,0 +1,17 @@
+name: Region - Chile Central
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '57 3 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  chilecentral:
+    secrets: inherit
+    uses: ./.github/workflows/region.yml
+    with:
+      location: chilecentral

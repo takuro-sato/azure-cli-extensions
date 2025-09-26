@@ -1,0 +1,17 @@
+name: Region - South India
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '13 15 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  southindia:
+    secrets: inherit
+    uses: ./.github/workflows/region.yml
+    with:
+      location: southindia

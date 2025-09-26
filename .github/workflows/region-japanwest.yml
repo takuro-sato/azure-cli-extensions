@@ -1,0 +1,17 @@
+name: Region - Japan West
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '36 9 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  japanwest:
+    secrets: inherit
+    uses: ./.github/workflows/region.yml
+    with:
+      location: japanwest

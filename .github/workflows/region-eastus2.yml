@@ -1,0 +1,17 @@
+name: Region - East US 2
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '49 5 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  eastus2:
+    secrets: inherit
+    uses: ./.github/workflows/region.yml
+    with:
+      location: eastus2

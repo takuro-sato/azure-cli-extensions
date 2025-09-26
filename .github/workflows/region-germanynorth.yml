@@ -1,0 +1,17 @@
+name: Region - Germany North
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '41 7 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  germanynorth:
+    secrets: inherit
+    uses: ./.github/workflows/region.yml
+    with:
+      location: germanynorth

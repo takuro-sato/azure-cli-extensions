@@ -1,0 +1,17 @@
+name: Region - West US 3
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '0 19 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  westus3:
+    secrets: inherit
+    uses: ./.github/workflows/region.yml
+    with:
+      location: westus3

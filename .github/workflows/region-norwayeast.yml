@@ -1,0 +1,17 @@
+name: Region - Norway East
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '19 13 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  norwayeast:
+    secrets: inherit
+    uses: ./.github/workflows/region.yml
+    with:
+      location: norwayeast

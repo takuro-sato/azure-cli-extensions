@@ -1,0 +1,17 @@
+name: Region - Israel Central
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '33 9 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  israelcentral:
+    secrets: inherit
+    uses: ./.github/workflows/region.yml
+    with:
+      location: israelcentral

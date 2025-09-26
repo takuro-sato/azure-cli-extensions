@@ -1,0 +1,17 @@
+name: Region - Australia Central
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '1 2 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  australiacentral:
+    secrets: inherit
+    uses: ./.github/workflows/region.yml
+    with:
+      location: australiacentral

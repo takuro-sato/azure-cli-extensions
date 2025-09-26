@@ -21,7 +21,7 @@ class TestType:
 
 
 test_types = [
-    TestType("region", 60, 4, 1, 2),
+    TestType("region", 110, 4, 1, 2),
     TestType("uptime", 5, 20, 1, 3),
     TestType("high-spec", 5, 10, 1, 4),
     TestType("vn2", 20, 20, 1, 5),

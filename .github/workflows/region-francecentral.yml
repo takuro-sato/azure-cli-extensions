@@ -1,0 +1,17 @@
+name: Region - France Central
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '40 7 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  francecentral:
+    secrets: inherit
+    uses: ./.github/workflows/region.yml
+    with:
+      location: francecentral

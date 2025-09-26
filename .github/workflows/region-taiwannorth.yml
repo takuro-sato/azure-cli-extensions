@@ -1,0 +1,17 @@
+name: Region - Taiwan North
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '5 17 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  taiwannorth:
+    secrets: inherit
+    uses: ./.github/workflows/region.yml
+    with:
+      location: taiwannorth

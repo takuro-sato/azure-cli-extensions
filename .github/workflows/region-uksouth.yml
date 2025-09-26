@@ -1,0 +1,17 @@
+name: Region - UK South
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '7 17 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  uksouth:
+    secrets: inherit
+    uses: ./.github/workflows/region.yml
+    with:
+      location: uksouth
