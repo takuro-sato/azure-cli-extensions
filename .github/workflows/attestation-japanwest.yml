@@ -1,0 +1,22 @@
+name: Attestation - Japan West
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/attestation-japanwest.yml
+  schedule:
+    - cron: '24 1-23 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  attestation-japanwest:
+    secrets: inherit
+    uses: ./.github/workflows/workload-attestation.yml
+    with:
+      location: japanwest
+      policy_type: allow_all
+      test_schedule: gh-hourly

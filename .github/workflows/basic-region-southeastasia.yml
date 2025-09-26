@@ -9,7 +9,7 @@ on:
     paths:
       - .github/workflows/basic-region-southeastasia.yml
   schedule:
-    - cron: '23 1-23 * * *'  # managed by scripts/spread_out_schedules.py
+    - cron: '30 1-23 * * *'  # managed by scripts/spread_out_schedules.py
   workflow_dispatch:
 
 jobs:

@@ -1,0 +1,20 @@
+name: Region (Basic) - Taiwan North
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/basic-region-taiwannorth.yml
+  schedule:
+    - cron: '34 1-23 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  basic-taiwannorth:
+    secrets: inherit
+    uses: ./.github/workflows/basic-region.yml
+    with:
+      location: taiwannorth

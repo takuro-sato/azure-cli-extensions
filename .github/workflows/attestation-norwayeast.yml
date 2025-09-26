@@ -1,0 +1,22 @@
+name: Attestation - Norway East
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/attestation-norwayeast.yml
+  schedule:
+    - cron: '29 1-23 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  attestation-norwayeast:
+    secrets: inherit
+    uses: ./.github/workflows/workload-attestation.yml
+    with:
+      location: norwayeast
+      policy_type: allow_all
+      test_schedule: gh-hourly

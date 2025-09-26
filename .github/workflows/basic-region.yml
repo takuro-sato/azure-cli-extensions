@@ -23,7 +23,7 @@ on:
 
 jobs:
   info-nonzoned-nonvnet:
-    if: ${{ !cancelled() && inputs.location != 'switzerlandnorth' }}
+    if: ${{ !cancelled() }}
     name: info-nonzoned-nonvnet
     secrets: inherit
     uses: ./.github/workflows/workload-info.yml
@@ -35,7 +35,7 @@ jobs:
       test_schedule: gh-hourly
 
   info-nonzoned-vnet:
-    if: ${{ !cancelled() && inputs.location != 'francecentral' }}
+    if: ${{ !cancelled() }}
     name: info-nonzoned-vnet
     secrets: inherit
     uses: ./.github/workflows/workload-info.yml

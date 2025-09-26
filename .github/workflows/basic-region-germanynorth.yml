@@ -1,0 +1,20 @@
+name: Region (Basic) - Germany North
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/basic-region-germanynorth.yml
+  schedule:
+    - cron: '15 1-23 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  basic-germanynorth:
+    secrets: inherit
+    uses: ./.github/workflows/basic-region.yml
+    with:
+      location: germanynorth

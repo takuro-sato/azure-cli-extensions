@@ -9,7 +9,7 @@ on:
     paths:
       - .github/workflows/attestation-chilecentral.yml
   schedule:
-    - cron: '11 1-23 * * *'  # managed by scripts/spread_out_schedules.py
+    - cron: '13 1-23 * * *'  # managed by scripts/spread_out_schedules.py
   workflow_dispatch:
 
 jobs:
