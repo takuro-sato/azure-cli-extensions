@@ -63,10 +63,14 @@
     let showRunsLookbackHours=6;
     let errorCountThreshold=2;
     let regions = dynamic([
+        'australiacentral',
         'australiacentral2',
         'australiaeast',
+        'austriaeast',
         'brazilsouth',
+        'brazilsoutheast',
         'centralindia',
+        'centralus',
         'centraluseuap',
         'chilecentral',
         'eastasia',
@@ -74,20 +78,26 @@
         'eastus2',
         'eastus2euap',
         'francecentral',
+        'germanynorth',
         'germanywestcentral',
         'indonesiacentral',
         'israelcentral',
         'italynorth',
         'japaneast',
+        'japanwest',
         'koreacentral',
+        'koreasouth',
         'newzealandnorth',
         'northeurope',
+        'norwayeast',
         'polandcentral',
         'southafricanorth',
         'southcentralus',
         'southeastasia',
+        'southindia',
         'swedencentral',
         'switzerlandnorth',
+        'taiwannorth',
         'uaenorth',
         'uksouth',
         'westeurope',
@@ -124,7 +134,7 @@
     );
     let maaData=(
         CACIMAATestTrace
-        | where Time between (currentTime-make_timespan(showRunsLookbackHours, 0) .. currentTime)
+        | where Region in (regions) and Time between (currentTime-make_timespan(showRunsLookbackHours, 0) .. currentTime)
         | project
             Location=Region,
             AvailabilityZone='',
