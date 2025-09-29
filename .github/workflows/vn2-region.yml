@@ -132,6 +132,18 @@ jobs:
         run: |
           ./scripts/trace_run_result.sh ${{ job.status }}
 
+      - name: 'Test case - info'
+        if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
+        env:
+          DEPLOYMENT_NAME: info
+          STEP_PREFIX: info
+          REGISTRY: ghcr.io
+        run: |
+          set -ex
+          MONITOR_SECS=60 ./workloads/vn2/vn2-test-run.sh workloads/info
+          echo "Parse container output"
+          ./scripts/parse_container_output.py --fail-on-error output.log
+
       - name: 'Test case - sample-pod.yaml'
         if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
         env:

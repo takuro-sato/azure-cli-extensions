@@ -64,12 +64,14 @@ KERNEL_CMDLINE_LINE_RE = re.compile(r"Kernel command line: (.+)$", re.MULTILINE)
 HOST_BUILD_RE = re.compile(r"Hyper-V: Host Build (.+)$", re.MULTILINE)
 LINUX_UNAME_RE = re.compile(r"(Linux .+ \#.+)$", re.MULTILINE)
 REFERENCE_INFO_SHA256_RE = re.compile(r"\WReference info SHA256SUM: ([0-9a-fA-F]+)", re.MULTILINE)
+REFERENCE_INFO_PARSED = re.compile(r"UVM Reference info parsed: (.+)$", re.MULTILINE)
 
 extractions = [
     ("kernel_cmdline", KERNEL_CMDLINE_LINE_RE),
     ("host_build", HOST_BUILD_RE),
     ("uname", LINUX_UNAME_RE),
     ("reference_info_sha256", REFERENCE_INFO_SHA256_RE),
+    ("reference_info_parsed", REFERENCE_INFO_PARSED),
 ]
 
 container_log_str = log_file.read()

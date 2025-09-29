@@ -128,7 +128,7 @@ env:
   MEMORY_IN_GB: 16
   VM_IMAGE: ${{ inputs.vmImage || '' }}
   USE_OFFICIAL_IMAGES: ${{ inputs.vmImage == '' && 'true' || '' }}
-  CPLAT_BLOB_NAME: ${{ inputs.cplatBlobName || vars.CPLAT_6_1_BLOB_NAME }}
+  CPLAT_BLOB_NAME: ${{ inputs.cplatBlobName || vars.CPLAT_NEXT_6_1_BLOB_NAME }}
   WIN_FLAVOR: ${{ inputs.winFlavor || 'ws2025' }}
   VM_ZONE: ${{ inputs.zone || '' }}
   TAG: "20250225"

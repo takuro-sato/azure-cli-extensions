@@ -6,7 +6,7 @@ echo Set Azure CLI flag to avoid polluting telemetry metrics
 az config set core.collect_telemetry=false --only-show-errors
 
 export CONFCOM_VERSION="1.2.8"
-export C_ACI_TESTING_VERSION="1.2.12"
+export C_ACI_TESTING_VERSION="1.2.13"
 export C_ACI_TESTING_BRANCH=""
 
 if [ -n "$INIT_RUN_POPULATE_CACHE" ]; then

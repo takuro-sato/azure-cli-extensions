@@ -165,9 +165,8 @@ jobs:
         run: |
           set -eo pipefail
           ./scripts/tracing/trace_step.py --start 'Monitor Container Group'
-          sleep 20
-          echo > output.log
-          c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME --follow | tee output.log
+          sleep 120
+          c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME | tee output.log
           cat output.log | jq -R -s '{info: .}' | ./scripts/tracing/trace_step.py --complete --strict --output-from-stdin
 
       - name: Parse output

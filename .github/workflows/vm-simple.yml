@@ -125,7 +125,7 @@ env:
   VM_SIZE: ${{ inputs.vmSize || 'Standard_DC8as_cc_v5' }}
   VM_IMAGE: ${{ inputs.vmImage || '' }}
   USE_OFFICIAL_IMAGES: ${{ inputs.vmImage == '' && 'true' || '' }}
-  CPLAT_BLOB_NAME: ${{ inputs.cplatBlobName || vars.CPLAT_6_1_BLOB_NAME }}
+  CPLAT_BLOB_NAME: ${{ inputs.cplatBlobName || vars.CPLAT_NEXT_6_1_BLOB_NAME }}
   WIN_FLAVOR: ${{ inputs.winFlavor || 'ws2025' }}
   VM_ZONE: ${{ inputs.zone || '' }}
   UVM_KERNEL: ${{ inputs.uvmBlobName != '' && format('{0}/kernel.vmgs', inputs.uvmBlobName) || '' }}
@@ -162,6 +162,12 @@ jobs:
           ./scripts/tracing/trace_step.py --start 'Generate Policy'
           c-aci-testing policies gen workloads/server --deployment-name $DEPLOYMENT_NAME --policy-type allow_all
           cat workloads/server/policy_server.rego
+          c-aci-testing policies gen workloads/info --deployment-name $DEPLOYMENT_NAME --policy-type allow_all
+          if ! cmp workloads/server/policy_server.rego workloads/info/policy_info.rego; then
+            echo "Error: policies for server and info workloads differ for some reason, even though both are allow_all"
+            echo "info:"
+            cat workloads/info/policy_info.rego
+          fi
 
       - name: Download and extract UVM blob if specified
         if: ${{ inputs.uvmBlobName != '' }}
@@ -183,6 +189,11 @@ jobs:
 
       - name: Print info
         run: scripts/vm_print_info.sh
+
+      - name: Deploy Container Group (info)
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Deploy Container Group (info)'
+          c-aci-testing vm runc workloads/info --deployment-name $DEPLOYMENT_NAME --prefix lcow_info
 
       - name: Report result
         if: always()

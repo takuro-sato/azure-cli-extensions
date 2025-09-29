@@ -51,7 +51,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
             echo Building snp-report binary...
             set +e
             ( apt-get update -y && \
-              apt-get install -y git make gcc libc-dev ) > apt.log 2>&1
+              apt-get install -y git make gcc libc-dev curl gawk jq ) > apt.log 2>&1
             if [ $? -ne 0 ]; then
               cat apt.log
               exit 1
@@ -66,6 +66,29 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
             echo
             echo "snp-report:"
             verbose-report
+
+            echo "Pulling sign1util to parse UVM reference info..."
+            SIGN1UTIL_VERSION="1.4.0"
+            curl -sL \
+                "https://github.com/microsoft/cosesign1go/releases/download/v${SIGN1UTIL_VERSION}/sign1util" \
+                -o "/usr/local/bin/sign1util"
+            chmod +x "/usr/local/bin/sign1util"
+            base64 -d < /security-context-*/reference-info-base64 > /tmp/reference-info
+            echo "UVM reference info:"
+            sign1util print -in /tmp/reference-info | tee /tmp/refinfo.txt
+            if ! sign1util check \
+              --in /tmp/reference-info \
+              --did 'did:x509:0:sha256:I__iuL25oXEVFdTP_aBLx_eT1RPHbCQ_ECBQfYZpt9s::eku:1.3.6.1.4.1.311.76.59.1.2';
+              then
+              echo "ERROR: UVM reference info signature check failed"
+              exit 1
+            fi
+            gawk -e '/^payload:$/ { payload=1; next } payload { print }' /tmp/refinfo.txt > /tmp/ref-payload.json
+            echo "UVM Reference info parsed: $(jq . -c /tmp/ref-payload.json)"
+
+            # Keep container alive to avoid restart loop for vn2
+            echo "info: success"
+            sleep infinity
             '''
           ]
           resources: {

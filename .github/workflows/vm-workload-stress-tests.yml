@@ -118,7 +118,7 @@ env:
   VM_SIZE: ${{ inputs.vmSize || 'Standard_DC8as_cc_v5' }}
   VM_IMAGE: ${{ inputs.vmImage || '' }}
   USE_OFFICIAL_IMAGES: ${{ inputs.vmImage == '' && 'true' || '' }}
-  CPLAT_BLOB_NAME: ${{ inputs.cplatBlobName || vars.CPLAT_6_1_BLOB_NAME }}
+  CPLAT_BLOB_NAME: ${{ inputs.cplatBlobName || vars.CPLAT_NEXT_6_1_BLOB_NAME }}
   WIN_FLAVOR: ${{ inputs.winFlavor || 'ws2025' }}
   VM_ZONE: ${{ inputs.zone || '' }}
   UVM_KERNEL: ${{ inputs.uvmBlobName != '' && format('{0}/kernel.vmgs', inputs.uvmBlobName) || '' }}
