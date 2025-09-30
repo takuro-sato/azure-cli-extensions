@@ -9,7 +9,7 @@ on:
     paths:
       - .github/workflows/vn2-australiaeast.yml
   schedule:
-    - cron: '40 21 * * *'  # managed by scripts/spread_out_schedules.py
+    - cron: '9 21 * * *'  # managed by scripts/spread_out_schedules.py
   workflow_dispatch:
 
 jobs:

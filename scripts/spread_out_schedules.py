@@ -21,17 +21,16 @@ class TestType:
 
 
 test_types = [
-    TestType("region", 110, 4, 1, 2),
-    TestType("uptime", 5, 20, 1, 3),
-    TestType("high-spec", 5, 10, 1, 4),
-    TestType("vn2", 20, 20, 1, 5),
-
     # For VM tests, once they're deployed, they can run concurrently with the
     # ACI tests without hitting max deployment counts.  However, VM tests deploy
     # a few VMs in parallel at the start, so we reduce the max concurrency
-    TestType("vm", 10, 8, 1, 6),
+    TestType("vm", 10, 8, 1, 1),
+    TestType("perf", 10, 8, 1, 2),
 
-    TestType("perf", 120, 20, 1, 10),
+    TestType("region", 110, 4, 1, 3),
+    TestType("vn2", 20, 20, 1, 4),
+    TestType("uptime", 5, 20, 1, 5),
+    TestType("high-spec", 5, 10, 1, 6),
 ]
 
 # These tests are special - it runs every hour for continuous monitoring
@@ -93,7 +92,7 @@ accumulated_time = 0
 def minutes_to_cron(minutes: int) -> str:
     hours = minutes // 60
     minutes = minutes % 60
-    hours += 2
+    hours += 1
     return f"{minutes} {hours} * * *"
 
 CRON_RE = re.compile(
@@ -156,4 +155,4 @@ for ty in continuous_test_types:
         write_cron(wf, cron)
         accu_minutes = (accu_minutes + t.shift) % 60
 
-print(f"Tests expected to finish around {accumulated_time // 60 + 2}:{accumulated_time % 60} UTC")
+print(f"Tests expected to finish around {accumulated_time // 60 + 1}:{accumulated_time % 60} UTC")

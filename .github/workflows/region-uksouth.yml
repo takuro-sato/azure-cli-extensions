@@ -6,7 +6,7 @@ permissions:
 
 on:
   schedule:
-    - cron: '7 17 * * *'  # managed by scripts/spread_out_schedules.py
+    - cron: '24 17 * * *'  # managed by scripts/spread_out_schedules.py
   workflow_dispatch:
 
 jobs:
