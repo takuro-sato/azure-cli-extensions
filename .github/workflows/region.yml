@@ -58,7 +58,7 @@ jobs:
       test_schedule: gh-daily
 
   server:
-    if: ${{ !cancelled() }}
+    if: "${{ !cancelled() && !contains(vars.REGIONS_WITH_PROBLEMATIC_PUBLIC_IP, format(',{0},', inputs.location)) }}"
     name: server
     secrets: inherit
     needs: info
@@ -140,7 +140,7 @@ jobs:
       test_schedule: gh-daily
 
   non-confidential:
-    if: ${{ !cancelled() }}
+    if: "${{ !cancelled() && !contains(vars.REGIONS_WITH_PROBLEMATIC_PUBLIC_IP, format(',{0},', inputs.location)) }}"
     name: non-confidential
     secrets: inherit
     needs: many-layers
@@ -156,7 +156,7 @@ jobs:
       test_schedule: gh-daily
 
   stress-tests:
-    if: ${{ !cancelled() }}
+    if: "${{ !cancelled() && !contains(vars.REGIONS_WITH_PROBLEMATIC_PUBLIC_IP, format(',{0},', inputs.location)) }}"
     name: stress-tests
     secrets: inherit
     needs: non-confidential
@@ -240,7 +240,7 @@ jobs:
       test_schedule: gh-daily
 
   skr:
-    if: ${{ !cancelled() }}
+    if: "${{ !cancelled() && !contains(vars.REGIONS_WITH_PROBLEMATIC_PUBLIC_IP, format(',{0},', inputs.location)) }}"
     name: skr
     secrets: inherit
     needs: thim

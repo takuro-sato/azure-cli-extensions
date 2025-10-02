@@ -92,7 +92,7 @@ env:
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: ${{ inputs.policy_type || 'generated' }}
   TEST_SCHEDULE: ${{ inputs.test_schedule }}
-  RUN_FEATURES: ''
+  RUN_FEATURES: 'public_ip'
 
 jobs:
   non-confidential:
