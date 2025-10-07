@@ -128,7 +128,7 @@ jobs:
             --resource-group $RESOURCE_GROUP \
             --account-name $STORAGE_ACCOUNT \
             --query "[0].value" -o tsv)
-          c-aci-testing aci param_set workloads/volume --parameter key=$storage_key
+          c-aci-testing aci param_set workloads/volume --parameter key=$storage_key > /dev/null
 
       - name: Generate Security Policy
         run: |
