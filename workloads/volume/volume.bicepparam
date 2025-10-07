@@ -9,4 +9,6 @@ param ccePolicies={
 }
 param managedIDName='cacidashboard'
 
+param shareName=''
+param storageAccountName=''
 param key=''

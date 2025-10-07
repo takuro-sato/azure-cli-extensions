@@ -122,7 +122,13 @@ jobs:
         run: |
           c-aci-testing aci param_set workloads/volume --parameter cpu=$CPU
           c-aci-testing aci param_set workloads/volume --parameter memoryInGb=$MEMORY_IN_GB
-          c-aci-testing aci param_set workloads/volume --parameter key=${{ secrets.TINGMAO_STORAGE_KEY }} > /dev/null
+          c-aci-testing aci param_set workloads/volume --parameter shareName=share
+          c-aci-testing aci param_set workloads/volume --parameter storageAccountName=$STORAGE_ACCOUNT
+          storage_key=$(az storage account keys list \
+            --resource-group $RESOURCE_GROUP \
+            --account-name $STORAGE_ACCOUNT \
+            --query "[0].value" -o tsv)
+          c-aci-testing aci param_set workloads/volume --parameter key=$storage_key
 
       - name: Generate Security Policy
         run: |
@@ -134,44 +140,44 @@ jobs:
         run: |
           ./scripts/aci_deploy_traced.sh workloads/volume
 
-      # - name: Verify File Creation
-      #   run: |
-      #     sleep 20 # Wait in case it takes a while for the file to be created
+      - name: Verify File Creation
+        run: |
+          sleep 20 # Wait in case it takes a while for the file to be created
 
-      #     ./scripts/tracing/trace_step.py --start 'Verify File Creation'
-      #     container_logs=$(az container logs \
-      #       --resource-group $RESOURCE_GROUP \
-      #       --name $DEPLOYMENT_NAME \
-      #       --container-name primary)
+          ./scripts/tracing/trace_step.py --start 'Verify File Creation'
+          container_logs=$(az container logs \
+            --resource-group $RESOURCE_GROUP \
+            --name $DEPLOYMENT_NAME \
+            --container-name primary)
 
-      #     echo "Container output:"
-      #     echo "$container_logs"
+          echo "Container output:"
+          echo "$container_logs"
 
-      #     filename=$(echo "$container_logs" | grep "File name: " | sed 's/File name: //')
-      #     if [ -z "$filename" ]; then
-      #       echo "File name not found in container logs"
-      #       exit 1
-      #     else
-      #       echo "Found file name: $filename"
-      #       echo "filename=$filename" >> $GITHUB_ENV
-      #     fi
+          filename=$(echo "$container_logs" | grep "File name: " | sed 's/File name: //')
+          if [ -z "$filename" ]; then
+            echo "File name not found in container logs"
+            exit 1
+          else
+            echo "Found file name: $filename"
+            echo "filename=$filename" >> $GITHUB_ENV
+          fi
 
-      #     # Verify file exists in storage
-      #     echo "Verifying file exists in storage account..."
-      #     file_exists=$(az storage file exists \
-      #       --account-name $STORAGE_ACCOUNT \
-      #       --share-name share \
-      #       --path "$filename" \
-      #       --auth-mode key \
-      #       --account-key ${{ secrets.TINGMAO_STORAGE_KEY }} \
-      #       --query "exists" -o tsv)
+          # Verify file exists in storage
+          echo "Verifying file exists in storage account..."
+          file_exists=$(az storage file exists \
+            --account-name $STORAGE_ACCOUNT \
+            --share-name share \
+            --path "$filename" \
+            --auth-mode key \
+            --account-key ${{ secrets.TINGMAO_STORAGE_KEY }} \
+            --query "exists" -o tsv)
 
-      #     if [ "$file_exists" = "true" ]; then
-      #       echo "File $filename exists in storage account"
-      #     else
-      #       echo "File $filename does not exist in storage account"
-      #       exit 1
-      #     fi
+          if [ "$file_exists" = "true" ]; then
+            echo "File $filename exists in storage account"
+          else
+            echo "File $filename does not exist in storage account"
+            exit 1
+          fi
 
       - name: Report result
         if: always()

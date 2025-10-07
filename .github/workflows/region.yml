@@ -255,27 +255,27 @@ jobs:
       policy_type: ${{ matrix.policy_type }}
       test_schedule: gh-daily
 
-  volume:
-    if: ${{ !cancelled() }}
-    name: volume
-    secrets: inherit
-    needs: skr
-    uses: ./.github/workflows/workload-volume.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        policy_type: ['generated', 'debug', 'allow_all']
-    with:
-      id: volume-${{ matrix.policy_type }}
-      location: ${{ inputs.location }}
-      policy_type: ${{ matrix.policy_type }}
-      test_schedule: gh-daily
+  # volume:
+  #   if: ${{ !cancelled() }}
+  #   name: volume
+  #   secrets: inherit
+  #   needs: skr
+  #   uses: ./.github/workflows/workload-volume.yml
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       policy_type: ['generated', 'debug', 'allow_all']
+  #   with:
+  #     id: volume-${{ matrix.policy_type }}
+  #     location: ${{ inputs.location }}
+  #     policy_type: ${{ matrix.policy_type }}
+  #     test_schedule: gh-daily
 
   secrets:
     if: ${{ !cancelled() }}
     name: secrets
     secrets: inherit
-    needs: volume
+    needs: skr
     uses: ./.github/workflows/workload-secrets.yml
     strategy:
       fail-fast: false

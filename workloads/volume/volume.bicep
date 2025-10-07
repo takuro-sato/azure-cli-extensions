@@ -6,6 +6,8 @@ param managedIDName string
 param cpu int = 1
 param memoryInGb int = 4
 
+param shareName string
+param storageAccountName string
 @secure()
 param key string
 
@@ -67,8 +69,8 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
       {
         name: 'volume'
         azureFile: {
-          shareName: 'share'
-          storageAccountName: 'twcacitestfilesharewus'
+          shareName: shareName
+          storageAccountName: storageAccountName
           storageAccountKey: key
           readOnly: false
         }
