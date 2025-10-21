@@ -134,7 +134,8 @@ jobs:
           ATTESTATION_ENDPOINT=$(cat azure/MAA-endpoints.csv | grep -vE '^#|^$' | grep -E ',${{ env.LOCATION }},' | cut -d, -f3)
           if [ -z "$ATTESTATION_ENDPOINT" ]; then
             echo "No MAA endpoint found for location ${{ env.LOCATION }}"
-            exit 1
+            echo "Using default (westeurope) endpoint"
+            ATTESTATION_ENDPOINT=sharedweu.weu.attest.azure.net
           fi
           # Strip https:// and trailing slash
           ATTESTATION_ENDPOINT=${ATTESTATION_ENDPOINT#https://}
