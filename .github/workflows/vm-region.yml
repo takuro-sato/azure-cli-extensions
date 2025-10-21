@@ -70,6 +70,18 @@ jobs:
       vmSize: 'Standard_DC8as_cc_v6'
       test_schedule: gh-daily
 
+  vm-simple-next-6-1-ws2025:
+    if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2025_VM_REGIONS, format(',{0},', inputs.location)) }}
+    secrets: inherit
+    uses: ./.github/workflows/vm-simple.yml
+    with:
+      id: vm-simple-next-ws2025-6.1
+      location: ${{ inputs.location }}
+      cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
+      winFlavor: ws2025
+      vmSize: 'Standard_DC8as_cc_v5'
+      test_schedule: gh-daily
+
   vm-stress-next-6-1-ws2025:
     if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2025_VM_REGIONS, format(',{0},', inputs.location)) }}
     secrets: inherit
@@ -92,6 +104,18 @@ jobs:
       cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
       winFlavor: ws2025
       vmSize: 'Standard_DC8as_cc_v5'
+      test_schedule: gh-daily
+
+  vm-simple-genoa-next-6-1-ws2025:
+    if: ${{ !cancelled() && inputs.location != '' && contains(vars.V6_SKU_REGIONS, format(',{0},', inputs.location)) }}
+    secrets: inherit
+    uses: ./.github/workflows/vm-simple.yml
+    with:
+      id: vm-simple-genoa-next-ws2025-6.1
+      location: ${{ inputs.location }}
+      cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
+      winFlavor: ws2025
+      vmSize: 'Standard_DC8as_cc_v6'
       test_schedule: gh-daily
 
   vm-stress-genoa-next-6-1-ws2025:

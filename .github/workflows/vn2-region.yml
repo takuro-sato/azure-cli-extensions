@@ -138,11 +138,46 @@ jobs:
           DEPLOYMENT_NAME: info
           STEP_PREFIX: info
           REGISTRY: ghcr.io
+          REPOSITORY: ${{ github.repository }}/test-containers
+          TAG: latest
         run: |
           set -ex
           MONITOR_SECS=60 ./workloads/vn2/vn2-test-run.sh workloads/info
           echo "Parse container output"
           ./scripts/parse_container_output.py --fail-on-error output.log
+          echo "Check info log has success"
+          ./scripts/tracing/trace_step.py --start 'Check info log has success'
+          ok=1
+          grep -q "info: success" output.log || ok=0
+          if [ $ok -ne 1 ]; then
+            ./scripts/tracing/trace_step.py --complete --err 'info log does not contain success'
+            exit 1
+          fi
+          ./scripts/tracing/trace_step.py --complete --strict
+
+      - name: 'Test case - ccf_verify_uvm'
+        if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
+        env:
+          # pod names can't contain '_'
+          DEPLOYMENT_NAME: ccf-verify-uvm
+          STEP_PREFIX: ccf_verify_uvm
+          REGISTRY: ghcr.io
+          REPOSITORY: ${{ github.repository }}/test-containers
+          TAG: "latest"
+        run: |
+          set -ex
+          MONITOR_SECS=60 ./workloads/vn2/vn2-test-run.sh workloads/ccf_verify_uvm
+          echo "Parse container output"
+          ./scripts/parse_container_output.py --fail-on-error output.log
+          echo "Check ccf_verify_uvm log has success"
+          ./scripts/tracing/trace_step.py --start 'Check ccf_verify_uvm log has success'
+          ok=1
+          grep -q "ccf_verify_uvm: success" output.log || ok=0
+          if [ $ok -ne 1 ]; then
+            ./scripts/tracing/trace_step.py --complete --err 'ccf_verify_uvm log does not contain success'
+            exit 1
+          fi
+          ./scripts/tracing/trace_step.py --complete --strict
 
       - name: 'Test case - sample-pod.yaml'
         if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}

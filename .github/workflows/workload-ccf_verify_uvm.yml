@@ -1,4 +1,4 @@
-name: Workload - Info
+name: Workload - ccf_verify_uvm
 
 permissions:
   id-token: write
@@ -7,14 +7,14 @@ permissions:
 on:
   pull_request:
     paths:
-      - workloads/info/**
-      - .github/workflows/workload-info.yml
+      - workloads/ccf_verify_uvm/**
+      - .github/workflows/workload-ccf_verify_uvm.yml
       - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
   push:
     paths:
-      - workloads/info/**
-      - .github/workflows/workload-info.yml
+      - workloads/ccf_verify_uvm/**
+      - .github/workflows/workload-ccf_verify_uvm.yml
       - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
     branches:
@@ -28,14 +28,6 @@ on:
         type: string
         description: Where to deploy to
         required: true
-      zone:
-        type: string
-        description: The availability zone to deploy to
-        default: ''
-      use_vnet:
-        type: boolean
-        description: Whether to use a virtual network for the container group
-        default: false
       cpu:
         type: number
         description: The number of CPU cores in container
@@ -61,22 +53,6 @@ on:
         type: string
         description: Where to deploy to
         required: true
-      zone:
-        type: string
-        description: The availability zone to deploy to
-        default: ''
-      use_vnet:
-        type: boolean
-        description: Whether to use a virtual network for the container group
-        default: false
-      cpu:
-        type: number
-        description: The number of CPU cores in container
-        default: 1
-      memory_in_gb:
-        type: number
-        description: The memory in container in Gb
-        default: 1
       cleanup:
         type: boolean
         description: Whether to cleanup the container group after testing
@@ -95,28 +71,24 @@ env:
   KUSTO_DATABASE: ${{ secrets.KUSTO_DATABASE }}
   KUSTO_TABLE: CACITestStepTrace
   TEST_TYPE: aci
-  TEST_NAME: Info
+  TEST_NAME: ccf_verify_uvm
   RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-  DEPLOYMENT_NAME: ${{ inputs.id || 'info' }}-${{ inputs.location }}-${{ github.run_number }}
+  DEPLOYMENT_NAME: ${{ inputs.id || 'ccf_verify_uvm' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
   RESOURCE_GROUP: c-aci-dashboard
   REGISTRY: ghcr.io
   REPOSITORY: ${{ github.repository }}/test-containers
-  TAG: latest
+  TAG: "latest"
   MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'westeurope' }}
   LOCATION: ${{ inputs.location || 'westeurope' }}
-  ZONE: ${{ inputs.zone }}
-  USE_VNET: ${{ inputs.use_vnet || false }}
-  CPU: ${{ inputs.cpu || 1 }}
-  MEMORY_IN_GB: ${{ inputs.memory_in_gb || 1 }}
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: ${{ inputs.policy_type || 'generated' }}
   TEST_SCHEDULE: ${{ inputs.test_schedule }}
-  RUN_FEATURES: ${{ inputs.use_vnet && 'vnet' || '' }}
+  RUN_FEATURES: ''
 
 jobs:
-  info:
-    name: ${{ inputs.id || 'info' }}
+  ccf_verify_uvm:
+    name: ${{ inputs.id || 'ccf_verify_uvm' }}
     runs-on: ubuntu-latest
     steps:
 
@@ -137,24 +109,17 @@ jobs:
 
       - name: Pull Image
         if: ${{ env.POLICY_TYPE != 'allow_all' }}
-        run: c-aci-testing images pull workloads/info
-
-      - name: Set Parameters
-        run: |
-          c-aci-testing aci param_set workloads/info --parameter "zone='$ZONE'"
-          c-aci-testing aci param_set workloads/info --parameter useVnet=$USE_VNET
-          c-aci-testing aci param_set workloads/info --parameter cpu=$CPU
-          c-aci-testing aci param_set workloads/info --parameter memoryInGb=$MEMORY_IN_GB
+        run: c-aci-testing images pull workloads/ccf_verify_uvm
 
       - name: Generate Security Policy
         run: |
           ./scripts/tracing/trace_step.py --start 'Generate Policy'
-          c-aci-testing policies gen workloads/info --deployment-name $DEPLOYMENT_NAME
-          cat workloads/info/policy_info.rego
+          c-aci-testing policies gen workloads/ccf_verify_uvm --deployment-name $DEPLOYMENT_NAME
+          cat workloads/ccf_verify_uvm/policy_ccf_verify_uvm.rego
 
       - name: Deploy Container Group
         run: |
-          ./scripts/aci_deploy_traced.sh workloads/info
+          ./scripts/aci_deploy_traced.sh workloads/ccf_verify_uvm
 
       - name: Report result
         if: always()
@@ -169,19 +134,19 @@ jobs:
           ./scripts/tracing/trace_step.py --start 'Monitor Container Group'
           sleep 120
           c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME | tee output.log
-          cat output.log | jq -R -s '{info: .}' | ./scripts/tracing/trace_step.py --complete --strict --output-from-stdin
+          cat output.log | jq -R -s '{output: .}' | ./scripts/tracing/trace_step.py --complete --strict --output-from-stdin
 
       - name: Parse output
         run: |
           ./scripts/parse_container_output.py --fail-on-error output.log
 
-      - name: 'Check info log contains "info: success"'
+      - name: 'Check output log contains "ccf_verify_uvm: success"'
         run: |
-          ./scripts/tracing/trace_step.py --start 'Check info log has success'
+          ./scripts/tracing/trace_step.py --start 'Check output log has success'
           ok=1
-          grep -q "info: success" output.log || ok=0
+          grep -q "ccf_verify_uvm: success" output.log || ok=0
           if [ $ok -ne 1 ]; then
-            ./scripts/tracing/trace_step.py --complete --err 'info log does not contain success'
+            ./scripts/tracing/trace_step.py --complete --err 'output does not contain success'
             exit 1
           fi
           ./scripts/tracing/trace_step.py --complete --strict

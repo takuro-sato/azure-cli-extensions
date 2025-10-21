@@ -1,0 +1,6 @@
+version: '3'
+services:
+  primary:
+    image: $REGISTRY/$REPOSITORY/ccf_verify_uvm:${TAG:-latest}
+    build:
+      context: .

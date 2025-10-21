@@ -201,6 +201,7 @@ jobs:
       - name: Deploy Container Group (info)
         run: |
           ./scripts/tracing/trace_step.py --start 'Deploy Container Group (info)'
+          c-aci-testing aci param_set workloads/info --parameter 'requireHostAmdCert=false'
           c-aci-testing vm runc workloads/info --deployment-name $DEPLOYMENT_NAME --prefix lcow_info
 
       - name: Report result
@@ -222,6 +223,17 @@ jobs:
         if: always()
         run: |
           ./scripts/vm_check_container_output.sh
+
+      - name: 'Check info log contains "info: success"'
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Check info log has success'
+          ok=1
+          grep -q "info: success" container_output.log || ok=0
+          if [ $ok -ne 1 ]; then
+            ./scripts/tracing/trace_step.py --complete --err 'info log does not contain success'
+            exit 1
+          fi
+          ./scripts/tracing/trace_step.py --complete --strict
 
       - name: Report result
         if: always()

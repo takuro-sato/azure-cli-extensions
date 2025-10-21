@@ -1,4 +1,4 @@
-using './info.bicep'
+using './ccf_verify_uvm.bicep'
 
 // Image info
 param registry=''
@@ -7,10 +7,6 @@ param tag=''
 
 // Deployment info
 param location=''
-param zone=''
-param useVnet=false
 param ccePolicies={
-  info: ''
+  ccf_verify_uvm: ''
 }
-
-param requireHostAmdCert=true
