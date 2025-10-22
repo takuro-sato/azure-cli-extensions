@@ -18,3 +18,22 @@ jobs:
     uses: ./.github/workflows/basic-region.yml
     with:
       location: indonesiacentral
+
+  info-two-zones:
+    if: ${{ !cancelled() }}
+    name: info-two-zones
+    secrets: inherit
+    uses: ./.github/workflows/workload-info.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        # only vnets are supported for zonal deployments
+        use_vnet: [true]
+        zone: ["1", "2"]
+    with:
+      id: info-two-zones${{ matrix.zone }}-${{ matrix.use_vnet && 'vnet-' || '' }}allow_all
+      location: indonesiacentral
+      use_vnet: ${{ matrix.use_vnet }}
+      zone: ${{ matrix.zone }}
+      policy_type: allow_all
+      test_schedule: gh-hourly
