@@ -126,6 +126,7 @@ jobs:
           ./scripts/tracing/trace_step.py --start 'Deploy VN2 Helm Chart'
           ./workloads/vn2/deploy-vn2-helm.sh $RESOURCE_GROUP $AKS_CLUSTER_NAME
           echo "VN2_READY=1" >> $GITHUB_ENV
+          helm list
 
       - name: Report result
         if: always()
