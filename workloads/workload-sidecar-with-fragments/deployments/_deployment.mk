@@ -5,7 +5,7 @@ ALL: .primary_policy
 DEPLOY_SCRIPT ?= c-aci-testing aci deploy
 
 clean:
-	rm -f .param_set .primary_policy *.rego *.cose
+	rm -rf .param_set .primary_policy *.rego *.cose lcow_${VM_LCOW_NAME}
 
 .param_set:
 	if [ "${REPO}" != "" ]; then \
@@ -32,3 +32,6 @@ verify:
 	c-aci-testing aci monitor --deployment-name ${DEPLOYMENT_NAME} | tee monitor.out
 	grep -q ${VERIFY_KEYWORD} monitor.out
 	rm monitor.out
+
+generate_vm_scripts:
+	c-aci-testing vm generate_scripts . --prefix lcow_${VM_LCOW_NAME} lcow_${VM_LCOW_NAME} --win-flavor ws2025

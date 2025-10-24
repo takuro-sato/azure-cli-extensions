@@ -1,6 +1,6 @@
 all: certs login images fragments policies
 
-.PHONY: all clean clean_allbutcerts login images clean_images fragments show oras_attach oras_clean deploy policies verify
+.PHONY: all clean clean_allbutcerts login images clean_images fragments show oras_attach oras_clean deploy policies verify generate_vm_scripts
 
 CHAIN = certs/intermediateCA/certs/www.contoso.com.chain.cert.pem
 KEY = certs/intermediateCA/private/ec_p384_private.pem
@@ -24,6 +24,7 @@ clean_allbutcerts:
 	make -C deployments/primary-sidecar-a clean
 	make -C deployments/primary-sidecar-b clean
 	make -C deployments/just-sidecar clean
+	rm lcows_fragment.tar.gz
 
 images:
 	make -C containers/primary .image_push
@@ -66,3 +67,20 @@ verify:
 	make -C deployments/primary-sidecar-a verify
 	make -C deployments/primary-sidecar-b verify
 	make -C deployments/just-sidecar verify
+
+generate_vm_scripts:
+	make -C deployments/primary-sidecar-a generate_vm_scripts
+	make -C deployments/primary-sidecar-b generate_vm_scripts
+	make -C deployments/just-sidecar generate_vm_scripts
+# Do this so that tar file contains lcow_ folders without extra path components
+# before
+	tmpdir=$$(mktemp -d) && \
+	cd deployments/primary-sidecar-a && \
+	cp -r lcow_* $$tmpdir && \
+	cd ../primary-sidecar-b && \
+	cp -r lcow_* $$tmpdir && \
+	cd ../just-sidecar && \
+	cp -r lcow_* $$tmpdir && \
+	cd ../.. && \
+	tar -czf lcows_fragment.tar.gz -C $$tmpdir . && \
+	rm -rf $$tmpdir

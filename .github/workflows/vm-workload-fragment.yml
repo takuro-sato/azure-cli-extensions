@@ -1,4 +1,4 @@
-name: VM Simple
+name: VM Fragment workload
 
 permissions:
   id-token: write
@@ -7,13 +7,13 @@ permissions:
 on:
   pull_request:
     paths:
-      - .github/workflows/vm-simple.yml
+      - .github/workflows/vm-workload-fragment.yml
       - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
       - scripts/vm_print_info.sh
   push:
     paths:
-      - .github/workflows/vm-simple.yml
+      - .github/workflows/vm-workload-fragment.yml
       - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
       - scripts/vm_print_info.sh
@@ -110,13 +110,12 @@ env:
   KUSTO_DATABASE: ${{ secrets.KUSTO_DATABASE }}
   KUSTO_TABLE: CACITestStepTrace
   TEST_TYPE: vm
-  TEST_NAME: VM Simple
+  TEST_NAME: VM Fragment workload
   RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
   DEPLOYMENT_NAME: ${{ inputs.id || 'vm-simple' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
   RESOURCE_GROUP: c-aci-dashboard
-  REGISTRY: ghcr.io
-  REPOSITORY: ${{ github.repository }}/test-containers
+  REGISTRY: cacidashboard.azurecr.io
   TAG: latest
   STORAGE_ACCOUNT: cacitestingstorage
   LOCATION: ${{ inputs.location || 'uaenorth' }}
@@ -134,8 +133,8 @@ env:
   TEST_SCHEDULE: ${{ inputs.test_schedule }}
 
 jobs:
-  vm-simple:
-    name: ${{ inputs.id || 'vm-simple' }}
+  vm-fragment:
+    name: ${{ inputs.id || 'vm-fragment' }}
     runs-on: ubuntu-latest
     steps:
 
@@ -162,20 +161,32 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: ./scripts/init_run.sh
 
-      - name: Pull Image
-        run: c-aci-testing images pull workloads/server
-
-      - name: Generate Security Policy
+      - name: Use precise current time as tag
         run: |
-          ./scripts/tracing/trace_step.py --start 'Generate Policy'
-          c-aci-testing policies gen workloads/server --deployment-name $DEPLOYMENT_NAME --policy-type allow_all
-          cat workloads/server/policy_server.rego
-          c-aci-testing policies gen workloads/info --deployment-name $DEPLOYMENT_NAME --policy-type allow_all
-          if ! cmp workloads/server/policy_server.rego workloads/info/policy_info.rego; then
-            echo "Error: policies for server and info workloads differ for some reason, even though both are allow_all"
-            echo "info:"
-            cat workloads/info/policy_info.rego
-          fi
+          export TAG=$(date "+%Y%m%d-%H%M%S.%N")
+          echo TAG: $TAG
+          . workloads/workload-sidecar-with-fragments/setup_vars.sh
+
+          echo "REPO=$REPO" >> $GITHUB_ENV
+          echo "SIDECAR_REPO_A=$SIDECAR_REPO_A" >> $GITHUB_ENV
+          echo "SIDECAR_REPO_B=$SIDECAR_REPO_B" >> $GITHUB_ENV
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "SIDECAR_TAG=$SIDECAR_TAG" >> $GITHUB_ENV
+          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+          echo "SIDECAR_IMAGE_A=$SIDECAR_IMAGE_A" >> $GITHUB_ENV
+          echo "SIDECAR_IMAGE_B=$SIDECAR_IMAGE_B" >> $GITHUB_ENV
+          echo "FEED=$FEED" >> $GITHUB_ENV
+
+      - name: Build and push image and fragments (make)
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Build and push image and fragments (make)'
+          cd workloads/workload-sidecar-with-fragments
+          make
+
+      - name: Generate VM scripts
+        run: |
+          cd workloads/workload-sidecar-with-fragments
+          make generate_vm_scripts
 
       - name: Download and extract UVM blob if specified
         if: ${{ inputs.uvmBlobName != '' }}
@@ -193,19 +204,20 @@ jobs:
         run: |
           ./scripts/vm_create_traced.sh
 
-      - name: Deploy Container Group (server)
+      - name: Run containers on VM
         run: |
-          ./scripts/tracing/trace_step.py --start 'vm runc'
-          c-aci-testing vm runc workloads/server
+          ./scripts/tracing/trace_step.py --start 'Run containers on VM'
+          cd workloads/workload-sidecar-with-fragments
+          mkdir tmp
+          cd tmp
+          mv ../lcows_fragment.tar.gz ./
+          cp ../vm-run-fragment-tests.ps1 ./
+          c-aci-testing vm cp_into --deployment-name $DEPLOYMENT_NAME . 'C:\' 'C:\vm-run-fragment-tests.ps1 *> C:\fragment_tests.log'
 
-      - name: Print info
-        run: scripts/vm_print_info.sh
-
-      - name: Deploy Container Group (info)
+      - name: Fetch output
         run: |
-          ./scripts/tracing/trace_step.py --start 'Deploy Container Group (info)'
-          c-aci-testing aci param_set workloads/info --parameter 'requireHostAmdCert=false'
-          c-aci-testing vm runc workloads/info --deployment-name $DEPLOYMENT_NAME --prefix lcow_info
+          ./scripts/tracing/trace_step.py --start 'Fetch output'
+          c-aci-testing vm cat --deployment-name $DEPLOYMENT_NAME 'C:\fragment_tests.log' | tee fragment_tests.log
 
       - name: Report result
         if: always()
@@ -227,13 +239,19 @@ jobs:
         run: |
           ./scripts/vm_check_container_output.sh
 
-      - name: 'Check info log contains "info: success"'
+      - name: 'Check run log contains "fragment: success"'
         run: |
-          ./scripts/tracing/trace_step.py --start 'Check info log has success'
-          ok=1
-          grep -q "info: success" container_output.log || ok=0
-          if [ $ok -ne 1 ]; then
-            ./scripts/tracing/trace_step.py --complete --err 'info log does not contain success'
+          ./scripts/tracing/trace_step.py --start 'Check run log has success'
+          err=""
+          if grep -q "ERROR" fragment_tests.log; then
+            err="Found ERROR in fragment_tests.log"
+            echo $err
+          elif ! grep -q "fragment: success" fragment_tests.log; then
+            err="fragment_tests.log does not contain fragment: success"
+            echo $err
+          fi
+          if [ -n "$err" ]; then
+            ./scripts/tracing/trace_step.py --complete --err "$err"
             exit 1
           fi
           ./scripts/tracing/trace_step.py --complete --strict

@@ -96,23 +96,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: ./scripts/init_run.sh
 
-      - name: Install oras
-        run: |
-          VERSION="1.2.2"
-          curl -LO "https://github.com/oras-project/oras/releases/download/v${VERSION}/oras_${VERSION}_linux_amd64.tar.gz"
-          mkdir -p oras-install/
-          tar -zxf oras_${VERSION}_*.tar.gz -C oras-install/
-          sudo mv oras-install/oras /usr/local/bin/
-          rm -rf oras_${VERSION}_*.tar.gz oras-install/
-
-      - name: Install sign1util
-        run: |
-          mkdir -p /tmp/cosesign1go
-          cd /tmp/cosesign1go
-          curl -sL https://github.com/microsoft/cosesign1go/releases/download/v1.4.0/sign1util -o sign1util
-          chmod +x sign1util
-          echo "PATH=$PATH:/tmp/cosesign1go" >> $GITHUB_ENV
-
       - name: Use precise current time as tag
         run: |
           export TAG=$(date "+%Y%m%d-%H%M%S.%N")
