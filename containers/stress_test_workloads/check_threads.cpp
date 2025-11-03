@@ -129,10 +129,6 @@ void thread_fn(int i)
             perror("accept");
             exit(1);
         }
-        if (pin_listen_threads && get_cpu() != i)
-        {
-            printf_with_time("WARN: Thread %d is not running on CPU %d!!\n", i, i);
-        }
         snprintf(buf, 1024, "CPU %d is alive\n", i);
         thread_report_cpu(i);
         send(conn_fd, buf, strlen(buf), 0);
@@ -186,10 +182,6 @@ void check_thread_fn(int this_thread, int target_thread)
     int expected_len = strlen(expected_buf);
     while (true)
     {
-        if (pin_check_threads && get_cpu() != this_thread)
-        {
-            printf_with_time("WARN: Check thread %d is not running on CPU %d!!\n", this_thread, this_thread);
-        }
         int s = socket(AF_INET, SOCK_STREAM, 0);
         if (s < 0)
         {

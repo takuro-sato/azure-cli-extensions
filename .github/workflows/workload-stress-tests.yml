@@ -180,7 +180,8 @@ jobs:
         run: |
           sleep 100
           ./scripts/tracing/trace_step.py --start 'Curl Server after 1min'
-          timeout -s INT 1m curl --fail-with-body http://$ip_address:80 || exit 1
+          set -eo pipefail
+          (timeout -s INT 1m curl --fail-with-body http://$ip_address:80 | tee output.log) || exit 1
 
       - name: Report result
         if: always()
@@ -194,7 +195,7 @@ jobs:
           set -eo pipefail
           ./scripts/tracing/trace_step.py --start 'Monitor Container Group'
           rm -f output.log
-          c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME | tee output.log
+          c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME | tee -a output.log
 
       - name: Parse output
         if: always()
