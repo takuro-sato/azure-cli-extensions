@@ -42,7 +42,7 @@ continuous_test_types = [
 tests = []
 continuous_tests = {}
 
-ignore_list = ["region-australiacentral2.yml", "region-brazilsouth.yml"]
+ignore_list = ["vn2-australiacentral2.yml", "region-australiacentral2.yml", "region-brazilsouth.yml"]
 
 # Don't run on 0:00-0:59 UTC as that's when cleanup would be happening.
 CONTINUOUS_TEST_HOURS = "1-23"
