@@ -29,5 +29,10 @@ else
     echo "Cloning virtualnodesOnAzureContainerInstances..."
     git clone https://github.com/microsoft/virtualnodesOnAzureContainerInstances.git --depth 1 --single-branch --branch main
   fi
+
+  # Use newer VN2 kubelet image if it's old
+  sed -i 's/mcr\.microsoft\.com\/aci\/virtual-node-2-kubelet:main_20251023\.1/mcr.microsoft.com\/aci\/virtual-node-2-kubelet:kubelet_ubuntu_20251106.1/g' \
+    workloads/vn2/virtualnodesOnAzureContainerInstances/Helm/virtualnode/values.yaml
+
   helm install vn2 virtualnodesOnAzureContainerInstances/Helm/virtualnode
 fi
