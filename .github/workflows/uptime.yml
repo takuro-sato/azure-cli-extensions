@@ -46,7 +46,14 @@ jobs:
 
           for container in $(echo $CONTAINERS | jq -r '.[].id'); do
             echo "checking $container"
-            creationTime=$(date -d $(az container show --ids $container --query "containers[0].instanceView.events" --output json | jq -r 'min_by(.firstTimestamp) | .firstTimestamp') +%s)
+            creationTimeStr=$(az container show --ids $container --query "containers[0].instanceView.events" --output json | jq -r 'min_by(.firstTimestamp) | .firstTimestamp')
+            if [ -z "$creationTimeStr" ]; then
+              echo "No creation time found on $container"
+                echo "Deleting container group: ${container}"
+                az resource delete --ids $container
+                continue
+            fi
+            creationTime=$(date -d "$creationTimeStr" +%s)
             containerAge=$(( ($(date -u +"%s") - $creationTime) / 3600 ))
             echo "creationTime=$creationTime"
             echo "containerAge=$containerAge hours"
@@ -59,13 +66,13 @@ jobs:
           done
 
           deploymentsNeeded=$(((48 / 24 + 1) - $currentContainerCount))
-          
+
           # Always deploy at least one uptime container so that we test a
           # range of ages
           if [ $deploymentsNeeded -lt 1 ]; then
             deploymentsNeeded=1
           fi
-          
+
           echo "deploymentsNeeded=$deploymentsNeeded"
           echo "deployments-matrix=[$(seq -s, 1 $deploymentsNeeded)]" >> $GITHUB_OUTPUT
 
