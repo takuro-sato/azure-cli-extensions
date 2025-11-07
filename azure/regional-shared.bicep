@@ -32,9 +32,12 @@ resource subnet 'Microsoft.Network/virtualNetworks/subnets@2024-07-01' = {
 // This identity is used to attach to deployed ACI and VM resource, one per region.
 // This is not the cacidashboard identity - that is the single identity used by
 // runner to deploy these containers/VMs.
-resource perRegionManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = {
+resource perRegionManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' = {
   name: 'cacidashboard-${location}'
   location: location
+  properties: {
+    isolationScope: 'Regional'
+  }
 }
 
 resource cacidashboard 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' existing = {
