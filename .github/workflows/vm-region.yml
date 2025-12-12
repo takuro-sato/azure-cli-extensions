@@ -30,7 +30,6 @@ jobs:
       id: vm-stress-curr-ws2025-6.1
       location: ${{ inputs.location }}
       cplatBlobName: ${{ vars.CPLAT_CURR_BLOB_NAME }}
-      winFlavor: ws2025
       vmSize: 'Standard_DC8as_cc_v5'
       test_schedule: gh-daily
 
@@ -42,7 +41,6 @@ jobs:
       id: vm-stress-curr-hard-ws2025-6.1
       location: ${{ inputs.location }}
       cplatBlobName: ${{ vars.CPLAT_CURR_BLOB_NAME }}
-      winFlavor: ws2025
       vmSize: 'Standard_DC8as_cc_v5'
       test_schedule: gh-daily
 
@@ -54,7 +52,6 @@ jobs:
       id: vm-stress-genoa-curr-ws2025-6.1
       location: ${{ inputs.location }}
       cplatBlobName: ${{ vars.CPLAT_CURR_BLOB_NAME }}
-      winFlavor: ws2025
       vmSize: 'Standard_DC8as_cc_v6'
       test_schedule: gh-daily
 
@@ -66,7 +63,6 @@ jobs:
       id: vm-stress-genoa-curr-hard-ws2025-6.1
       location: ${{ inputs.location }}
       cplatBlobName: ${{ vars.CPLAT_CURR_BLOB_NAME }}
-      winFlavor: ws2025
       vmSize: 'Standard_DC8as_cc_v6'
       test_schedule: gh-daily
 
@@ -78,7 +74,6 @@ jobs:
       id: vm-simple-next-ws2025-6.1
       location: ${{ inputs.location }}
       cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
-      winFlavor: ws2025
       vmSize: 'Standard_DC8as_cc_v5'
       test_schedule: gh-daily
 
@@ -92,7 +87,6 @@ jobs:
       id: vm-fragment-next-ws2025-6.1
       location: ${{ inputs.location }}
       cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
-      winFlavor: ws2025
       vmSize: 'Standard_DC8as_cc_v5'
       test_schedule: gh-daily
 
@@ -104,7 +98,6 @@ jobs:
       id: vm-stress-next-ws2025-6.1
       location: ${{ inputs.location }}
       cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
-      winFlavor: ws2025
       vmSize: 'Standard_DC8as_cc_v5'
       test_schedule: gh-daily
 
@@ -116,7 +109,6 @@ jobs:
       id: vm-stress-next-hard-ws2025-6.1
       location: ${{ inputs.location }}
       cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
-      winFlavor: ws2025
       vmSize: 'Standard_DC8as_cc_v5'
       test_schedule: gh-daily
 
@@ -128,7 +120,6 @@ jobs:
       id: vm-simple-genoa-next-ws2025-6.1
       location: ${{ inputs.location }}
       cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
-      winFlavor: ws2025
       vmSize: 'Standard_DC8as_cc_v6'
       test_schedule: gh-daily
 
@@ -142,7 +133,6 @@ jobs:
       id: vm-fragment-genoa-next-ws2025-6.1
       location: ${{ inputs.location }}
       cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
-      winFlavor: ws2025
       vmSize: 'Standard_DC8as_cc_v6'
       test_schedule: gh-daily
 
@@ -154,7 +144,6 @@ jobs:
       id: vm-stress-genoa-next-ws2025-6.1
       location: ${{ inputs.location }}
       cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
-      winFlavor: ws2025
       vmSize: 'Standard_DC8as_cc_v6'
       test_schedule: gh-daily
 
@@ -166,7 +155,6 @@ jobs:
       id: vm-stress-genoa-next-hard-ws2025-6.1
       location: ${{ inputs.location }}
       cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
-      winFlavor: ws2025
       vmSize: 'Standard_DC8as_cc_v6'
       test_schedule: gh-daily
 
@@ -178,7 +166,6 @@ jobs:
       id: vm-idle-curr-ws2025-6.1
       location: ${{ inputs.location }}
       cplatBlobName: ${{ vars.CPLAT_CURR_BLOB_NAME }}
-      winFlavor: ws2025
       vmSize: 'Standard_DC8as_cc_v5'
       test_schedule: gh-daily
 
@@ -190,7 +177,6 @@ jobs:
       id: vm-idle-genoa-curr-ws2025-6.1
       location: ${{ inputs.location }}
       cplatBlobName: ${{ vars.CPLAT_CURR_BLOB_NAME }}
-      winFlavor: ws2025
       vmSize: 'Standard_DC8as_cc_v6'
       test_schedule: gh-daily
 
@@ -229,5 +215,4 @@ jobs:
   #     id: vm-vc-${{ inputs.location }}
   #     location: ${{ inputs.location }}
   #     cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
-  #     winFlavor: ws2025
   #     profileName: '-'

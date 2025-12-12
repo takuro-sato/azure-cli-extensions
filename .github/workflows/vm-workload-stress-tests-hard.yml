@@ -38,13 +38,6 @@ on:
         type: string
         description: The name of the containerplat blob
         default: ''
-      winFlavor:
-        type: choice
-        description: The Windows version of the image
-        default: ws2025
-        options:
-          - ws2022
-          - ws2025
       uvmBlobName:
         type: string
         description: The name of the blob for UVM image
@@ -75,10 +68,6 @@ on:
         type: string
         description: The name of the containerplat blob
         default: ''
-      winFlavor:
-        type: string
-        description: The Windows version of the image
-        default: ws2025
       uvmBlobName:
         type: string
         description: The name of the blob for UVM image
@@ -110,7 +99,7 @@ env:
   VM_IMAGE: ${{ inputs.vmImage || '' }}
   USE_OFFICIAL_IMAGES: ${{ inputs.vmImage == '' && 'true' || '' }}
   CPLAT_BLOB_NAME: ${{ inputs.cplatBlobName || vars.CPLAT_NEXT_6_1_BLOB_NAME }}
-  WIN_FLAVOR: ${{ inputs.winFlavor || 'ws2025' }}
+  WIN_FLAVOR: 'ws2025'
   CONTAINER_CPUS: 4
   CONTAINER_MEMORY_GBS: 4
   UVM_KERNEL: ${{ inputs.uvmBlobName != '' && format('{0}/kernel.vmgs', inputs.uvmBlobName) || '' }}

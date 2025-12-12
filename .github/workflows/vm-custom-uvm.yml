@@ -26,7 +26,6 @@ jobs:
   #     id: custom-uvm-virtualclient
   #     location: ${{ inputs.location }}
   #     cplatBlobName: ${{ vars.CPLAT_NEXT_6_1_BLOB_NAME }}
-  #     winFlavor: ws2025
   #     profileName: '-'
   #     uvmBlobName: ${{ inputs.uvmBlobName }}
 
@@ -37,7 +36,6 @@ jobs:
       id: custom-uvm-idle
       location: ${{ inputs.location }}
       cplatBlobName: ${{ vars.CPLAT_CURR_BLOB_NAME }}
-      winFlavor: ws2025
       uvmBlobName: ${{ inputs.uvmBlobName }}
 
   stress-tests:
@@ -47,7 +45,6 @@ jobs:
       id: custom-uvm-stress-tests
       location: ${{ inputs.location }}
       cplatBlobName: ${{ vars.CPLAT_CURR_BLOB_NAME }}
-      winFlavor: ws2025
       uvmBlobName: ${{ inputs.uvmBlobName }}
 
   stress-tests-hard:
@@ -57,5 +54,4 @@ jobs:
       id: custom-uvm-stress-tests-hard
       location: ${{ inputs.location }}
       cplatBlobName: ${{ vars.CPLAT_CURR_BLOB_NAME }}
-      winFlavor: ws2025
       uvmBlobName: ${{ inputs.uvmBlobName }}

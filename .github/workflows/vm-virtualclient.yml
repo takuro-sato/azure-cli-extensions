@@ -43,13 +43,6 @@ on:
         type: string
         description: The name of the containerplat blob
         default: ''
-      winFlavor:
-        type: choice
-        description: The Windows version of the image
-        default: ws2025
-        options:
-          - ws2022
-          - ws2025
       profileName:
         type: string
         description: The profile to run, can be '-' for all
@@ -89,10 +82,6 @@ on:
         type: string
         description: The name of the containerplat blob
         default: ''
-      winFlavor:
-        type: string
-        description: The Windows version of the image
-        default: ws2025
       profileName:
         type: string
         description: The profile to run, can be '-' for all
@@ -129,7 +118,7 @@ env:
   VM_IMAGE: ${{ inputs.vmImage || '' }}
   USE_OFFICIAL_IMAGES: ${{ inputs.vmImage == '' && 'true' || '' }}
   CPLAT_BLOB_NAME: ${{ inputs.cplatBlobName || vars.CPLAT_NEXT_6_1_BLOB_NAME }}
-  WIN_FLAVOR: ${{ inputs.winFlavor || 'ws2025' }}
+  WIN_FLAVOR: 'ws2025'
   VM_ZONE: ${{ inputs.zone || '' }}
   TAG: "20250225"
   PROFILE_NAME: ${{ inputs.profileName || 'PERF-CPU-OPENSSL.json' }}
