@@ -152,3 +152,30 @@ jobs:
               sleep 0.5
           done
           wait
+
+  cleanup-hsm:
+    name: Cleanup HSM Keys
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log into Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION }}
+
+      - name: Delete HSM keys
+        run: |
+          HSM_NAME=${{ vars.HSM_ENDPOINT }}
+          HSM_NAME=${HSM_NAME%.managedhsm.azure.net}
+          az keyvault key list --hsm-name $HSM_NAME \
+            --query "[].kid" -o tsv | \
+            xargs -I{} az keyvault key delete --id {}
+
+      - name: Purge deleted keys
+        run: |
+          HSM_NAME=${{ vars.HSM_ENDPOINT }}
+          HSM_NAME=${HSM_NAME%.managedhsm.azure.net}
+          az keyvault key list-deleted --hsm-name $HSM_NAME \
+            --query "[].kid" -o tsv | \
+            xargs -I{} az keyvault key purge --id {}
