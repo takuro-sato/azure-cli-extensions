@@ -47,6 +47,10 @@ on:
         type: string
         description: The name of the blob for UVM image
         default: ''
+      doStressTestsHttpChecks:
+        type: boolean
+        description: Whether to do curl checks during the run
+        default: false
   workflow_call:
     inputs:
       id:
@@ -86,6 +90,10 @@ on:
         type: string
         description: Trace marker by scheduled runs only
         default: ''
+      doStressTestsHttpChecks:
+        type: boolean
+        description: Whether to do curl checks during the run
+        default: false
 
 env:
   KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
@@ -114,6 +122,7 @@ env:
   UVM_ROOTFS: ${{ inputs.uvmBlobName != '' && format('{0}/rootfs-verity.vhd', inputs.uvmBlobName) || '' }}
   UVM_CONTAINERD_SHIM: ${{ inputs.uvmBlobName != '' && format('{0}/containerd-shim-runhcs-v1.exe', inputs.uvmBlobName) || '' }}
   TEST_SCHEDULE: ${{ inputs.test_schedule }}
+  DO_STRESS_TESTS_HTTP_CHECKS: ${{ inputs.doStressTestsHttpChecks }}
 
 jobs:
   vm-stress-tests:
@@ -200,7 +209,11 @@ jobs:
       - name: Do check loop on VM
         run: |
           mkdir -p ./logs
-          ./scripts/vm_do_check_loop.py --check-for-secs 3600 --out-dir ./logs --stress-tests-http-checks
+          maybe_do_stress_tests_http_checks=""
+          if [ "$DO_STRESS_TESTS_HTTP_CHECKS" = "true" ]; then
+            maybe_do_stress_tests_http_checks="--stress-tests-http-checks"
+          fi
+          ./scripts/vm_do_check_loop.py --check-for-secs 3600 --out-dir ./logs $maybe_do_stress_tests_http_checks
 
       - name: Report result
         if: always()
