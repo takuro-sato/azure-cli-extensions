@@ -17,4 +17,4 @@ Architectures: $(dpkg --print-architecture)
 Signed-by: /etc/apt/keyrings/microsoft.gpg" | sudo tee /etc/apt/sources.list.d/azure-cli.sources
 
 sudo apt-get update -y
-sudo apt-get install -y --allow-downgrades azure-cli=${AZ_CLI_VERSION:-2.77.0}-1~${AZ_DIST}
+sudo apt-get install -y --allow-downgrades azure-cli=${AZ_CLI_VERSION:-2.81.0}-1~${AZ_DIST}

@@ -133,12 +133,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # vm run-command invoke is broken from 2.78 - see
-      # https://github.com/Azure/azure-cli/issues/32258.  Use an older version
-      # of az-cli for VM tests until this is fixed.
       - name: Downgrade Azure CLI
         env:
-          AZ_CLI_VERSION: "2.77.0"
+          AZ_CLI_VERSION: "2.81.0"
         run: ./scripts/install-az-cli.sh
 
       - name: Log into Azure
