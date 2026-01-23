@@ -61,7 +61,7 @@ resource managedIdentityRoleAssignment 'Microsoft.Authorization/roleAssignments@
 }
 
 resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' existing = {
-  name: 'cacidashboard'
+  name: 'cacidashboardaci'
 }
 
 resource acrPull 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {

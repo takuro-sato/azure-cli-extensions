@@ -1,4 +1,4 @@
-export REGISTRY ?= cacidashboard.azurecr.io
+export REGISTRY ?= cacidashboardaci.azurecr.io
 export REPOSITORY ?= maa-tester
 export TAG ?= latest
 

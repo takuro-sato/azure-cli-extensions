@@ -1,4 +1,4 @@
 version: '3'
 services:
   perf-world:
-    image: cacidashboard.azurecr.io/ubuntu:20.04
+    image: cacidashboardaci.azurecr.io/ubuntu:20.04

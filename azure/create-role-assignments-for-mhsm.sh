@@ -20,7 +20,7 @@ regions=("$@")
 for r in "${regions[@]}"; do
   for a in 'Managed HSM Crypto User' 'Managed HSM Crypto Officer'; do
     msi_id="/subscriptions/$SUBSCRIPTION/resourceGroups/$RESOURCE_GROUP/providers/Microsoft.ManagedIdentity/userAssignedIdentities/cacidashboard-$r"
-    az keyvault role assignment create --hsm-name cacisidecars --role "$a" --assignee-principal-type MSI \
+    az keyvault role assignment create --hsm-name confidentialsidecars --role "$a" --assignee-principal-type MSI \
       --assignee "$(az identity show --id "$msi_id" --query 'principalId' | jq -r)" \
       --scope '/';
   done;

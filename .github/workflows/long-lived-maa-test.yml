@@ -44,9 +44,9 @@ env:
   TEST_NAME: 'Long lived MAA test'
   RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
   DEPLOYMENT_NAME: ${{ inputs.id || 'long-lived-maa-test' }}-${{ inputs.location || 'westeurope' }}
-  SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
+  SUBSCRIPTION: ${{ vars.SUBSCRIPTION_ACI }}
   RESOURCE_GROUP: c-aci-dashboard
-  REGISTRY: cacidashboard.azurecr.io
+  REGISTRY: cacidashboardaci.azurecr.io
   MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'westeurope' }}
   LOCATION: ${{ inputs.location || 'westeurope' }}
   POLICY_TYPE: ${{ inputs.policy_type || 'allow_all' }}
@@ -65,9 +65,9 @@ jobs:
       - name: Log into Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION }}
+          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
 
       - name: Initialize Run
         env:

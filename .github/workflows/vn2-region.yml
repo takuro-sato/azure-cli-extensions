@@ -70,7 +70,7 @@ env:
   TEST_NAME: VN2 - Region
   RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
   DEPLOYMENT_NAME: ${{ inputs.id || 'vn2' }}-${{ inputs.location }}-${{ github.run_number }}
-  SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
+  SUBSCRIPTION: ${{ vars.SUBSCRIPTION_ACI }}
   RESOURCE_GROUP: ${{ inputs.resource_group || 'c-aci-vn2' }}
   LOCATION: ${{ inputs.location || 'northeurope' }}
   AKS_CLUSTER_NAME: ${{ inputs.aks_cluster_name || 'vn2-aks-northeurope' }}
@@ -89,9 +89,9 @@ jobs:
       - name: Log into Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION }}
+          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
 
       # Note: GitHub Actions runner images have Kubectl and Helm pre-installed.
 
@@ -227,8 +227,8 @@ jobs:
         env:
           DEPLOYMENT_NAME: managed-identity
           STEP_PREFIX: managed-identity
-          REGISTRY: cacidashboard.azurecr.io
-          REPOSITORY: ubuntu-with-az-cli
+          REGISTRY: cacidashboardaci.azurecr.io
+          REPOSITORY: ubuntu-with-curl
           TAG: "24.04"
         run: |
           set -exo pipefail
@@ -245,7 +245,7 @@ jobs:
         env:
           DEPLOYMENT_NAME: thim
           STEP_PREFIX: thim
-          REGISTRY: cacidashboard.azurecr.io
+          REGISTRY: cacidashboardaci.azurecr.io
           TAG: "2.12"
         run: |
           set -ex
@@ -267,9 +267,9 @@ jobs:
         if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION }}
+          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
 
       - name: 'Test case - skr'
         if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
@@ -277,11 +277,11 @@ jobs:
           DEPLOYMENT_NAME: skr
           STEP_PREFIX: skr
           VN2_MODE: "true"
-          REGISTRY: cacidashboard.azurecr.io
+          REGISTRY: cacidashboardaci.azurecr.io
           TAG: "2.12"
           POLICY_TYPE: generated
           ATTESTATION_ENDPOINT: ${{ vars.ATTESTATION_ENDPOINT }}
-          HSM_ENDPOINT: ${{ vars.HSM_ENDPOINT }}
+          HSM_ENDPOINT: ${{ vars.HSM_ENDPOINT_ACI }}
         run: |
           set -ex
           ./scripts/tracing/trace_step.py --start 'Test SKR'

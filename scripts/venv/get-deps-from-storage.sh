@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-STORAGE_ACCOUNT=${STORAGE_ACCOUNT:-cacitestingstorage}
+STORAGE_ACCOUNT=${STORAGE_ACCOUNT:-cacitestingstorageaci}
 STORAGE_CONTAINER=${STORAGE_CONTAINER:-blobs}
 VIRTUAL_ENV_DIR=${VIRTUAL_ENV_DIR:-/tmp/runner-venv}
 

@@ -82,9 +82,9 @@ env:
   TEST_NAME: Minimal
   RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
   DEPLOYMENT_NAME: ${{ inputs.id || 'minimal' }}-${{ inputs.location }}-${{ github.run_number }}
-  SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
+  SUBSCRIPTION: ${{ vars.SUBSCRIPTION_ACI }}
   RESOURCE_GROUP: c-aci-dashboard
-  REGISTRY: cacidashboard.azurecr.io
+  REGISTRY: cacidashboardaci.azurecr.io
   MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'westeurope' }}
   LOCATION: ${{ inputs.location || 'westeurope' }}
   CPU: ${{ inputs.cpu || 2 }}
@@ -106,9 +106,9 @@ jobs:
       - name: Log into Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION }}
+          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
 
       - name: Initialize Run
         env:

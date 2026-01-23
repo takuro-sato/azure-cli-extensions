@@ -28,9 +28,9 @@ jobs:
       - name: Log into Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION }}
+          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
 
       # Use the init_run script to ensure that there is one place for version
       # numbers env vars

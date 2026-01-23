@@ -74,7 +74,7 @@ env:
   TEST_NAME: ccf_verify_uvm
   RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
   DEPLOYMENT_NAME: ${{ inputs.id || 'ccf_verify_uvm' }}-${{ inputs.location }}-${{ github.run_number }}
-  SUBSCRIPTION: ${{ vars.SUBSCRIPTION }}
+  SUBSCRIPTION: ${{ vars.SUBSCRIPTION_ACI }}
   RESOURCE_GROUP: c-aci-dashboard
   REGISTRY: ghcr.io
   REPOSITORY: ${{ github.repository }}/test-containers
@@ -98,9 +98,9 @@ jobs:
       - name: Log into Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION }}
+          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
 
       - name: Initialize Run
         env:

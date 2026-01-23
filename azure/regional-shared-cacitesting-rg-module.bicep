@@ -1,8 +1,8 @@
 param location string
 param perRegionMsiPrincipalId string
 
-resource cacitestingstorage 'Microsoft.Storage/storageAccounts@2025-01-01' existing = {
-  name: 'cacitestingstorage'
+resource cacitestingstorageaci 'Microsoft.Storage/storageAccounts@2025-01-01' existing = {
+  name: 'cacitestingstorageaci'
 }
 
 resource storageBlobDataContributor 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
@@ -12,8 +12,8 @@ resource storageBlobDataContributor 'Microsoft.Authorization/roleDefinitions@202
 
 // Give the per-region managed identity access to the storage account for logs
 resource storageBlobDataContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = {
-  name: guid(cacitestingstorage.id, perRegionMsiPrincipalId, storageBlobDataContributor.id)
-  scope: cacitestingstorage
+  name: guid(cacitestingstorageaci.id, perRegionMsiPrincipalId, storageBlobDataContributor.id)
+  scope: cacitestingstorageaci
   properties: {
     roleDefinitionId: storageBlobDataContributor.id
     principalId: perRegionMsiPrincipalId

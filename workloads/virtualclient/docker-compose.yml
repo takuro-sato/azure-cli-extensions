@@ -1,7 +1,7 @@
 version: '3'
 services:
   virtualclient:
-    image: ${REGISTRY:-cacidashboard.azurecr.io}/${REPO_BASE:-virtualclient}:${TAG:-latest}
+    image: ${REGISTRY:-cacidashboardaci.azurecr.io}/${REPO_BASE:-virtualclient}:${TAG:-latest}
     build:
       context: .
       dockerfile: Dockerfile

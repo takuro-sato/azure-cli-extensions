@@ -71,7 +71,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
       {
         name: 'skr'
         properties: {
-          image: 'cacidashboard.azurecr.io/skr-next'
+          image: 'cacidashboardaci.azurecr.io/skr-next'
           ports: [
             {
               protocol: 'TCP'
