@@ -156,6 +156,14 @@ jobs:
           fi
           ./scripts/tracing/trace_step.py --complete --strict
 
+      - name: Re-log into Azure
+        if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+
       - name: 'Test case - ccf_verify_uvm'
         if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
         env:
@@ -180,6 +188,14 @@ jobs:
           fi
           ./scripts/tracing/trace_step.py --complete --strict
 
+      - name: Re-log into Azure
+        if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+
       - name: 'Test case - sample-pod.yaml'
         if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
         env:
@@ -193,6 +209,14 @@ jobs:
             c-aci-testing vn2 remove --deployment-name sample-pod
           fi
           exit $status
+
+      - name: Re-log into Azure
+        if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
 
       - name: 'Test case - stress test (4cpu, 16gb)'
         if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
@@ -208,6 +232,14 @@ jobs:
         run: |
           ./workloads/vn2/stress_test.sh
 
+      - name: Re-log into Azure
+        if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+
       - name: 'Test case - stress test (18cpu, 64gb)'
         if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' && (inputs.location == 'eastus2euap') }}
         env:
@@ -221,6 +253,14 @@ jobs:
           STEP_PREFIX: stress-18cpu-64gb
         run: |
           ./workloads/vn2/stress_test.sh
+
+      - name: Re-log into Azure
+        if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
 
       - name: 'Test case - managed identity'
         if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
@@ -239,6 +279,14 @@ jobs:
 
           WAIT_FOR_OUTPUT=true ./workloads/vn2/vn2-test-run.sh workloads/managed_identity
           ./scripts/parse_container_output.py --must-have-output --fail-on-error output.log
+
+      - name: Re-log into Azure
+        if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
 
       - name: 'Test case - thim'
         if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
@@ -263,7 +311,7 @@ jobs:
           fi
           ./scripts/tracing/trace_step.py --complete
 
-      - name: 'Another log into Azure'
+      - name: Re-log into Azure
         if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
         uses: azure/login@v2
         with:
