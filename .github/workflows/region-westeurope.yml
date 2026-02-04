@@ -15,17 +15,3 @@ jobs:
     uses: ./.github/workflows/region.yml
     with:
       location: westeurope
-
-  zones:
-    name: availability_zones
-    secrets: inherit
-    uses: ./.github/workflows/workload-availability-zones.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        zone: ['1', '2']
-    with:
-      id: zone-${{ matrix.zone }}
-      location: westeurope
-      zone: ${{ matrix.zone }}
-      policy_type: generated
