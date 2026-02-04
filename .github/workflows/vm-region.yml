@@ -187,7 +187,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        vmSize: ['DC4as_v5', 'DC8as_v5']
+        vmSize: ['DC4as_v6', 'DC8as_v6']
     with:
       id: perf-cvm-${{ matrix.vmSize }}
       location: ${{ inputs.location }}
@@ -200,7 +200,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        vmSize: ['D4as_v5', 'D8as_v5']
+        vmSize: ['D4as_v6', 'D8as_v6']
     with:
       id: perf-regular-vm-${{ matrix.vmSize }}
       location: ${{ inputs.location }}

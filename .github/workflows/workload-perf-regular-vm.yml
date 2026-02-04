@@ -29,7 +29,7 @@ on:
       vmSize:
         type: string
         description: The size of the VM
-        default: Standard_D8as_v5
+        default: Standard_D8as_v6
       cleanup:
         type: boolean
         description: Whether to cleanup the VM after testing
@@ -46,7 +46,7 @@ on:
       vmSize:
         type: string
         description: The size of the VM
-        default: Standard_D8as_v5
+        default: Standard_D8as_v6
       cleanup:
         type: boolean
         description: Whether to cleanup the VM after testing
@@ -60,7 +60,7 @@ env:
   # STORAGE_ACCOUNT: cacitestingstorageaci
   LOCATION: ${{ inputs.location || 'uaenorth' }}
   CLEANUP: ${{ inputs.cleanup }}
-  VM_SIZE: ${{ inputs.vmSize || 'Standard_D8as_v5' }}
+  VM_SIZE: ${{ inputs.vmSize || 'Standard_D8as_v6' }}
 
 jobs:
   perf-regular-vm:

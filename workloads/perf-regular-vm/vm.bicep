@@ -1,7 +1,7 @@
 param deploymentName string
 
 param location string = resourceGroup().location
-param vmSize string = 'Standard_D8as_v5'
+param vmSize string = 'Standard_D8as_v6'
 param adminUsername string = 'azureuser'
 @secure()
 param adminPassword string
