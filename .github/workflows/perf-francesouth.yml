@@ -1,0 +1,17 @@
+name: Perf - France South
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '57 1 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  perf-francesouth:
+    secrets: inherit
+    uses: ./.github/workflows/perf-region.yml
+    with:
+      location: francesouth

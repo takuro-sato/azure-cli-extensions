@@ -1,0 +1,17 @@
+name: High Spec - Norway West
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '57 22 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  high-spec-norwaywest:
+    uses: ./.github/workflows/high-spec.yml
+    secrets: inherit
+    with:
+      location: norwaywest

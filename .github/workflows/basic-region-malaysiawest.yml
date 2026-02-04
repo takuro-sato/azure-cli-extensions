@@ -1,0 +1,20 @@
+name: Region (Basic) - Malaysia West
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/basic-region-malaysiawest.yml
+  schedule:
+    - cron: '37 1-23 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  basic-malaysiawest:
+    secrets: inherit
+    uses: ./.github/workflows/basic-region.yml
+    with:
+      location: malaysiawest

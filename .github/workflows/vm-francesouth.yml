@@ -1,0 +1,17 @@
+name: VM - France South
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '22 1 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  vm-francesouth:
+    secrets: inherit
+    uses: ./.github/workflows/vm-region.yml
+    with:
+      location: francesouth

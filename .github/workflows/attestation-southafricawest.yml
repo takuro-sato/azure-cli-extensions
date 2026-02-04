@@ -1,0 +1,22 @@
+name: Attestation - South Africa West
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/attestation-southafricawest.yml
+  schedule:
+    - cron: '41 1-23 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  attestation-southafricawest:
+    secrets: inherit
+    uses: ./.github/workflows/workload-attestation.yml
+    with:
+      location: southafricawest
+      policy_type: allow_all
+      test_schedule: gh-hourly

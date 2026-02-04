@@ -1,0 +1,17 @@
+name: Region - South Africa West
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '25 17 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  southafricawest:
+    secrets: inherit
+    uses: ./.github/workflows/region.yml
+    with:
+      location: southafricawest

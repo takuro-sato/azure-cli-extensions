@@ -1,0 +1,17 @@
+name: High Spec - Belgium Central
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '57 22 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  high-spec-belgiumcentral:
+    uses: ./.github/workflows/high-spec.yml
+    secrets: inherit
+    with:
+      location: belgiumcentral

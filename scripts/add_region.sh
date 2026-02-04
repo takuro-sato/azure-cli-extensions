@@ -6,8 +6,8 @@ if [ "$#" -ne 2 ]; then
   exit 1
 fi
 
-OLD_REGION="westeurope"
-OLD_REGION_TITLE="West Europe"
+OLD_REGION="northeurope"
+OLD_REGION_TITLE="North Europe"
 NEW_REGION=$1
 NEW_REGION_TITLE=$2
 

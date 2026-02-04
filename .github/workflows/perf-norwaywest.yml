@@ -1,0 +1,17 @@
+name: Perf - Norway West
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '57 1 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  perf-norwaywest:
+    secrets: inherit
+    uses: ./.github/workflows/perf-region.yml
+    with:
+      location: norwaywest

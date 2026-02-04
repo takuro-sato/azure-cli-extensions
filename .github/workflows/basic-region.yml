@@ -23,7 +23,7 @@ on:
 
 jobs:
   info-nonzoned-nonvnet:
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && !contains(vars.ACI_VNET_ONLY_REGIONS, format(',{0},', inputs.location)) && !contains(vars.ACI_ONLY_ZONAL_VNET_REGIONS, format(',{0},', inputs.location)) }}
     name: info-nonzoned-nonvnet
     secrets: inherit
     uses: ./.github/workflows/workload-info.yml
@@ -35,7 +35,7 @@ jobs:
       test_schedule: gh-hourly
 
   info-nonzoned-vnet:
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && !contains(vars.ACI_ONLY_ZONAL_VNET_REGIONS, format(',{0},', inputs.location)) }}
     name: info-nonzoned-vnet
     secrets: inherit
     uses: ./.github/workflows/workload-info.yml
@@ -43,6 +43,25 @@ jobs:
       id: info-vnet-allow_all
       location: ${{ inputs.location }}
       use_vnet: true
+      policy_type: allow_all
+      test_schedule: gh-hourly
+
+  info-zoned-1-2:
+    if: ${{ !cancelled() && contains(vars.ACI_ZONE_1_2_REGIONS, format(',{0},', inputs.location)) }}
+    name: info-zoned
+    secrets: inherit
+    uses: ./.github/workflows/workload-info.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        # only vnets are supported for zonal deployments
+        use_vnet: [true]
+        zone: ["1", "2"]
+    with:
+      id: info-zone${{ matrix.zone }}-${{ matrix.use_vnet && 'vnet-' || '' }}allow_all
+      location: ${{ inputs.location }}
+      use_vnet: ${{ matrix.use_vnet }}
+      zone: ${{ matrix.zone }}
       policy_type: allow_all
       test_schedule: gh-hourly
 

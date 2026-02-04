@@ -1,0 +1,17 @@
+name: Region - Malaysia West
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '25 17 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  malaysiawest:
+    secrets: inherit
+    uses: ./.github/workflows/region.yml
+    with:
+      location: malaysiawest
