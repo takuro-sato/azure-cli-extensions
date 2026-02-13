@@ -7,7 +7,7 @@ clean:
 
 .image_build: Dockerfile sidecar_server.py
 	make clean
-	docker buildx build -t $(SIDECAR_IMAGE) .
+	docker buildx build --provenance=false --sbom=false -t $(SIDECAR_IMAGE) .
 	touch .image_build
 
 .image_push: .image_build
