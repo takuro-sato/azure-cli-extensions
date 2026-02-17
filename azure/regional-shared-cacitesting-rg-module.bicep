@@ -20,3 +20,19 @@ resource storageBlobDataContributorRoleAssignment 'Microsoft.Authorization/roleA
     principalType: 'ServicePrincipal'
   }
 }
+
+resource storageFileDataSMBMIAdmin 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
+  name: 'a235d3ee-5935-4cfb-8cc5-a3303ad5995e'
+  scope: subscription()
+}
+
+// "Storage File Data SMB MI Admin" access on the storage account too for file mount tests
+resource storageFileDataSMBMIAdminRoleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-01-preview' = {
+  name: guid(cacitestingstorageaci.id, perRegionMsiPrincipalId, storageFileDataSMBMIAdmin.id)
+  scope: cacitestingstorageaci
+  properties: {
+    roleDefinitionId: storageFileDataSMBMIAdmin.id
+    principalId: perRegionMsiPrincipalId
+    principalType: 'ServicePrincipal'
+  }
+}
