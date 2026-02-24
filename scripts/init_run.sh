@@ -64,3 +64,6 @@ fi
 
 echo Setup Docker
 sudo usermod -aG docker $USER
+
+echo Docker version
+docker version
