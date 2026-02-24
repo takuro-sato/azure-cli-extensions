@@ -28,13 +28,20 @@ c-aci-testing vn2 generate_yaml .
 if [ $? -ne 0 ]; then
   err_die "Failed to generate YAML"
 fi
+
+echo
+echo "Generated YAML file:"
+cat "$yaml_file"
+echo
+
 $TRACE_SCRIPT --start 'vn2 policygen'
 c-aci-testing vn2 policygen .
 if [ $? -ne 0 ]; then
   err_die "Failed to generate policy"
 fi
+
 echo
-echo "Generated YAML file:"
+echo "Generated YAML file with policy:"
 cat "$yaml_file"
 echo
 
