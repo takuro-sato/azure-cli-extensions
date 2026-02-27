@@ -13,7 +13,7 @@ grep -i segfault $dmesg_file && found_sus_message+="segfault "
 grep -i 'protection fault' $dmesg_file && found_sus_message+="protection-fault "
 grep 'BUG:' $dmesg_file && found_sus_message+="kernel-bug "
 grep 'WARNING:' $dmesg_file && found_sus_message+="kernel-bug "
-grep 'RIP:' $dmesg_file && found_sus_message+="kernel-backtrace "
+grep -E '(\W|^)RIP:' $dmesg_file && found_sus_message+="kernel-backtrace "
 soft_lockup_count=$(grep 'watchdog: BUG: soft lockup' $dmesg_file | wc -l)
 if [ "$soft_lockup_count" -gt 0 ]; then
   found_sus_message+="soft-lockup "
