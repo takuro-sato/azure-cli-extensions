@@ -152,8 +152,6 @@ vm_cp_into(
     storage_account=STORAGE_ACCOUNT,
 )
 
-CONTAINER_OUT_SUFFIX = "_container_output.log"
-
 last_probed_update_time: Optional[datetime] = None
 printed_lengths = {}
 containers_terminated = False

@@ -5,7 +5,7 @@ set -e
 set +e
 out_file="container_output.log"
 
-c-aci-testing vm exec --deployment-name $DEPLOYMENT_NAME 'Get-Item C:\*\container_log_*.log | foreach { echo ""; echo ""; echo $_.FullName; cat -Raw $_ } > C:\container_output.log'
+c-aci-testing vm exec --deployment-name $DEPLOYMENT_NAME 'Get-Item C:\*\container*.log | foreach { echo ""; echo ""; echo $_.FullName; cat -Raw $_ } > C:\container_output.log'
 c-aci-testing vm cat --deployment-name $DEPLOYMENT_NAME 'C:\container_output.log' > $out_file
 if [ $? -ne 0 ]; then
   echo "Failed to get container_output.log"

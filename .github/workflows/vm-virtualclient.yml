@@ -202,7 +202,7 @@ jobs:
       - name: Push result to Kusto
         run: |
           ./scripts/tracing/trace_step.py --start 'Push results to Kusto'
-          KUSTO_TABLE=CACIVirtualClientResult ./scripts/tracing/trace_virtualclient.py ./logs/container_log_*.log
+          KUSTO_TABLE=CACIVirtualClientResult ./scripts/tracing/trace_virtualclient.py ./logs/container*.log
           ./scripts/tracing/trace_step.py --complete --output \
             vmSize=$VM_SIZE \
             containerCpus=$CPU \

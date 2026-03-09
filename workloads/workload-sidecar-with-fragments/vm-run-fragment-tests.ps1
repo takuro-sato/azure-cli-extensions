@@ -13,6 +13,11 @@ foreach ($d in @("lcow_primarya","lcow_primaryb","lcow_justsc")) {
         Write-Output "ERROR: ${d}: runp.ps1 failed"
         exit 1
     }
+    .\createc.ps1
+    if (-not $?) {
+        Write-Output "ERROR: ${d}: createc.ps1 failed"
+        exit 1
+    }
     .\startc.ps1
     if (-not $?) {
         Write-Output "ERROR: ${d}: startc.ps1 failed"
@@ -25,11 +30,11 @@ sleep 10
 
 function Expect-Lcow-Output-Contains($dirName, $expectToHave) {
     cd C:\$dirName
-    $output = cat container_log_*.log
+    $output = cat container*.log
     if ("$output" -notmatch "$expectToHave") {
         Write-Output "ERROR: ${dirName}: output.txt does not contain expected string: ${expectToHave}"
         Write-Output "Actual output:"
-        cat container_log_*.log
+        cat container*.log
         exit 1
     }
     cd C:\

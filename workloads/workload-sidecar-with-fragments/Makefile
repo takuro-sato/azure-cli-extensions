@@ -24,7 +24,7 @@ clean_allbutcerts:
 	make -C deployments/primary-sidecar-a clean
 	make -C deployments/primary-sidecar-b clean
 	make -C deployments/just-sidecar clean
-	rm lcows_fragment.tar.gz
+	rm -f lcows_fragment.tar.gz
 
 images:
 	make -C containers/primary .image_push
