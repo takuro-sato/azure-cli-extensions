@@ -7,7 +7,7 @@ az config set core.collect_telemetry=false --only-show-errors
 
 export CONFCOM_VERSION="1.4.5"
 export C_ACI_TESTING_VERSION="1.2.15"
-export C_ACI_TESTING_BRANCH="vm-gen-script"
+export C_ACI_TESTING_BRANCH="deploy-timeout"
 
 if [ -n "$INIT_RUN_POPULATE_CACHE" ]; then
   if ! ./scripts/venv/get-deps.sh; then
