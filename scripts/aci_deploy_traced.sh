@@ -18,6 +18,7 @@ err_file=`mktemp`
 c-aci-testing aci deploy "${args[@]}" --timeout 3600 --deploy-output-file "$out_file" 2> "$err_file"
 status=$?
 cat "$out_file"
+echo
 out_file_is_valid=$(jq -r '.' < "$out_file" > /dev/null 2>&1 && echo "true" || echo "false")
 cat "$err_file" >&2
 if [ $status -ne 0 ]; then
