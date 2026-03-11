@@ -169,55 +169,12 @@ az role assignment create \
     --role "Managed Identity Operator" \
     --scope "$SCOPE"
 
-# Create waf subnet
-if az network vnet subnet show --resource-group $MC_RESOURCE_GROUP --vnet-name $VNET_NAME --name "waf" &>/dev/null; then
-    echo "Subnet 'waf' already exists in VNet '$VNET_NAME'. Skipping creation."
-else
-    echo "Creating NSG for waf subnet..."
-    az deployment group create \
-        --name "vn2-waf-nsg-deploy" \
-        --resource-group $MC_RESOURCE_GROUP \
-        --template-file waf-nsg.bicep \
-        --parameters vnetName="$VNET_NAME" \
-        --parameters location="$LOCATION"
-
-    if [[ $? -ne 0 ]]; then
-        echo "Failed to create NSG for waf subnet."
-        exit 1
-    fi
-
-    echo "Creating subnet 'waf' in VNet '$VNET_NAME'..."
-    az network vnet subnet create \
-        --resource-group $MC_RESOURCE_GROUP \
-        --vnet-name $VNET_NAME \
-        --name "waf" \
-        --address-prefixes "10.226.0.0/24" \
-        --nsg "$VNET_NAME-waf-nsg"
-
-    if [[ $? -ne 0 ]]; then
-        echo "Failed to create subnet 'waf'."
-        exit 1
-    fi
-fi
-
 echo "Getting AKS credentials..."
 echo az aks get-credentials --overwrite-existing --resource-group "$RESOURCE_GROUP" --name "$CLUSTER_NAME"
 az aks get-credentials --overwrite-existing --resource-group "$RESOURCE_GROUP" --name "$CLUSTER_NAME"
 if [[ $? -ne 0 ]]; then
     echo "Failed to get AKS credentials."
     exit 1
-fi
-
-WAF_NAME="vn2-aks-waf-$LOCATION"
-if az network application-gateway show --resource-group $MC_RESOURCE_GROUP -n $WAF_NAME &>/dev/null; then
-    echo "WAF '$WAF_NAME' already exists in resource group '$MC_RESOURCE_GROUP'. Skipping creation."
-else
-    echo "Creating WAF '$WAF_NAME' in resource group '$MC_RESOURCE_GROUP'..."
-    "$(dirname "$0")/update-waf.sh" "$RESOURCE_GROUP" "$CLUSTER_NAME" 30000
-    if [[ $? -ne 0 ]]; then
-        echo "Failed to create WAF."
-        exit 1
-    fi
 fi
 
 echo "AKS cluster deployment and subnet configuration completed."

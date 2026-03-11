@@ -42,26 +42,17 @@ has_error=0
 
 echo "Get IP address"
 $TRACE_SCRIPT --start "Get IP address"
-../vn2/update-waf.sh "$RESOURCE_GROUP" "$AKS_CLUSTER_NAME" "svc/$DEPLOYMENT_NAME"
-ip_address=""
-if [ $? -ne 0 ]; then
-  echo "Failed to update WAF"
-  $TRACE_SCRIPT --complete --strict --err "Failed to update WAF"
+ip_address="$(c-aci-testing vn2 get-ip)"
+if [ $? -ne 0 ] || [ -z "$ip_address" ]; then
+  echo "Failed to get IP address"
+  $TRACE_SCRIPT --complete --strict --err "Failed to get IP address"
   has_error=1
-  # Don't exit here yet - we still want to check the container output
 else
-  ip_address=$(cat ../vn2/.waf-frontend-ip.txt)
-  if [ $? -ne 0 ] || [ -z "$ip_address" ]; then
-    echo "Failed to get IP address from WAF update script"
-    $TRACE_SCRIPT --complete --strict --err "Failed to get IP address from WAF update script"
+  echo "Curl Server"
+  $SCRIPTS_DIR/curl_check_with_retry.sh "http://$ip_address"
+  if [ $? -ne 0 ]; then
+    echo "Curl failed"
     has_error=1
-  else
-    echo "Curl Server"
-    $SCRIPTS_DIR/curl_check_with_retry.sh "http://$ip_address"
-    if [ $? -ne 0 ]; then
-      echo "Curl failed"
-      has_error=1
-    fi
   fi
 fi
 
@@ -106,7 +97,7 @@ if [ -n "$ip_address" ]; then
   $TRACE_SCRIPT --start 'Check dmesg'
   dmesg_file="dmesg.log"
 
-  timeout -s INT 1m curl --fail-with-body http://$ip_address/dmesg.log -o $dmesg_file
+  timeout -s INT 1m curl --fail-with-body http://$ip_address:80/dmesg.log -o $dmesg_file
   if [ $? -ne 0 ]; then
     echo "Failed to get dmesg"
     cat $dmesg_file

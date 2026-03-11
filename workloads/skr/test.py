@@ -34,6 +34,7 @@ from c_aci_testing.args.parameters.policy_type import parse_policy_type
 from c_aci_testing.tools.target_run import target_run_ctx
 from c_aci_testing.tools.aci_get_ips import aci_get_ips
 from c_aci_testing.tools.vn2_target_run import vn2_target_run_ctx
+from c_aci_testing.tools.vn2_get_ip import vn2_get_ip
 
 def get_grpc_response(raw_response: bytes):
     return json.loads(
@@ -113,7 +114,7 @@ class SkrTest(unittest.TestCase):
                 prefer_pull=True,
                 **vars(args),
             )
-            cls.http_port = 80
+            cls.http_port = 8000
 
         cls.target_context.__enter__()
 
@@ -124,13 +125,7 @@ class SkrTest(unittest.TestCase):
                 resource_group=args.resource_group,
             )[0]
         else:
-            workload_vn2_dir = os.path.join(os.path.dirname(__file__), "../vn2")
-            subprocess.check_call(
-                ["./update-waf.sh", os.getenv("AKS_RESOURCE_GROUP"), os.getenv("AKS_CLUSTER_NAME"), f"svc/{cls.id}"],
-                cwd=workload_vn2_dir,
-            )
-            with open(os.path.join(workload_vn2_dir, ".waf-frontend-ip.txt"), "rt") as f:
-                cls.skr_ip = f.read().strip()
+            cls.skr_ip = vn2_get_ip(deployment_name=cls.id)
 
     @classmethod
     def tearDownClass(cls):
