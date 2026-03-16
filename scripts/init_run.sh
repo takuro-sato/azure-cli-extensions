@@ -5,7 +5,7 @@ set -e
 echo Set Azure CLI flag to avoid polluting telemetry metrics
 az config set core.collect_telemetry=false --only-show-errors
 
-export CONFCOM_VERSION="1.4.5"
+export CONFCOM_VERSION="1.8.0"
 export C_ACI_TESTING_VERSION="1.2.15"
 export C_ACI_TESTING_BRANCH="deploy-timeout"
 
