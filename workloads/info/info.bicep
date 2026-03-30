@@ -43,7 +43,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
       {
         name: 'ubuntu'
         properties: {
-          image: '${empty(registry) ? 'ghcr.io' : registry}/${empty(repository) ? 'microsoft/confidential-aci-dashboard/test-containers' : repository}/info:${empty(tag) ? 'latest' : tag}'
+          image: '${empty(registry) ? 'cacidashboardaci.azurecr.io' : registry}/${empty(repository) ? 'prebuilt-test-containers' : repository}/info:${empty(tag) ? 'latest' : tag}'
           resources: {
             requests: {
               memoryInGB: memoryInGb

@@ -138,8 +138,8 @@ jobs:
         env:
           DEPLOYMENT_NAME: info
           STEP_PREFIX: info
-          REGISTRY: ghcr.io
-          REPOSITORY: ${{ github.repository }}/test-containers
+          REGISTRY: cacidashboardaci.azurecr.io
+          REPOSITORY: prebuilt-test-containers
           TAG: latest
         run: |
           set -ex
@@ -170,8 +170,8 @@ jobs:
           # pod names can't contain '_'
           DEPLOYMENT_NAME: ccf-verify-uvm
           STEP_PREFIX: ccf_verify_uvm
-          REGISTRY: ghcr.io
-          REPOSITORY: ${{ github.repository }}/test-containers
+          REGISTRY: cacidashboardaci.azurecr.io
+          REPOSITORY: prebuilt-test-containers
           TAG: "latest"
         run: |
           set -ex
@@ -224,8 +224,8 @@ jobs:
           CPU: 4
           MEMORY_IN_GB: 16
           DEPLOYMENT_NAME: stress-4cpu-16gb
-          REGISTRY: ghcr.io
-          REPOSITORY: ${{ github.repository }}/test-containers/stress-tests-server-alpine
+          REGISTRY: cacidashboardaci.azurecr.io
+          REPOSITORY: prebuilt-test-containers/stress-tests-server-alpine
           TAG: latest
           POLICY_TYPE: debug
           STEP_PREFIX: stress-4cpu-16gb
@@ -246,8 +246,8 @@ jobs:
           CPU: 18
           MEMORY_IN_GB: 64
           DEPLOYMENT_NAME: stress-18cpu-64gb
-          REGISTRY: ghcr.io
-          REPOSITORY: ${{ github.repository }}/test-containers/stress-tests-server-alpine
+          REGISTRY: cacidashboardaci.azurecr.io
+          REPOSITORY: prebuilt-test-containers/stress-tests-server-alpine
           TAG: latest
           POLICY_TYPE: debug
           STEP_PREFIX: stress-18cpu-64gb

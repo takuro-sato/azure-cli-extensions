@@ -1,6 +1,6 @@
 export TAG ?= latest
-export REGISTRY ?= ghcr.io
-export REPOSITORY ?= microsoft/confidential-aci-dashboard/test-containers
+export REGISTRY ?= cacidashboardaci.azurecr.io
+export REPOSITORY ?= prebuilt-test-containers
 
 all: build push
 .PHONY: all build push build_networking run_networking run_stress_server_alpine build_stress_server_alpine run_stress_server_ubuntu build_stress_server_ubuntu build_stress_noserver run_stress_noserver_alpine run_stress_noserver_ubuntu build_info run_info build_ccf_verify_uvm run_ccf_verify_uvm killall

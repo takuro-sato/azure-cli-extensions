@@ -105,8 +105,8 @@ env:
   DEPLOYMENT_NAME: ${{ inputs.id || 'stress-nosrv' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION_ACI }}
   RESOURCE_GROUP: c-aci-dashboard
-  REGISTRY: ghcr.io
-  REPOSITORY: ${{ github.repository }}/test-containers/stress-tests-noserver-alpine
+  REGISTRY: cacidashboardaci.azurecr.io
+  REPOSITORY: prebuilt-test-containers/stress-tests-noserver-alpine
   TAG: latest
   MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'westus' }}
   LOCATION: ${{ inputs.location || 'westus' }}

@@ -104,8 +104,8 @@ env:
   DEPLOYMENT_NAME: ${{ inputs.id || 'vm-simple' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION_ACI }}
   RESOURCE_GROUP: c-aci-dashboard
-  REGISTRY: ghcr.io
-  REPOSITORY: ${{ github.repository }}/test-containers
+  REGISTRY: cacidashboardaci.azurecr.io
+  REPOSITORY: prebuilt-test-containers
   TAG: latest
   STORAGE_ACCOUNT: cacitestingstorageaci
   LOCATION: ${{ inputs.location || 'uaenorth' }}

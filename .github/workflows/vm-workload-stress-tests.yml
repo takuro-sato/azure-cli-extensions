@@ -105,8 +105,8 @@ env:
   DEPLOYMENT_NAME: ${{ inputs.id || 'vm-stress' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION_ACI }}
   RESOURCE_GROUP: c-aci-dashboard
-  REGISTRY: ghcr.io
-  REPOSITORY: ${{ github.repository }}/test-containers/stress-tests-server-alpine
+  REGISTRY: cacidashboardaci.azurecr.io
+  REPOSITORY: prebuilt-test-containers/stress-tests-server-alpine
   TAG: latest
   STORAGE_ACCOUNT: cacitestingstorageaci
   LOCATION: ${{ inputs.location || 'uaenorth' }}
