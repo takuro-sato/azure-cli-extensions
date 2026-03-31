@@ -61,10 +61,10 @@
 .create-or-alter function with (folder = "C-ACI") CACIMonitoringIcMTriggers() {
     let failureLookbackHours=3;
     let showRunsLookbackHours=6;
-    let errorCountThreshold=2;
+    let errorCountThreshold=8;
     let regions = dynamic([
         'australiacentral',
-        'australiacentral2',
+        // 'australiacentral2',
         'australiaeast',
         'austriaeast',
         'brazilsouth',
@@ -76,7 +76,7 @@
         'eastasia',
         'eastus',
         'eastus2',
-        'eastus2euap',
+        // 'eastus2euap',
         'francecentral',
         'germanynorth',
         'germanywestcentral',
