@@ -1,0 +1,137 @@
+#!/usr/bin/env bpftrace
+
+// Define latency threshold in milliseconds (default: 1000ms = 1 second)
+#define LATENCY_THRES_MILLIS 1000
+
+// Track file descriptors and timestamps
+// @fd_to_filename[pid, fd] = filename
+// @current_fd[tid] = fd (to track fd between enter and exit)
+// @current_start[tid] = timestamp
+
+// Capture file names during openat syscalls
+tracepoint:syscalls:sys_enter_openat
+{
+    $filename = args->filename;
+    if ($filename != 0) {
+        @enter_openat[pid] = $filename;
+    }
+}
+
+// When openat returns, store the fd->filename mapping
+tracepoint:syscalls:sys_exit_openat
+{
+    $fd = args->ret;
+    $filename = @enter_openat[pid];
+
+    if ($fd >= 0 && $filename != 0) {
+        @fd_to_filename[pid, $fd] = str($filename);
+    }
+    delete(@enter_openat[pid]);
+}
+
+tracepoint:syscalls:sys_enter_close
+{
+    $fd = args->fd;
+    if ($fd >= 0) {
+        // Remove the fd from the mapping
+        delete(@fd_to_filename[pid, $fd]);
+    }
+}
+
+// Track entry of I/O syscalls - separate handlers for each syscall
+tracepoint:syscalls:sys_enter_read
+{
+    @current_fd[tid] = args->fd;
+    @current_start[tid] = nsecs;
+}
+
+tracepoint:syscalls:sys_enter_write
+{
+    @current_fd[tid] = args->fd;
+    @current_start[tid] = nsecs;
+}
+
+tracepoint:syscalls:sys_enter_pread64
+{
+    @current_fd[tid] = args->fd;
+    @current_start[tid] = nsecs;
+}
+
+tracepoint:syscalls:sys_enter_pwrite64
+{
+    @current_fd[tid] = args->fd;
+    @current_start[tid] = nsecs;
+}
+
+tracepoint:syscalls:sys_enter_fsync
+{
+    @current_fd[tid] = args->fd;
+    @current_start[tid] = nsecs;
+}
+
+tracepoint:syscalls:sys_enter_fdatasync
+{
+    @current_fd[tid] = args->fd;
+    @current_start[tid] = nsecs;
+}
+
+tracepoint:syscalls:sys_enter_ftruncate
+{
+    @current_fd[tid] = args->fd;
+    @current_start[tid] = nsecs;
+}
+
+// Track exit of I/O syscalls - using a single handler is fine here
+tracepoint:syscalls:sys_exit_read,
+tracepoint:syscalls:sys_exit_write,
+tracepoint:syscalls:sys_exit_pread64,
+tracepoint:syscalls:sys_exit_pwrite64,
+tracepoint:syscalls:sys_exit_fsync,
+tracepoint:syscalls:sys_exit_fdatasync,
+tracepoint:syscalls:sys_exit_ftruncate
+{
+    $fd = @current_fd[tid];
+    $start_ts = @current_start[tid];
+
+    if ($start_ts != 0) {
+        $elapsed_ns = nsecs - $start_ts;
+        $elapsed_ms = $elapsed_ns / 1000000; // Convert ns to ms
+
+        // Check if latency exceeds threshold
+        if ($elapsed_ms > LATENCY_THRES_MILLIS) {
+            $name = "<unknown>";
+            $filename = @fd_to_filename[pid, $fd];
+            if ($filename != "") {
+                $name = $filename;
+            }
+
+            // Won't compile due to bug in old versions of LLVM
+            // https://bugs.launchpad.net/ubuntu/+source/bpftrace/+bug/2060766
+            /*
+            time("%H:%M:%S ");
+            printf("%s[%d]: ", comm, pid);
+            printf("%s on %s ", probe, $name);
+            printf("took %d ms\n", $elapsed_ms);
+            */
+            @long_io_ops[comm, $name, probe] += 1;
+            @long_io_time_avg[comm, $name, probe] = avg($elapsed_ms);
+        }
+
+        // Clean up the entries
+        delete(@current_start[tid]);
+        delete(@current_fd[tid]);
+    }
+}
+
+// Clean up when a process exits
+tracepoint:sched:sched_process_exit
+{
+    delete(@current_fd[tid]);
+    delete(@current_start[tid]);
+}
+
+END {
+    clear(@fd_to_filename);
+    clear(@current_start);
+    clear(@current_fd);
+}
