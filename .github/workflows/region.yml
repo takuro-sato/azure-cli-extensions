@@ -262,9 +262,9 @@ jobs:
     needs: skr
     uses: ./.github/workflows/workload-volume.yml
     with:
-      id: volume-allow_all
+      id: volume-generated
       location: ${{ inputs.location }}
-      policy_type: allow_all
+      policy_type: generated
       test_schedule: gh-daily
 
   net_liveness:
