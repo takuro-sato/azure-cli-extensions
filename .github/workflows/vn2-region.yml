@@ -16,6 +16,7 @@ on:
       - .github/workflows/vn2-region.yml
       - scripts/init_run.sh
       - workloads/vn2/**
+      - workloads/volume/**
   push:
     branches:
       - main
@@ -23,6 +24,7 @@ on:
       - .github/workflows/vn2-region.yml
       - scripts/init_run.sh
       - workloads/vn2/**
+      - workloads/volume/**
   workflow_call:
     inputs:
       id:
@@ -354,6 +356,60 @@ jobs:
           jq -Rs '{skrTestLog: .}' < skr_test.log | \
             ./scripts/tracing/trace_step.py --complete "${maybe_err[@]}" --output-from-stdin || exit 1
           exit $status
+
+      - name: Re-log into Azure
+        if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+
+      - name: 'Test case - volume (vn2)'
+        if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
+        env:
+          DEPLOYMENT_NAME: volume-vn2
+          STEP_PREFIX: volume-vn2
+        run: |
+          ./workloads/vn2/run-volumes-test.sh workloads/volume/volume.yaml volumes-stress-test-vn2
+
+      - name: Re-log into Azure
+        if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+
+      - name: 'Test case - volume (non-vn2)'
+        if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
+        env:
+          DEPLOYMENT_NAME: volume-nonvn2
+          STEP_PREFIX: volume-nonvn2
+        run: |
+          ./workloads/vn2/run-volumes-test.sh workloads/volume/volume-nonvn2.yaml volumes-stress-test-nonvn2
+
+      - name: Re-log into Azure
+        if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+
+      - name: 'Test case - net-liveness'
+        if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
+        env:
+          DEPLOYMENT_NAME: net-liveness
+          STEP_PREFIX: net-liveness
+          REGISTRY: cacidashboardaci.azurecr.io
+          REPOSITORY: prebuilt-test-containers
+          TAG: tingmao.20260402
+          CONTAINER_GROUP_COUNT: "2"
+          MONITOR_SECS: "600"
+          POLICY_TYPE: allow_all
+        run: |
+          ./workloads/vn2/net_liveness.sh
 
       - name: Report result
         if: always()

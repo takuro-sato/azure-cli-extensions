@@ -3,17 +3,27 @@ param ccePolicies object
 param managedIDGroup string = resourceGroup().name
 param managedIDName string
 
+param registry string
+param repository string
+param tag string
+
 param cpu int = 1
 param memoryInGb int = 4
 
-param shareName string
-param storageAccountName string
-@secure()
-param key string
+param useVnet bool = false
 
-// resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' existing = {
-//   name: 'cacidashboardvolumetest'
-// }
+resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' existing = {
+  name: uniqueString(subscription().id, resourceGroup().name, location, 'caci-testing-storage')
+}
+
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' existing = {
+  name: 'aci-long-lived-vnet-${location}'
+}
+
+resource subnet 'Microsoft.Network/virtualNetworks/subnets@2021-02-01' existing = {
+  parent: virtualNetwork
+  name: 'acisubnet'
+}
 
 resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01' = {
   name: deployment().name
@@ -27,6 +37,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
   properties: {
     osType: 'Linux'
     sku: 'Confidential'
+    subnetIds: useVnet ? [{ id: subnet.id }] : []
     restartPolicy: 'Never'
     confidentialComputeProperties: {
       ccePolicy: ccePolicies.volume
@@ -35,7 +46,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
       {
         name: 'primary'
         properties: {
-          image: 'mcr.microsoft.com/mirror/docker/library/ubuntu:24.04'
+          image: '${empty(registry) ? 'cacidashboardaci.azurecr.io' : registry}/${empty(repository) ? 'prebuilt-test-containers/stress-tests-noserver-ubuntu' : repository}:${empty(tag) ? 'latest' : tag}'
           resources: {
             requests: {
               memoryInGB: memoryInGb
@@ -59,6 +70,9 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
             ls -la
             set +x
             echo "File name: $TIMESTAMP_NS.txt"
+            sleep 1
+            cd /var/www
+            ./io_latency_bench_like_ccf.py -w /mnt/volume
             sleep infinity
             '''
           ]
@@ -69,9 +83,9 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
       {
         name: 'volume'
         azureFile: {
-          shareName: shareName
-          storageAccountName: storageAccountName
-          storageAccountKey: key
+          shareName: 'testshare'
+          storageAccountName: storageAccount.name
+          storageAccountKey: storageAccount.listKeys().keys[0].value
           readOnly: false
         }
       }

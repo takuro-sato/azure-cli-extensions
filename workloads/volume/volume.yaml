@@ -1,0 +1,79 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: azurefile-csi-volume-test
+provisioner: file.csi.azure.com
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+allowVolumeExpansion: true
+mountOptions:
+  - dir_mode=0777
+  - file_mode=0777
+  - uid=0
+  - gid=0
+  - mfsymlinks
+  - cache=strict
+  - nosharesock
+  - actimeo=30
+  - nobrl
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: volumes-stress-test-vn2
+spec:
+  serviceName: volumes-stress-test
+  replicas: 1
+  selector:
+    matchLabels:
+      app: volumes-stress-test
+  template:
+    metadata:
+      labels:
+        app: volumes-stress-test
+      annotations:
+        microsoft.containerinstance.virtualnode.injectdns: 'false'
+        microsoft.containerinstance.virtualnode.ccepolicy: cGFja2FnZSBwb2xpY3kKCmFwaV92ZXJzaW9uIDo9ICIwLjEwLjAiCgptb3VudF9kZXZpY2UgOj0geyJhbGxvd2VkIjogdHJ1ZX0KbW91bnRfb3ZlcmxheSA6PSB7ImFsbG93ZWQiOiB0cnVlfQpjcmVhdGVfY29udGFpbmVyIDo9IHsiYWxsb3dlZCI6IHRydWUsICJhbGxvd19zdGRpb19hY2Nlc3MiOiB0cnVlfQp1bm1vdW50X2RldmljZSA6PSB7ImFsbG93ZWQiOiB0cnVlfQp1bm1vdW50X292ZXJsYXkgOj0geyJhbGxvd2VkIjogdHJ1ZX0KZXhlY19pbl9jb250YWluZXIgOj0geyJhbGxvd2VkIjogdHJ1ZX0KZXhlY19leHRlcm5hbCA6PSB7ImFsbG93ZWQiOiB0cnVlLCAiYWxsb3dfc3RkaW9fYWNjZXNzIjogdHJ1ZX0Kc2h1dGRvd25fY29udGFpbmVyIDo9IHsiYWxsb3dlZCI6IHRydWV9CnNpZ25hbF9jb250YWluZXJfcHJvY2VzcyA6PSB7ImFsbG93ZWQiOiB0cnVlfQpwbGFuOV9tb3VudCA6PSB7ImFsbG93ZWQiOiB0cnVlfQpwbGFuOV91bm1vdW50IDo9IHsiYWxsb3dlZCI6IHRydWV9CmdldF9wcm9wZXJ0aWVzIDo9IHsiYWxsb3dlZCI6IHRydWV9CmR1bXBfc3RhY2tzIDo9IHsiYWxsb3dlZCI6IHRydWV9CnJ1bnRpbWVfbG9nZ2luZyA6PSB7ImFsbG93ZWQiOiB0cnVlfQpsb2FkX2ZyYWdtZW50IDo9IHsiYWxsb3dlZCI6IHRydWV9CnNjcmF0Y2hfbW91bnQgOj0geyJhbGxvd2VkIjogdHJ1ZX0Kc2NyYXRjaF91bm1vdW50IDo9IHsiYWxsb3dlZCI6IHRydWV9Cg==
+    spec:
+      containers:
+      - name: primary
+        image: cacidashboardaci.azurecr.io/prebuilt-test-containers/stress-tests-noserver-ubuntu:latest
+        resources:
+          requests:
+            cpu: 1
+            memory: 4G
+        command:
+        - /bin/bash
+        - -c
+        - |
+            set -ex
+            cd /mnt/volume
+            TIMESTAMP_NS=$(date '+%Y-%m-%dT%T.%N')
+            echo "Hello" >> "$TIMESTAMP_NS.txt"
+            ls -la
+            set +x
+            echo "File name: $TIMESTAMP_NS.txt"
+            sleep 1
+            cd /var/www
+            ./io_latency_bench_like_ccf.py -w /mnt/volume
+            sleep infinity
+        volumeMounts:
+        - name: azure-file-volume
+          mountPath: /mnt/volume
+      nodeSelector:
+        virtualization: virtualnode2
+      tolerations:
+      - key: virtual-kubelet.io/provider
+        operator: Exists
+        effect: NoSchedule
+      imagePullSecrets:
+      - name: acr-auth-cacidashboardaci
+  volumeClaimTemplates:
+  - metadata:
+      name: azure-file-volume
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: azurefile-csi-volume-test
+      resources:
+        requests:
+          storage: 30Gi

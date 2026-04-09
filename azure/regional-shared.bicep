@@ -26,6 +26,14 @@ resource subnet 'Microsoft.Network/virtualNetworks/subnets@2024-07-01' = {
         }
       }
     ]
+    serviceEndpoints: [
+      {
+        service: 'Microsoft.Storage'
+        locations: [
+          location
+        ]
+      }
+    ]
   }
 }
 
@@ -77,6 +85,54 @@ resource acrPullRoleAssignment 'Microsoft.Authorization/roleAssignments@2020-10-
     roleDefinitionId: acrPull.id
     principalId: perRegionManagedIdentity.properties.principalId
     principalType: 'ServicePrincipal'
+  }
+}
+
+resource regionalStorageAccount 'Microsoft.Storage/storageAccounts@2025-08-01' = {
+  name: uniqueString(subscription().id, resourceGroup().name, location, 'caci-testing-storage')
+  location: location
+  kind: 'StorageV2'
+  sku: {
+    name: 'Standard_LRS'
+  }
+  properties: {
+    defaultToOAuthAuthentication: true
+    publicNetworkAccess: 'Enabled'
+    azureFilesIdentityBasedAuthentication: {
+      smbOAuthSettings: {
+        isSmbOAuthEnabled: true
+      }
+      directoryServiceOptions: 'None'
+    }
+    minimumTlsVersion: 'TLS1_2'
+    allowBlobPublicAccess: false
+    allowSharedKeyAccess: true
+    networkAcls: {
+      defaultAction: 'Allow'
+      bypass: 'AzureServices'
+      virtualNetworkRules: [
+        {
+          id: subnet.id
+          action: 'Allow'
+        }
+      ]
+    }
+    supportsHttpsTrafficOnly: true
+    accessTier: 'Hot'
+  }
+}
+
+resource fileService 'Microsoft.Storage/storageAccounts/fileServices@2025-08-01' = {
+  parent: regionalStorageAccount
+  name: 'default'
+}
+
+resource fileShare 'Microsoft.Storage/storageAccounts/fileServices/shares@2025-08-01' = {
+  parent: fileService
+  name: 'testshare'
+  properties: {
+    accessTier: 'Hot'
+    enabledProtocols: 'SMB'
   }
 }
 

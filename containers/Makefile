@@ -2,8 +2,11 @@ export TAG ?= latest
 export REGISTRY ?= cacidashboardaci.azurecr.io
 export REPOSITORY ?= prebuilt-test-containers
 
-all: build push
-.PHONY: all build push build_networking run_networking run_stress_server_alpine build_stress_server_alpine run_stress_server_ubuntu build_stress_server_ubuntu build_stress_noserver run_stress_noserver_alpine run_stress_noserver_ubuntu build_info run_info build_ccf_verify_uvm run_ccf_verify_uvm killall
+all: build login push
+.PHONY: all build login push build_networking run_networking run_stress_server_alpine build_stress_server_alpine run_stress_server_ubuntu build_stress_server_ubuntu build_stress_noserver run_stress_noserver_alpine run_stress_noserver_ubuntu build_info run_info build_ccf_verify_uvm run_ccf_verify_uvm killall
+
+login:
+	az acr login --name $(REGISTRY)
 
 build_networking: networking.Dockerfile
 	docker buildx build . -t $(REGISTRY)/$(REPOSITORY)/networking:$(TAG) -f networking.Dockerfile

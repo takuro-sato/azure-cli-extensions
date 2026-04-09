@@ -84,15 +84,16 @@ env:
   DEPLOYMENT_NAME: ${{ inputs.id || 'volume' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION_ACI }}
   RESOURCE_GROUP: c-aci-dashboard
-  REGISTRY: mcr.microsoft.com
+  REGISTRY: cacidashboardaci.azurecr.io
+  REPOSITORY: prebuilt-test-containers/stress-tests-noserver-ubuntu
+  TAG: latest
   MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'westeurope' }}
   LOCATION: ${{ inputs.location || 'westeurope' }}
   CPU: ${{ inputs.cpu || 2 }}
   MEMORY_IN_GB: ${{ inputs.memory_in_gb || 4 }}
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: ${{ inputs.policy_type || 'generated' }}
-  STORAGE_ACCOUNT: cacidashboardvolumetest
-  RUN_FEATURES: azureFile
+  RUN_FEATURES: azureFile,vnet
 
 jobs:
   volume:
@@ -122,13 +123,7 @@ jobs:
         run: |
           c-aci-testing aci param_set workloads/volume --parameter cpu=$CPU
           c-aci-testing aci param_set workloads/volume --parameter memoryInGb=$MEMORY_IN_GB
-          c-aci-testing aci param_set workloads/volume --parameter shareName=share
-          c-aci-testing aci param_set workloads/volume --parameter storageAccountName=$STORAGE_ACCOUNT
-          storage_key=$(az storage account keys list \
-            --resource-group $RESOURCE_GROUP \
-            --account-name $STORAGE_ACCOUNT \
-            --query "[0].value" -o tsv)
-          c-aci-testing aci param_set workloads/volume --parameter key=$storage_key > /dev/null
+          c-aci-testing aci param_set workloads/volume --parameter useVnet=true
 
       - name: Generate Security Policy
         run: |
@@ -140,54 +135,24 @@ jobs:
         run: |
           ./scripts/aci_deploy_traced.sh workloads/volume
 
-      - name: Verify File Creation
-        run: |
-          sleep 20 # Wait in case it takes a while for the file to be created
-
-          ./scripts/tracing/trace_step.py --start 'Verify File Creation'
-          container_logs=$(az container logs \
-            --resource-group $RESOURCE_GROUP \
-            --name $DEPLOYMENT_NAME \
-            --container-name primary)
-
-          echo "Container output:"
-          echo "$container_logs"
-
-          filename=$(echo "$container_logs" | grep "File name: " | sed 's/File name: //')
-          if [ -z "$filename" ]; then
-            echo "File name not found in container logs"
-            exit 1
-          else
-            echo "Found file name: $filename"
-            echo "filename=$filename" >> $GITHUB_ENV
-          fi
-
-          # Verify file exists in storage
-          echo "Verifying file exists in storage account..."
-          file_exists=$(az storage file exists \
-            --account-name $STORAGE_ACCOUNT \
-            --share-name share \
-            --path "$filename" \
-            --auth-mode key \
-            --account-key ${{ secrets.TINGMAO_STORAGE_KEY }} \
-            --query "exists" -o tsv)
-
-          if [ "$file_exists" = "true" ]; then
-            echo "File $filename exists in storage account"
-          else
-            echo "File $filename does not exist in storage account"
-            exit 1
-          fi
-
       - name: Report result
         if: always()
         run: |
           ./scripts/trace_run_result.sh ${{ job.status }}
 
+      - name: Wait for 5 minute
+        run: sleep 300
+
       - name: Monitor Container Group
         if: always()
         continue-on-error: true
-        run: c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME
+        run: |
+          c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME 2>&1 | tee output.log
+
+      - name: Parse container output
+        if: always()
+        run: |
+          ./scripts/parse_container_output.py --must-have-output output.log
 
       - name: Get Container States
         if: always()
@@ -195,21 +160,6 @@ jobs:
         run: |
           sleep 60 # Ensure all states are up to date
           ./scripts/trace_container_states.sh
-
-      - name: Clean up file from storage
-        if: ${{ always() }}
-        continue-on-error: true
-        run: |
-          if [[ "$filename" != "" ]]; then
-            echo "Deleting file $filename from storage account..."
-            az storage file delete \
-              --account-name $STORAGE_ACCOUNT \
-              --share-name share \
-              --path "$filename" \
-              --yes
-          else
-            echo "No file to delete"
-          fi
 
       - name: Remove Container Group
         run: |

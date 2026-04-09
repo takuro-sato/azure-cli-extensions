@@ -28,6 +28,10 @@ echo "Starting cleanup of deployment and VN2 Helm chart..."
 
 # Step 1: Delete all existing deployments/services
 kubectl delete deployment --all --namespace="$NAMESPACE"
+kubectl delete statefulset --all --namespace="$NAMESPACE"
+kubectl delete pod --all --namespace="$NAMESPACE"
+kubectl delete pvc --all
+kubectl delete pv --all
 kubectl get services -o name | grep -vE '^service/kubernetes$' | xargs --no-run-if-empty kubectl delete
 
 # Step 2: Wait for pods to be deleted with a timeout of 8 minutes

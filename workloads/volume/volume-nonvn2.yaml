@@ -1,0 +1,70 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: azurefile-csi-volume-test
+provisioner: file.csi.azure.com
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+allowVolumeExpansion: true
+mountOptions:
+  - dir_mode=0777
+  - file_mode=0777
+  - uid=0
+  - gid=0
+  - mfsymlinks
+  - cache=strict
+  - nosharesock
+  - actimeo=30
+  - nobrl
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: volumes-stress-test-nonvn2
+spec:
+  serviceName: volumes-stress-test
+  replicas: 1
+  selector:
+    matchLabels:
+      app: volumes-stress-test
+  template:
+    metadata:
+      labels:
+        app: volumes-stress-test
+    spec:
+      containers:
+      - name: primary
+        image: cacidashboardaci.azurecr.io/prebuilt-test-containers/stress-tests-noserver-ubuntu:latest
+        resources:
+          requests:
+            cpu: 500m
+            memory: 4G
+        command:
+        - /bin/bash
+        - -c
+        - |
+            set -ex
+            cd /mnt/volume
+            TIMESTAMP_NS=$(date '+%Y-%m-%dT%T.%N')
+            echo "Hello" >> "$TIMESTAMP_NS.txt"
+            ls -la
+            set +x
+            echo "File name: $TIMESTAMP_NS.txt"
+            sleep 1
+            cd /var/www
+            ./io_latency_bench_like_ccf.py -w /mnt/volume
+            sleep infinity
+        volumeMounts:
+        - name: azure-file-volume
+          mountPath: /mnt/volume
+      imagePullSecrets:
+      - name: acr-auth-cacidashboardaci
+  volumeClaimTemplates:
+  - metadata:
+      name: azure-file-volume
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: azurefile-csi-volume-test
+      resources:
+        requests:
+          storage: 30Gi

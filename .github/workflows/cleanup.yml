@@ -153,6 +153,36 @@ jobs:
           done
           wait
 
+  cleanup-storage-shares:
+    name: Cleanup Storage File Shares
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log into Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+
+      - name: Recreate testshare in each storage account
+        run: |
+          for account in $(az storage account list -g c-aci-dashboard --query "[].name" -o tsv); do
+            echo "Processing storage account: $account"
+            if az storage share show --name testshare --account-name "$account" --output none; then
+              echo "Deleting testshare in $account"
+              az storage share delete --name testshare --account-name "$account"
+              # Avoid "The specified share is being deleted. Try operation later."
+              sleep 60
+            fi
+            echo "Creating testshare in $account"
+            az storage share-rm create \
+              --storage-account "$account" \
+              --resource-group c-aci-dashboard \
+              --name testshare \
+              --access-tier Hot \
+              --enabled-protocols SMB
+          done
+
   cleanup-hsm:
     name: Cleanup HSM Keys
     runs-on: ubuntu-latest

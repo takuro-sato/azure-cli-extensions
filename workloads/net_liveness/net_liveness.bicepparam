@@ -1,4 +1,4 @@
-using './volume.bicep'
+using './net_liveness.bicep'
 
 // Image info
 param registry=''
@@ -6,10 +6,7 @@ param repository=''
 param tag=''
 
 // Deployment info
-param location='westeurope'
+param location=''
 param ccePolicies={
-  volume: ''
+  net_liveness: ''
 }
-param managedIDName=''
-
-param useVnet=true

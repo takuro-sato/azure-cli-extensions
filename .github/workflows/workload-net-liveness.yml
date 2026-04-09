@@ -1,0 +1,245 @@
+name: Workload - Net Liveness
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - workloads/net_liveness/**
+      - .github/workflows/workload-net-liveness.yml
+      - scripts/init_run.sh
+      - scripts/install-c-aci-testing.sh
+      - containers/tcp_liveness.py
+      - containers/populate_peer_ips.py
+      - containers/get_stats.py
+  push:
+    paths:
+      - workloads/net_liveness/**
+      - .github/workflows/workload-net-liveness.yml
+      - scripts/init_run.sh
+      - scripts/install-c-aci-testing.sh
+      - containers/tcp_liveness.py
+      - containers/populate_peer_ips.py
+      - containers/get_stats.py
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      id:
+        type: string
+        description: ID of the run
+      location:
+        type: string
+        description: Where to deploy to
+        required: true
+      container_group_count:
+        type: number
+        description: Number of container groups to deploy
+        default: 2
+      cpu:
+        type: number
+        description: The number of CPU cores per container
+        default: 1
+      memory_in_gb:
+        type: number
+        description: The memory per container in GB
+        default: 2
+      cleanup:
+        type: boolean
+        description: Whether to cleanup the container group after testing
+        default: true
+  workflow_call:
+    inputs:
+      id:
+        type: string
+        description: ID of the run
+      location:
+        type: string
+        description: Where to deploy to
+        required: true
+      container_group_count:
+        type: number
+        description: Number of container groups to deploy
+        default: 2
+      cpu:
+        type: number
+        description: The number of CPU cores per container
+        default: 1
+      memory_in_gb:
+        type: number
+        description: The memory per container in GB
+        default: 2
+      cleanup:
+        type: boolean
+        description: Whether to cleanup the container group after testing
+        default: true
+      test_schedule:
+        type: string
+        description: Trace marker by scheduled runs only
+        default: ''
+
+env:
+  KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
+  KUSTO_DATABASE: ${{ secrets.KUSTO_DATABASE }}
+  KUSTO_TABLE: CACITestStepTrace
+  TEST_TYPE: aci
+  TEST_NAME: Net Liveness
+  RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+  DEPLOYMENT_NAME: ${{ inputs.id || 'netliv' }}-${{ inputs.location }}-${{ github.run_number }}
+  SUBSCRIPTION: ${{ vars.SUBSCRIPTION_ACI }}
+  RESOURCE_GROUP: c-aci-dashboard
+  REGISTRY: cacidashboardaci.azurecr.io
+  REPOSITORY: prebuilt-test-containers
+  TAG: tingmao.20260402
+  MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'westeurope' }}
+  LOCATION: ${{ inputs.location || 'westeurope' }}
+  CPU: ${{ inputs.cpu || 1 }}
+  MEMORY_IN_GB: ${{ inputs.memory_in_gb || 2 }}
+  CONTAINER_GROUP_COUNT: ${{ inputs.container_group_count || 2 }}
+  CLEANUP: ${{ inputs.cleanup }}
+  # Need custom command execution
+  POLICY_TYPE: allow_all
+  TEST_SCHEDULE: ${{ inputs.test_schedule }}
+  RUN_FEATURES: 'vnet'
+
+jobs:
+  net-liveness:
+    name: ${{ inputs.id || 'net-liveness' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log into Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+
+      - name: Initialize Run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/init_run.sh
+
+      - name: Pull Image
+        if: ${{ env.POLICY_TYPE != 'allow_all' }}
+        run: c-aci-testing images pull workloads/net_liveness
+
+      - name: Set Parameters
+        run: |
+          c-aci-testing aci param_set workloads/net_liveness --parameter cpu=$CPU
+          c-aci-testing aci param_set workloads/net_liveness --parameter memoryInGb=$MEMORY_IN_GB
+
+      - name: Generate Security Policy
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Generate Policy'
+          c-aci-testing policies gen workloads/net_liveness --deployment-name $DEPLOYMENT_NAME-0
+          cat workloads/net_liveness/policy_net_liveness.rego
+
+      - name: Deploy Container Groups
+        run: |
+          DEPLOYMENT_NAME_BASE=$DEPLOYMENT_NAME
+          for i in $(seq 0 $(($CONTAINER_GROUP_COUNT - 1))); do
+            export DEPLOYMENT_NAME="${DEPLOYMENT_NAME_BASE}-${i}"
+            ./scripts/aci_deploy_traced.sh workloads/net_liveness
+          done
+
+      - name: Get IPs and populate peers
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Get IPs and populate peers'
+          set -eo pipefail
+
+          # Collect container group names and IPs
+          declare -a NAMES=()
+          declare -a IPS=()
+          for i in $(seq 0 $(($CONTAINER_GROUP_COUNT - 1))); do
+            cg_name="${DEPLOYMENT_NAME}-${i}"
+            NAMES+=("$cg_name")
+
+            # Get the private IP from vnet
+            ip=$(az container show \
+              --resource-group $RESOURCE_GROUP \
+              --name "$cg_name" \
+              --query 'ipAddress.ip' --output tsv)
+            echo "Container group $cg_name has IP $ip"
+            IPS+=("$ip")
+          done
+
+          # Populate peers on each container group
+          bash workloads/net_liveness/populate_peers.sh "$RESOURCE_GROUP" \
+            $(for i in "${!NAMES[@]}"; do echo "${NAMES[$i]} ${IPS[$i]}"; done)
+
+          ./scripts/tracing/trace_step.py --complete --strict
+
+      - name: Wait for heartbeat exchange
+        run: |
+          echo "Waiting 10 minutes for heartbeat exchange..."
+          sleep 600
+
+      - name: Report result
+        if: always()
+        run: |
+          ./scripts/trace_run_result.sh ${{ job.status }}
+
+      - name: Monitor and parse output from all container groups
+        if: always()
+        continue-on-error: true
+        run: |
+          set -uo pipefail
+          has_error=0
+          for i in $(seq 0 $(($CONTAINER_GROUP_COUNT - 1))); do
+            cg_name="${DEPLOYMENT_NAME}-${i}"
+            echo "===== Monitor $cg_name ====="
+            ./scripts/tracing/trace_step.py --start "Monitor $cg_name"
+            c-aci-testing aci monitor --deployment-name "$cg_name" | tee "output-${i}.log" || true
+            jq -Rs "{containerLog: .}" "output-${i}.log" | \
+              ./scripts/tracing/trace_step.py --complete --strict --output-from-stdin || true
+
+            echo "===== Parse output $cg_name ====="
+            ./scripts/parse_container_output.py --fail-on-error "output-${i}.log" || has_error=1
+          done
+
+          if [ $has_error -ne 0 ]; then
+            echo "Errors found in container output"
+          fi
+
+      - name: Collect stats from all container groups
+        if: always()
+        continue-on-error: true
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Aggregate net-liveness stats'
+          declare -a NAMES=()
+          for i in $(seq 0 $(($CONTAINER_GROUP_COUNT - 1))); do
+            NAMES+=("${DEPLOYMENT_NAME}-${i}")
+          done
+          bash workloads/net_liveness/collect_stats.sh "$RESOURCE_GROUP" "${NAMES[@]}"
+
+          # Aggregate and trace to Kusto
+          stat_files=()
+          for name in "${NAMES[@]}"; do
+            stat_files+=("stats-${name}.log")
+          done
+          python3 workloads/net_liveness/aggregate_stats.py "${stat_files[@]}" || \
+            ./scripts/tracing/trace_step.py --complete --err "Failed to aggregate stats"
+
+      - name: Get Container States
+        if: always()
+        continue-on-error: true
+        run: |
+          DEPLOYMENT_NAME_BASE=$DEPLOYMENT_NAME
+          for i in $(seq 0 $(($CONTAINER_GROUP_COUNT - 1))); do
+            export DEPLOYMENT_NAME="${DEPLOYMENT_NAME_BASE}-${i}"
+            ./scripts/trace_container_states.sh
+          done
+
+      - name: Remove Container Groups
+        if: always()
+        run: |
+          if [ "$CLEANUP" != false ]; then
+            for i in $(seq 0 $(($CONTAINER_GROUP_COUNT - 1))); do
+              c-aci-testing aci remove --deployment-name "${DEPLOYMENT_NAME}-${i}" || true
+            done
+          fi

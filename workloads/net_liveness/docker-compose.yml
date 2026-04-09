@@ -1,0 +1,4 @@
+version: '3'
+services:
+  net-liveness:
+    image: ${REGISTRY:-cacidashboardaci.azurecr.io}/${REPOSITORY:-prebuilt-test-containers}/networking:${TAG:-latest}

@@ -1,4 +1,4 @@
 version: '3'
 services:
   ubuntu:
-    image: mcr.microsoft.com/mirror/docker/library/ubuntu:24.04
+    image: ${REGISTRY:-cacidashboardaci.azurecr.io}/${REPOSITORY:-prebuilt-test-containers}/info:${TAG:-latest}

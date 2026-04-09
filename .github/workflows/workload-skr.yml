@@ -77,7 +77,7 @@ env:
   ATTESTATION_ENDPOINT: ${{ vars.ATTESTATION_ENDPOINT }}
   HSM_ENDPOINT: ${{ vars.HSM_ENDPOINT_ACI }}
   TEST_SCHEDULE: ${{ inputs.test_schedule }}
-  RUN_FEATURES: 'public_ip'
+  RUN_FEATURES: 'managed_identity,public_ip'
 
 jobs:
   server:
