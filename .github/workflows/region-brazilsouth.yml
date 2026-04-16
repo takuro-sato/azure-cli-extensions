@@ -9,7 +9,7 @@ on:
     paths:
       - .github/workflows/region-brazilsouth.yml
   schedule:
-    - cron: '0 1-21/2 * * *'
+    - cron: '29 4 * * *'  # managed by scripts/spread_out_schedules.py
   workflow_dispatch:
 
 jobs:
