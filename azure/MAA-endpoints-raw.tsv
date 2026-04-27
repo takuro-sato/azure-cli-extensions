@@ -1,77 +1,85 @@
 Env	Region	DNS Name	TEE
-TEST	West US	sharedwus.wus.test.attest.azure.net	None
 TEST	East US	sharedeus.eus.test.attest.azure.net	None
-TEST	East US2	sharedeus2.eus2.test.attest.azure.net	SGX
+TEST	West US	sharedwus.wus.test.attest.azure.net	None
+TEST	East US 2	sharedeus2.eus2.test.attest.azure.net	SGX
 TEST	South Central US	sharedscus.scus.test.attest.azure.net	SGX
 TEST	UK South	shareduks.uks.test.attest.azure.net	None
 TEST	North Europe	sharedneu.neu.test.attest.azure.net	C-ACI
 TEST	West Europe	sharedweu.weu.test.attest.azure.net	C-ACI
-TEST	Central US EUAP	sharedcuse.cuse.test.attest.azure.net	C-ACI
 TEST	UAE North	shareduaen.uaen.test.attest.azure.net	C-ACI
-TEST	East US2 EUAP	sharedeus2e.eus2e.test.attest.azure.net	C-ACI
+TEST	Central US EUAP	sharedcuse.cuse.test.attest.azure.net	C-ACI
+TEST	East US 2 EUAP	sharedeus2e.eus2e.test.attest.azure.net	C-ACI
 TEST	West US 2	sharedwus2.wus2.test.attest.azure.net	None
 PROD	Central US EUAP	sharedcuse.cuse.attest.azure.net	SGX
+PROD	East US 2 EUAP	sharedeus2e.eus2e.attest.azure.net	C-ACI
 PROD	East Asia	sharedeasia.easia.attest.azure.net	None
-PROD	East Canada	sharedcae.cae.attest.azure.net	SGX
-PROD	East US2	sharedeus2.eus2.attest.azure.net	SGX
-PROD	East US2 EUAP	sharedeus2e.eus2e.attest.azure.net	C-ACI
-PROD	UK South	shareduks.uks.attest.azure.net	SGX
+PROD	Canada East	sharedcae.cae.attest.azure.net	SGX
+PROD	East US 2	sharedeus2.eus2.attest.azure.net	SGX
+PROD	UK South	shareduks.uks.attest.azure.net	C-ACI
 PROD	West India	sharedwin.win.attest.azure.net	None
-PROD	East US	sharedeus.eus.attest.azure.net	SGX
-PROD	Central Canada	sharedcac.cac.attest.azure.net	SGX
-PROD	North Central US	sharedncus.ncus.attest.azure.net	SGX
-PROD	North Europe	sharedneu.neu.attest.azure.net	SGX
-PROD	UK West	sharedukw.ukw.attest.azure.net	SGX
-PROD	Japan East	sharedjpe.jpe.attest.azure.net	SGX
-PROD	Central India	sharedcin.cin.attest.azure.net	SGX
-PROD	Central US	sharedcus.cus.attest.azure.net	SGX
-PROD	Germany West Central	shareddewc.dewc.attest.azure.net	SGX
-PROD	UAE Central	shareduaec.uaec.attest.azure.net	None
-PROD	Jio India West	sharedjinw.jinw.attest.azure.net	None
-PROD	Australia East	sharedeau.eau.attest.azure.net	SGX
-PROD	Norway East	sharednoe.noe.attest.azure.net	None
-PROD	Sweden Central	sharedsec.sec.attest.azure.net	C-ACI
-PROD	Taiwan North	sharedtwn.twn.attest.azure.net	None
-PROD	West Central US	sharedwcus.wcus.attest.azure.net	None
-PROD	Spain Central	sharedesc.esc.attest.azure.net	None
 PROD	Australia Central 2	sharedcau2.cau2.attest.azure.net	None
-PROD	France South	sharedfrs.frs.attest.azure.net	None
-PROD	Switzerland North	sharedswn.swn.attest.azure.net	SGX
-PROD	South Africa West	sharedsaw.saw.attest.azure.net	None
+PROD	Australia East	sharedeau.eau.attest.azure.net	C-ACI
+PROD	Brazil Southeast	sharedsebr.sebr.attest.azure.net	C-ACI
+PROD	Canada Central	sharedcac.cac.attest.azure.net	SGX
+PROD	Central India	sharedcin.cin.attest.azure.net	SGX
+PROD	Central US	sharedcus.cus.attest.azure.net	C-ACI
+PROD	East US	sharedeus.eus.attest.azure.net	SGX
+PROD	France South	sharedfrs.frs.attest.azure.net	C-ACI
+PROD	Germany West Central	shareddewc.dewc.attest.azure.net	C-ACI
+PROD	Japan West	sharedjpw.jpw.attest.azure.net	C-ACI
+PROD	Jio India West	sharedjinw.jinw.attest.azure.net	None
 PROD	Korea Central	sharedkrc.krc.attest.azure.net	C-ACI
 PROD	New Zealand North	sharednzn.nzn.attest.azure.net	C-ACI
-PROD	West US	sharedwus.wus.attest.azure.net	SGX
-PROD	West Europe	sharedweu.weu.attest.azure.net	SGX
-PROD	Brazil Southeast	sharedsebr.sebr.attest.azure.net	None
-PROD	South Central US	sharedscus.scus.attest.azure.net	SGX
+PROD	North Central US	sharedncus.ncus.attest.azure.net	SGX
+PROD	North Europe	sharedneu.neu.attest.azure.net	SGX
+PROD	Norway East	sharednoe.noe.attest.azure.net	C-ACI
+PROD	South Africa West	sharedsaw.saw.attest.azure.net	C-ACI
+PROD	Spain Central	sharedesc.esc.attest.azure.net	None
+PROD	Sweden Central	sharedsec.sec.attest.azure.net	C-ACI
+PROD	Switzerland North	sharedswn.swn.attest.azure.net	SGX
+PROD	Taiwan North	sharedtwn.twn.attest.azure.net	C-ACI
+PROD	UAE Central	shareduaec.uaec.attest.azure.net	None
+PROD	UK West	sharedukw.ukw.attest.azure.net	SGX
+PROD	West Central US	sharedwcus.wcus.attest.azure.net	None
+PROD	Australia Central	sharedcau.cau.attest.azure.net	C-ACI
 PROD	Australia Southeast	sharedsau.sau.attest.azure.net	SGX
-PROD	South Africa North	sharedsan.san.attest.azure.net	C-ACI
-PROD	Southeast Asia	sharedsasia.sasia.attest.azure.net	SGX
-PROD	Japan West	sharedjpw.jpw.attest.azure.net	SGX
-PROD	Italy North	shareditn.itn.attest.azure.net	SGX
-PROD	UAE North	shareduaen.uaen.attest.azure.net	SGX
-PROD	South India	sharedsin.sin.attest.azure.net	None
+PROD	Austria East	sharedate.ate.attest.azure.net	C-ACI
 PROD	Brazil South	sharedsbr.sbr.attest.azure.net	C-ACI
-PROD	Germany North	sharedden.den.attest.azure.net	None
-PROD	Jio India Central	sharedjinc.jinc.attest.azure.net	None
-PROD	Norway West	sharednow.now.attest.azure.net	None
-PROD	Sweden South	sharedses.ses.attest.azure.net	None
-PROD	West US 2	sharedwus2.wus2.attest.azure.net	None
-PROD	Taiwan Northwest	sharedtwnw.twnw.attest.azure.net	None
-PROD	West US 3	sharedwus3.wus3.attest.azure.net	C-ACI
-PROD	Australia Central	sharedcau.cau.attest.azure.net	None
-PROD	Korea South	sharedkrs.krs.attest.azure.net	None
-PROD	France Central	sharedfrc.frc.attest.azure.net	C-ACI
-PROD	Poland Central	sharedplc.plc.attest.azure.net	C-ACI
-PROD	Switzerland West	sharedsww.sww.attest.azure.net	None
-PROD	Israel Central	sharedilc.ilc.attest.azure.net	C-ACI
-PROD	Mexico Central	sharedmxc.mxc.attest.azure.net	None
+PROD	Belgium Central	sharedbec.bec.attest.azure.net	C-ACI
 PROD	Chile Central	sharedclc.clc.attest.azure.net	C-ACI
+PROD	France Central	sharedfrc.frc.attest.azure.net	C-ACI
+PROD	Germany North	sharedden.den.attest.azure.net	C-ACI
+PROD	Indonesia Central	sharedidc.idc.attest.azure.net	C-ACI
+PROD	Israel Central	sharedilc.ilc.attest.azure.net	C-ACI
+PROD	Japan East	sharedjpe.jpe.attest.azure.net	SGX
+PROD	Italy North	shareditn.itn.attest.azure.net	SGX
+PROD	Jio India Central	sharedjinc.jinc.attest.azure.net	None
+PROD	Korea South	sharedkrs.krs.attest.azure.net	C-ACI
 PROD	Malaysia South	sharedmys.mys.attest.azure.net	None
+PROD	Malaysia West	sharedmyw.myw.attest.azure.net	C-ACI
+PROD	Norway West	sharednow.now.attest.azure.net	C-ACI
+PROD	Mexico Central	sharedmxc.mxc.attest.azure.net	None
+PROD	Poland Central	sharedplc.plc.attest.azure.net	C-ACI
+PROD	South Africa North	sharedsan.san.attest.azure.net	C-ACI
+PROD	South Central US	sharedscus.scus.attest.azure.net	C-ACI
+PROD	South India	sharedsin.sin.attest.azure.net	C-ACI
+PROD	Sweden South	sharedses.ses.attest.azure.net	None
+PROD	Southeast Asia	sharedsasia.sasia.attest.azure.net	SGX
+PROD	Switzerland West	sharedsww.sww.attest.azure.net	None
+PROD	Taiwan Northwest	sharedtwnw.twnw.attest.azure.net	None
+PROD	UAE North	shareduaen.uaen.attest.azure.net	C-ACI
+PROD	West Europe	sharedweu.weu.attest.azure.net	SGX
+PROD	West US 2	sharedwus2.wus2.attest.azure.net	None
+PROD	West US	sharedwus.wus.attest.azure.net	SGX
+PROD	West US 3	sharedwus3.wus3.attest.azure.net	C-ACI
 PERF	West US 2	sharedwus2.wus2.perf.attest.azure.net	SGX
+PERF	East US	sharedeus.eus.perf.attest.azure.net	None
 PERF	West US	sharedwus.wus.perf.attest.azure.net	SGX
 PERF	Italy North	shareditn.itn.perf.attest.azure.net	SGX
-PERF	UAE North	shareduaen.uaen.perf.attest.azure.net	C-ACI
 PERF	North Europe	sharedneu.neu.perf.attest.azure.net	C-ACI
-PERF	East US	sharedeus.eus.perf.attest.azure.net	None
+PERF	UAE North	shareduaen.uaen.perf.attest.azure.net	C-ACI
 PERF	Germany West Central	shareddewc.dewc.perf.attest.azure.net	C-ACI
+MOONCAKE	China North 3	sharedcnn3.cnn3.attest.azure.cn	None
+MOONCAKE	China East 3	sharedcne3.cne3.attest.azure.cn	None
+FF	Virginia	sharedugv.ugv.attest.azure.us	SGX
+FF	Arizona	shareduga.uga.attest.azure.us	SGX
