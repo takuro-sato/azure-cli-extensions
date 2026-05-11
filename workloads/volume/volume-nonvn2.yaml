@@ -52,7 +52,7 @@ spec:
             echo "File name: $TIMESTAMP_NS.txt"
             sleep 1
             cd /var/www
-            ./io_latency_bench_like_ccf.py -w /mnt/volume
+            ./io_latency_bench_like_ccf.py -w /mnt/volume --latency-thres-fsync 10000
             sleep infinity
         volumeMounts:
         - name: azure-file-volume

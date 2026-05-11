@@ -72,7 +72,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
             echo "File name: $TIMESTAMP_NS.txt"
             sleep 1
             cd /var/www
-            ./io_latency_bench_like_ccf.py -w /mnt/volume
+            ./io_latency_bench_like_ccf.py -w /mnt/volume --latency-thres-fsync 10000
             sleep infinity
             '''
           ]
