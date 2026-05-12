@@ -125,6 +125,11 @@ resource regionalStorageAccount 'Microsoft.Storage/storageAccounts@2025-08-01' =
 resource fileService 'Microsoft.Storage/storageAccounts/fileServices@2025-08-01' = {
   parent: regionalStorageAccount
   name: 'default'
+  properties: {
+    shareDeleteRetentionPolicy: {
+      enabled: false
+    }
+  }
 }
 
 resource fileShare 'Microsoft.Storage/storageAccounts/fileServices/shares@2025-08-01' = {
