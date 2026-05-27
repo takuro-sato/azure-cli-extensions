@@ -10,9 +10,10 @@ RUN g++ -static multicpu.cpp -Og -g -o multicpu && \
 FROM mcr.microsoft.com/mirror/docker/library/ubuntu:24.04
 WORKDIR /var/www
 RUN apt update -y && \
-    apt install -y python3 python3-fastapi uvicorn fio bash sysbench curl stress-ng htop strace
+    apt install -y python3 python3-fastapi uvicorn fio bash sysbench curl stress-ng htop strace cifs-utils tcpdump jq
 COPY stress_test_workloads/workload_*.sh .
 COPY stress_test_workloads/io_latency_bench_like_ccf.py .
+COPY stress_test_workloads/stress_test_v2.py .
 COPY server.py /server
 COPY --from=build multicpu check_threads io_latency_bench attestation_loop threaded_add_numbers .
 

@@ -1,9 +1,9 @@
-name: Build and push test containers
+name: Build and push test containers (arm64)
 
 on:
   pull_request:
     paths:
-      - .github/workflows/build-test-containers.yaml
+      - .github/workflows/build-test-containers-arm.yaml
   workflow_dispatch:
 
 permissions:
@@ -15,10 +15,11 @@ env:
   DOCKER_BUILDKIT: 1
   REGISTRY: cacidashboardaci.azurecr.io
   REPOSITORY: prebuilt-test-containers
+  IMAGE_PLATFORM: linux/arm64
 
 jobs:
   build-and-push:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04-arm
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -40,11 +41,11 @@ jobs:
           echo "TAG=$TAG"
           echo "TAG=$TAG" >> $GITHUB_ENV
 
-      - name: Build and push containers
-        run: cd containers && make REGISTRY=$REGISTRY REPOSITORY=$REPOSITORY TAG=$TAG push
+      - name: Build and push containers (linux/arm64)
+        run: cd containers && make REGISTRY=$REGISTRY REPOSITORY=$REPOSITORY TAG=$TAG IMAGE_PLATFORM=$IMAGE_PLATFORM push
 
       - name: Tag with latest
         if: github.ref == 'refs/heads/main'
         run: |
           # Rebuilding the image won't change it due to caching
-          cd containers && make REGISTRY=$REGISTRY REPOSITORY=$REPOSITORY TAG=latest push
+          cd containers && make REGISTRY=$REGISTRY REPOSITORY=$REPOSITORY TAG=latest IMAGE_PLATFORM=$IMAGE_PLATFORM push

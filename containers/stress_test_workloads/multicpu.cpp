@@ -6,15 +6,33 @@
 
 static uint64_t get_cycles()
 {
+#if defined(__x86_64__) || defined(__i386__)
     uint64_t t;
     unsigned long lo, hi;
     asm volatile("rdtsc" : "=a"(lo), "=d"(hi));
     t = lo | (hi << 32);
     return t;
+#elif defined(__aarch64__)
+    uint64_t t;
+    // CNTVCT_EL0 is the architectural virtual counter; not a CPU-cycle
+    // counter, but a monotonic time source with a fixed frequency given by
+    // CNTFRQ_EL0 (see measure_rdtsc_per_secs below).
+    asm volatile("mrs %0, cntvct_el0" : "=r"(t));
+    return t;
+#else
+#error "get_cycles() not implemented for this architecture"
+#endif
 }
 
 static uint64_t measure_rdtsc_per_secs()
 {
+#if defined(__aarch64__)
+    // On aarch64 the virtual counter ticks at the fixed frequency reported
+    // by CNTFRQ_EL0, so we don't need a wall-clock calibration loop.
+    uint64_t freq;
+    asm volatile("mrs %0, cntfrq_el0" : "=r"(freq));
+    return freq;
+#else
     uint64_t start = get_cycles();
     auto start_tp = std::chrono::system_clock::now();
     std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -24,6 +42,7 @@ static uint64_t measure_rdtsc_per_secs()
         std::chrono::duration_cast<std::chrono::milliseconds>(end_tp - start_tp)
             .count();
     return ( (double)(end - start) / (double)duration_ms ) * 1000.0;
+#endif
 }
 
 static uint64_t rdtsc_per_secs;
