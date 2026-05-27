@@ -1,5 +1,5 @@
 ---
-name: add-workload
+name: add-aci-test
 description: Step-by-step guide for adding a new ACI workload to this repo — creating the workloads/<name>/ directory (docker-compose.yml, .bicep, .bicepparam), the .github/workflows/workload-<name>.yml workflow, wiring it into .github/workflows/region.yml, and (optionally) adding a prebuilt image entry to containers/Makefile. Use whenever the user asks to "add a workload", "create a new test", "add a workflow for X", or copy an existing workload as a starting point. Covers gotchas: underscore↔hyphen filename mismatch, loadFileAsBase64 for pre-generated policies vs runtime policy gen, prebuilt-test-containers vs per-workload images.
 ---
 

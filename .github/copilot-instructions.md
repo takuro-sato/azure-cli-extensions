@@ -19,9 +19,15 @@ Each `workloads/<name>/` directory contains at minimum:
 - `<name>.bicep` — ARM/Bicep `Microsoft.ContainerInstance/containerGroups` definition. Confidential workloads set `sku: 'Confidential'` and reference `ccePolicies.<name_underscored>`.
 - `<name>.bicepparam` — parameter file. `registry`/`repository`/`tag` are populated by `c-aci-testing`; `ccePolicies` is either populated at run time by `policies gen` or, for fixed-policy workloads, via `loadFileAsBase64(...)` against a committed `.rego` file.
 
-> **Adding a new workload?** Use the **add-workload** skill — it covers directory layout, the workflow yaml template, `region.yml` wiring, the prebuilt-image / `containers/Makefile` path, and the underscore↔hyphen / fixed-policy / pinned-tag gotchas.
+> **Adding a new workload?** Use the **add-aci-test** skill — it covers directory layout, the workflow yaml template, `region.yml` wiring, the prebuilt-image / `containers/Makefile` path, and the underscore↔hyphen / fixed-policy / pinned-tag gotchas.
 >
 > **Adding a VN2 test case?** Use the **add-vn2-test** skill.
+>
+> **Adding a regular Linux VM test (vanilla Ubuntu or SEV-SNP CVM, harness runs directly on the VM OS)?** Use the **add-regular-vm-test** skill.
+>
+> **Adding a ContainerPlat-on-Windows-VM test (container runs in an LCOW UVM hosted by cplat on a Windows VM)?** Use the **add-cplat-in-vm-test** skill.
+>
+> **Naming warning:** historically "VM test" / "VM workload" in this repo almost always meant **cplat-in-VM** — e.g. [.github/workflows/vm-workload-stress-tests.yml](workflows/vm-workload-stress-tests.yml), [.github/workflows/vm-simple.yml](workflows/vm-simple.yml), and the whole `vm-<region>.yml` family all deploy a Windows VM and run a container in ContainerPlat. Tests that run a script directly on a Linux VM (e.g. [workload-perf-regular-vm.yml](workflows/workload-perf-regular-vm.yml)) only got added later and use the `workload-...-regular-vm` / `workload-...-cvm` naming. So when a user says "vm test", clarify which they mean: look at whether the existing example uses `c-aci-testing vm runc` (→ cplat-in-VM) or `az vm run-command invoke` against a Linux VM (→ regular-vm).
 
 ## `c-aci-testing` quick reference
 

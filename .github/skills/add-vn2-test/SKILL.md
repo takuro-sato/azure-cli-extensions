@@ -9,7 +9,7 @@ VN2 tests run workloads on Azure Kubernetes Service (AKS) via the Virtual Node 2
 
 ## 1. Workload directory
 
-Reuse an existing `workloads/<name>/` or create a new one (see the **add-workload** skill). The bicep file must be compatible with `c-aci-testing vn2 generate_yaml` and `c-aci-testing vn2 policygen`.
+Reuse an existing `workloads/<name>/` or create a new one (see the **add-aci-test** skill). The bicep file must be compatible with `c-aci-testing vn2 generate_yaml` and `c-aci-testing vn2 policygen`.
 
 ## 2. Test script
 
