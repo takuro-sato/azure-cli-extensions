@@ -15,7 +15,7 @@ IMAGE_PLATFORM ?= linux/amd64
 PLATFORM_TAG := $(subst /,-,$(IMAGE_PLATFORM))
 
 all: build login push_arch merge_manifests
-.PHONY: all build login push push_arch merge_manifests build_networking run_networking run_stress_server_alpine build_stress_server_alpine run_stress_server_ubuntu build_stress_server_ubuntu build_stress_noserver run_stress_noserver_alpine run_stress_noserver_ubuntu build_info run_info build_ccf_verify_uvm run_ccf_verify_uvm killall
+.PHONY: all build login push push_arch merge_manifests build_networking run_networking run_stress_server_alpine build_stress_server_alpine run_stress_server_ubuntu build_stress_server_ubuntu build_stress_noserver run_stress_noserver_alpine run_stress_noserver_ubuntu build_info run_info build_ccf_verify_uvm run_ccf_verify_uvm build_skr_proxy run_skr_proxy killall
 
 login:
 	az acr login --name $(REGISTRY)
@@ -56,7 +56,10 @@ else
 	$(BUILD) -t $(REGISTRY)/$(REPOSITORY)/ccf_verify_uvm:$(TAG) -f ccf_verify_uvm.Dockerfile
 endif
 
-build: build_networking build_stress_server_alpine build_stress_server_ubuntu build_stress_noserver build_info build_ccf_verify_uvm
+build_skr_proxy: skr_proxy.Dockerfile skr_proxy.py
+	$(BUILD) -t $(REGISTRY)/$(REPOSITORY)/skr_proxy:$(TAG) -f skr_proxy.Dockerfile
+
+build: build_networking build_stress_server_alpine build_stress_server_ubuntu build_stress_noserver build_info build_ccf_verify_uvm build_skr_proxy
 
 # --- push rule --------------------------------------------------------------
 # For each image:
@@ -74,7 +77,8 @@ IMAGES = \
 	stress-tests-server-ubuntu \
 	stress-tests-noserver-alpine \
 	stress-tests-noserver-ubuntu \
-	info
+	info \
+	skr_proxy
 
 ifeq ($(IMAGE_PLATFORM),linux/arm64)
 IMAGES_TO_PUSH = $(filter-out $(X86_ONLY_IMAGES),$(IMAGES))
@@ -160,6 +164,9 @@ run_info: build_info
 
 run_ccf_verify_uvm: build_ccf_verify_uvm
 	docker run --rm -i $(REGISTRY)/$(REPOSITORY)/ccf_verify_uvm:$(TAG)
+
+run_skr_proxy: build_skr_proxy
+	docker run --rm -i -p 8000:8000 $(REGISTRY)/$(REPOSITORY)/skr_proxy:$(TAG)
 
 killall:
 	docker ps --format '{{ .ID }}' | xargs --no-run-if-empty docker stop -s KILL

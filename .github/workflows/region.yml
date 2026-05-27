@@ -255,11 +255,22 @@ jobs:
       policy_type: ${{ matrix.policy_type }}
       test_schedule: gh-daily
 
+  skr-fixed-policy:
+    if: "${{ !cancelled() && !contains(vars.REGIONS_WITH_PROBLEMATIC_PUBLIC_IP, format(',{0},', inputs.location)) }}"
+    name: skr-fixed-policy
+    secrets: inherit
+    needs: skr
+    uses: ./.github/workflows/workload-skr-fixed-policy.yml
+    with:
+      id: skr-fixed-policy
+      location: ${{ inputs.location }}
+      test_schedule: gh-daily
+
   volume:
     if: ${{ !cancelled() }}
     name: volume
     secrets: inherit
-    needs: skr
+    needs: skr-fixed-policy
     uses: ./.github/workflows/workload-volume.yml
     with:
       id: volume-generated

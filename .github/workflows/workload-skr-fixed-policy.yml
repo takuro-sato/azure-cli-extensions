@@ -1,4 +1,4 @@
-name: Workload - SKR
+name: Workload - SKR Fixed Policy
 
 permissions:
   id-token: write
@@ -7,14 +7,22 @@ permissions:
 on:
   pull_request:
     paths:
-      - workloads/skr/**
-      - .github/workflows/workload-skr.yml
+      - workloads/skr-fixed-policy/**
+      - workloads/skr/attestation.py
+      - workloads/skr/key.py
+      - containers/skr_proxy.Dockerfile
+      - containers/skr_proxy.py
+      - .github/workflows/workload-skr-fixed-policy.yml
       - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
   push:
     paths:
-      - workloads/skr/**
-      - .github/workflows/workload-skr.yml
+      - workloads/skr-fixed-policy/**
+      - workloads/skr/attestation.py
+      - workloads/skr/key.py
+      - containers/skr_proxy.Dockerfile
+      - containers/skr_proxy.py
+      - .github/workflows/workload-skr-fixed-policy.yml
       - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
     branches:
@@ -63,14 +71,18 @@ env:
   KUSTO_DATABASE: ${{ secrets.KUSTO_DATABASE }}
   KUSTO_TABLE: CACITestStepTrace
   TEST_TYPE: aci
-  TEST_NAME: SKR
+  TEST_NAME: SKR Fixed Policy
   RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-  DEPLOYMENT_NAME: ${{ inputs.id || 'skr' }}-${{ inputs.location }}-${{ github.run_number }}
+  DEPLOYMENT_NAME: ${{ inputs.id || 'skr-fixed-policy' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION_ACI }}
   RESOURCE_GROUP: c-aci-dashboard
   REGISTRY: cacidashboardaci.azurecr.io
+  REPOSITORY: prebuilt-test-containers
   MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'westeurope' }}
-  TAG: "2.12"
+  # Pinned to a dedicated tag (not 'latest') so future pushes to
+  # skr_proxy:latest do not invalidate the hard-coded CCE policy in
+  # workloads/skr-fixed-policy/policy_skr_fixed_policy.rego.
+  TAG: skr-fixed-policy
   LOCATION: ${{ inputs.location || 'westeurope' }}
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: ${{ inputs.policy_type || 'generated' }}
@@ -81,7 +93,7 @@ env:
 
 jobs:
   server:
-    name: ${{ inputs.id || 'skr' }}
+    name: ${{ inputs.id || 'skr-fixed-policy' }}
     runs-on: ubuntu-latest
     steps:
 
@@ -100,16 +112,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: ./scripts/init_run.sh
 
-      # Deployment is separated from testing to avoid the AZ CLI login timeout
-      - name: Deploy the SKR container group
-        env:
-          ID: ${{ env.DEPLOYMENT_NAME }}
+      - name: Deploy Container Group
         run: |
-          ./scripts/tracing/trace_step.py --start 'Deploy the SKR container group'
-          c-aci-testing target run workloads/skr \
-            --deployment-name $ID \
-            --prefer-pull \
-            --no-cleanup
+          ./scripts/aci_deploy_traced.sh workloads/skr-fixed-policy
 
       - name: Log into Azure
         uses: azure/login@v2
@@ -118,18 +123,13 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
 
-      # This python test uses target_run, and it will handle monitoring the
-      # container output and doing cleanup.
       - name: Test SKR
-        env:
-          ID: ${{ env.DEPLOYMENT_NAME }}
         run: |
           set +e -o pipefail
           ./scripts/tracing/trace_step.py --start 'Test SKR' || exit 1
-          python -m unittest discover -s workloads/skr 2>&1 | tee skr_test.log
+          python -m unittest discover -s workloads/skr-fixed-policy 2>&1 | tee skr_test.log
           status=$?
           if [ $status -ne 0 ]; then
-            echo "SKR test failed"
             maybe_err=(--err "SKR test failed")
           else
             maybe_err=()
@@ -150,6 +150,7 @@ jobs:
           ./scripts/trace_container_states.sh
 
       - name: Remove Container Group
+        if: always()
         run: |
           if [ "$CLEANUP" != false ]; then
             c-aci-testing aci remove --deployment-name $DEPLOYMENT_NAME
