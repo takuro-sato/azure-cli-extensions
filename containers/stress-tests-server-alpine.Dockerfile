@@ -9,7 +9,7 @@ RUN g++ -static multicpu.cpp -Og -g -o multicpu && \
 
 FROM mcr.microsoft.com/mirror/docker/library/alpine:3.16
 WORKDIR /var/www
-RUN apk add --no-cache python3 python3-dev py3-pip fio bash sysbench stress-ng htop strace cifs-utils tcpdump jq && \
+RUN apk add --no-cache python3 python3-dev py3-pip fio bash sysbench stress-ng htop strace cifs-utils tcpdump jq util-linux && \
     pip3 install --no-cache-dir fastapi 'uvicorn[standard]'
 COPY stress_test_workloads/workload_*.sh ./
 COPY stress_test_workloads/io_latency_bench_like_ccf.py ./

@@ -2,7 +2,7 @@
 
 /server &
 
-echo ------------- payload start taring --------------- | tee /dev/kmsg
+echo ------------- payload start taring --------------- | tee "$([ -c /dev/kmsg ] && echo /dev/kmsg || echo /dev/null)"
 
 cd /
 while :; do

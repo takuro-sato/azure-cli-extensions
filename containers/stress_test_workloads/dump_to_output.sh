@@ -8,6 +8,7 @@ uname -a
 dmesg | grep "Kernel command line"
 dmesg | grep "Hyper-V: Host Build"
 echo Reference info SHA256SUM: $(base64 -d < /security-context-*/reference-info-base64 | sha256sum)
+lscpu | grep -i 'model name:'
 
 sleep 80
 echo "-------- Stress test container alive --------"

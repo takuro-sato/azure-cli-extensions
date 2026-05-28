@@ -2,7 +2,7 @@
 
 /server &
 
-echo ------------- payload start attestation_loop --------------- | tee /dev/kmsg
+echo ------------- payload start attestation_loop --------------- | tee "$([ -c /dev/kmsg ] && echo /dev/kmsg || echo /dev/null)"
 
 while :; do
   ./attestation_loop

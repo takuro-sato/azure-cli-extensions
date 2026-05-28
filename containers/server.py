@@ -16,13 +16,30 @@ from glob import glob
 def checked_exec_get_output(cmd: str) -> bytes:
     return check_output(cmd, shell=True, stderr=STDOUT)
 
-kern_cmdline = checked_exec_get_output('dmesg | grep "Kernel command line"').decode('utf-8').strip()
-hv_host_build = checked_exec_get_output('dmesg | grep "Hyper-V: Host Build"').decode('utf-8').strip()
+try:
+    kern_cmdline = checked_exec_get_output('dmesg | grep "Kernel command line"').decode('utf-8').strip()
+except CalledProcessError as e:
+    print("Failed to get kernel command line from dmesg:", e.stdout)
+    print("Trying /proc/cmdline")
+    try:
+        with open("/proc/cmdline", "r") as f:
+            kern_cmdline = "Kernel command line: " + f.read().strip()
+    except Exception as e:
+        print("ERROR: Failed to read kernel command line from /proc/cmdline:", e)
+        kern_cmdline = ""
+
+try:
+    hv_host_build = checked_exec_get_output('dmesg | grep "Hyper-V: Host Build"').decode('utf-8').strip()
+except CalledProcessError as e:
+    print("ERROR: Failed to get Hyper-V host build from dmesg:", e.stdout)
+    hv_host_build = ""
 
 ref_info_sha = "(not found)"
 ref_info_glob = glob("/security-context-*/reference-info-base64")
 if ref_info_glob:
     ref_info_sha = checked_exec_get_output(f'base64 -d < {ref_info_glob[0]} | sha256sum').decode('utf-8').split()[0]
+
+cpu_model_name = checked_exec_get_output('lscpu | grep -i "model name:"').decode('utf-8').strip()
 
 startup_time = datetime.now(timezone.utc)
 startup_str = (
@@ -32,6 +49,7 @@ startup_str = (
     + f"{kern_cmdline}\n"
     + f"{hv_host_build}\n"
     + f"Reference info SHA256SUM: {ref_info_sha}\n\n"
+    + f"lscpu:\n{cpu_model_name}\n\n"
 )
 req_count = 0
 

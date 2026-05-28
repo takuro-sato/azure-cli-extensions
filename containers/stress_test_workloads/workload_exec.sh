@@ -2,7 +2,7 @@
 
 /server &
 
-echo ------------- payload start ls loop --------------- | tee /dev/kmsg
+echo ------------- payload start ls loop --------------- | tee "$([ -c /dev/kmsg ] && echo /dev/kmsg || echo /dev/null)"
 
 while :; do
   ls loooooooooooooooooooooooooooooooooooooooonnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnggggggggggggggggggggg 2>/dev/null

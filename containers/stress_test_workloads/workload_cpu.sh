@@ -4,7 +4,7 @@
 SERVER_PID=$!
 
 {
-  echo ------------- payload start check_threads --------------- | tee /dev/kmsg
+  echo ------------- payload start check_threads --------------- | tee "$([ -c /dev/kmsg ] && echo /dev/kmsg || echo /dev/null)"
 
   while :; do
     ./check_threads
@@ -16,7 +16,7 @@ SERVER_PID=$!
   done
 } &
 
-echo ------------- payload start sysbench --------------- | tee /dev/kmsg
+echo ------------- payload start sysbench --------------- | tee "$([ -c /dev/kmsg ] && echo /dev/kmsg || echo /dev/null)"
 
 while :; do
   nice -n +10 sysbench --threads=$(nproc) --time=60 cpu --cpu-max-prime=15000 run

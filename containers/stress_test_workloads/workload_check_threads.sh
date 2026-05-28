@@ -3,7 +3,7 @@
 /server &
 SERVER_PID=$!
 
-echo ------------- payload start check_threads --------------- | tee /dev/kmsg
+echo ------------- payload start check_threads --------------- | tee "$([ -c /dev/kmsg ] && echo /dev/kmsg || echo /dev/null)"
 
 while :; do
   ./check_threads
