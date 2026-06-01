@@ -147,6 +147,8 @@ Deploys confidential containers with VN2
 [![Perf - South Africa West](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-southafricawest.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-southafricawest.yml)
 [![Perf - West Europe](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-westeurope.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-westeurope.yml)
 [![Perf - West US](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-westus.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-westus.yml)
+[![Perf - West US 2](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-westus2.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-westus2.yml)
+[![Perf - West US 3](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-westus3.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-westus3.yml)
 
 ### Canary
 

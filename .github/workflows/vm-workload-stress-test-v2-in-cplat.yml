@@ -1,0 +1,249 @@
+name: VM Workload - stress test v2 in ContainerPlat
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/vm-workload-stress-test-v2-in-cplat.yml
+  workflow_dispatch:
+    inputs:
+      id:
+        type: string
+      location:
+        type: string
+        default: westeurope
+      vmImage:
+        type: string
+        description: VM image ID (Atlas) or the literal string "official" to use official marketplace images
+        default: official
+      cplatBlobName:
+        type: string
+        description: Name of the ContainerPlat blob to use (defaults to vars.CPLAT_NEXT_6_1_BLOB_NAME)
+        default: ''
+      confidential:
+        type: boolean
+        default: true
+      vmSize:
+        type: string
+        default: Standard_DC8as_cc_v5
+      cleanup:
+        type: boolean
+        default: true
+  workflow_call:
+    inputs:
+      id:
+        type: string
+      location:
+        type: string
+        default: westeurope
+      vmImage:
+        type: string
+        default: official
+      cplatBlobName:
+        type: string
+        default: ''
+      confidential:
+        type: boolean
+        default: true
+      vmSize:
+        type: string
+        default: Standard_DC8as_cc_v5
+      cleanup:
+        type: boolean
+        default: true
+      test_schedule:
+        type: string
+        default: ''
+
+env:
+  KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
+  KUSTO_DATABASE: ${{ secrets.KUSTO_DATABASE }}
+  KUSTO_TABLE: CACITestStepTrace
+  TEST_TYPE: vm
+  TEST_NAME: stress test v2 ContainerPlat VM
+  RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+  DEPLOYMENT_NAME: ${{ inputs.id || 'stress-v2-cplat' }}-${{ inputs.location || 'westeurope' }}-${{ github.run_number }}
+  SUBSCRIPTION: ${{ vars.SUBSCRIPTION_ACI }}
+  RESOURCE_GROUP: c-aci-dashboard
+  REGISTRY: cacidashboardaci.azurecr.io
+  REPOSITORY: prebuilt-test-containers/stress-tests-noserver-ubuntu
+  TAG: "latest"
+  STORAGE_ACCOUNT: cacitestingstorageaci
+  LOCATION: ${{ inputs.location || 'westeurope' }}
+  MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'westeurope' }}
+  CLEANUP: ${{ inputs.cleanup }}
+  VM_SIZE: ${{ inputs.vmSize || 'Standard_DC8as_cc_v5' }}
+  VM_IMAGE: ${{ inputs.vmImage != 'official' && inputs.vmImage || '' }}
+  USE_OFFICIAL_IMAGES: ${{ (inputs.vmImage == '' || inputs.vmImage == 'official') && 'true' || '' }}
+  CPLAT_BLOB_NAME: ${{ inputs.cplatBlobName || vars.CPLAT_NEXT_6_1_BLOB_NAME }}
+  WIN_FLAVOR: 'ws2025'
+  VM_ZONE: ''
+  TEST_SCHEDULE: ${{ inputs.test_schedule }}
+  CONFIDENTIAL: ${{ inputs.confidential == false && 'false' || 'true' }}
+  WORKLOAD_DIR: ${{ inputs.confidential == false && 'workloads/stress-test-v2-cplat-vm-nonconf' || 'workloads/stress-test-v2-cplat-vm' }}
+  WORKLOAD_PREFIX: ${{ inputs.confidential == false && 'lcow_stress-test-v2-cplat-vm-nonconf' || 'lcow_stress-test-v2-cplat-vm' }}
+  STORAGE_TAG_PURPOSE: ${{ inputs.confidential == false && 'caci-nonconf-testing-storage-premium' || 'caci-testing-storage-premium' }}
+  SHARE_QUOTA_GIB: '51200'
+
+jobs:
+  stress-test-v2-cplat-vm:
+    name: ${{ inputs.id || 'stress-v2-cplat' }}
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Downgrade Azure CLI
+        env:
+          AZ_CLI_VERSION: "2.81.0"
+        run: ./scripts/install-az-cli.sh
+
+      - name: Log into Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+
+      - name: Initialize Run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/init_run.sh
+
+      - name: Resolve storage account
+        id: storage
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Resolve storage account'
+          ACCOUNT=$(az storage account list \
+            --query "[?location=='$LOCATION' && tags.purpose=='$STORAGE_TAG_PURPOSE'].name | [0]" \
+            -o tsv)
+          if [ -z "$ACCOUNT" ]; then
+            ./scripts/tracing/trace_step.py --complete --strict --err "No $STORAGE_TAG_PURPOSE account in $LOCATION"
+            exit 1
+          fi
+          KEY=$(az storage account keys list \
+            --account-name "$ACCOUNT" \
+            --resource-group $RESOURCE_GROUP \
+            --query '[0].value' -o tsv)
+          echo "::add-mask::$KEY"
+          SUFFIX=$(az cloud show --query "suffixes.storageEndpoint" -o tsv)
+          FQDN="${ACCOUNT}.file.${SUFFIX}"
+          SHARE="stv2-cplat-${{ github.run_number }}-${{ github.run_attempt }}"
+          echo "Resolved storage account: $ACCOUNT (location=$LOCATION)"
+          echo "account=$ACCOUNT" >> "$GITHUB_OUTPUT"
+          echo "key=$KEY" >> "$GITHUB_OUTPUT"
+          echo "fqdn=$FQDN" >> "$GITHUB_OUTPUT"
+          echo "share=$SHARE" >> "$GITHUB_OUTPUT"
+          ./scripts/tracing/trace_step.py --complete --strict --output account=$ACCOUNT share=$SHARE fqdn=$FQDN
+
+      - name: Create 50TiB Azure Files share
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Create share'
+          az storage share-rm create \
+            --storage-account ${{ steps.storage.outputs.account }} \
+            --resource-group $RESOURCE_GROUP \
+            --name ${{ steps.storage.outputs.share }} \
+            --quota $SHARE_QUOTA_GIB \
+            --enabled-protocols SMB
+          ./scripts/tracing/trace_step.py --complete --strict
+
+      - name: Set bicep parameters
+        run: |
+          c-aci-testing aci param_set $WORKLOAD_DIR --parameter vmSku="$VM_SIZE"
+          c-aci-testing aci param_set $WORKLOAD_DIR --parameter cplatBlob="$CPLAT_BLOB_NAME"
+          c-aci-testing aci param_set $WORKLOAD_DIR --parameter branch=${GITHUB_REF_NAME}
+          c-aci-testing aci param_set $WORKLOAD_DIR --parameter storageAccountName=${{ steps.storage.outputs.account }}
+          c-aci-testing aci param_set $WORKLOAD_DIR --parameter storageAccountKey='${{ steps.storage.outputs.key }}'
+          c-aci-testing aci param_set $WORKLOAD_DIR --parameter storageAccountFqdn=${{ steps.storage.outputs.fqdn }}
+          c-aci-testing aci param_set $WORKLOAD_DIR --parameter shareName=${{ steps.storage.outputs.share }}
+
+      - name: Generate Security Policy
+        if: ${{ inputs.confidential }}
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Generate Policy'
+          c-aci-testing policies gen $WORKLOAD_DIR --deployment-name $DEPLOYMENT_NAME --policy-type allow_all
+
+      - name: Deploy VM
+        run: |
+          ./scripts/vm_create_traced.sh
+
+      - name: Run container on VM
+        run: |
+          ./scripts/tracing/trace_step.py --start 'vm runc'
+          c-aci-testing vm runc $WORKLOAD_DIR --deployment-name $DEPLOYMENT_NAME --prefix $WORKLOAD_PREFIX
+
+      - name: Wait for ALL-DONE
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Wait for ALL-DONE'
+          for i in $(seq 1 60); do
+            c-aci-testing vm exec --deployment-name $DEPLOYMENT_NAME \
+              'Get-Item C:\*\container*.log | foreach { cat -Raw $_ } > C:\container_output.log'
+            OUTPUT=$(c-aci-testing vm cat --deployment-name $DEPLOYMENT_NAME 'C:\container_output.log' 2>/dev/null || echo "")
+            echo "$OUTPUT" | tail -5
+            if echo "$OUTPUT" | grep -q "ALL-DONE"; then
+              ./scripts/tracing/trace_step.py --complete --strict
+              break
+            fi
+            if [ $i -eq 60 ]; then
+              ./scripts/tracing/trace_step.py --complete --strict --err "Timeout waiting for ALL-DONE"
+              exit 1
+            fi
+            sleep 60
+          done
+
+      - name: Print VM info
+        if: always()
+        continue-on-error: true
+        run: scripts/vm_print_info.sh
+
+      - name: Report result
+        if: always()
+        run: |
+          ./scripts/trace_run_result.sh ${{ job.status }}
+
+      - name: Check dmesg
+        if: always()
+        continue-on-error: true
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Check dmesg'
+          c-aci-testing vm exec --deployment-name $DEPLOYMENT_NAME 'Get-Item C:\*\dmesg*.log | foreach { echo ""; echo ""; echo $_.FullName; cat -Raw $_ } > C:\all-dmesg.log'
+          c-aci-testing vm cat --deployment-name $DEPLOYMENT_NAME 'C:\all-dmesg.log' > dmesg.log
+          cat dmesg.log
+          ./scripts/_check_dmesg.sh "dmesg.log"
+
+      - name: Container output
+        if: always()
+        run: |
+          ./scripts/vm_check_container_output.sh
+
+      - name: Report result (post-parse)
+        if: always()
+        run: |
+          ./scripts/trace_run_result.sh ${{ job.status }}
+
+      - name: Remove VM
+        if: always()
+        run: |
+          if [ "$CLEANUP" != false ]; then
+            c-aci-testing vm remove --deployment-name $DEPLOYMENT_NAME || true
+            az vm delete \
+              --resource-group $RESOURCE_GROUP \
+              --name ${DEPLOYMENT_NAME}-vm \
+              --yes --force-deletion yes --verbose || true
+          fi
+
+      - name: Delete Azure Files share
+        if: always()
+        continue-on-error: true
+        run: |
+          if [ "$CLEANUP" != false ] && [ -n "${{ steps.storage.outputs.share }}" ]; then
+            az storage share-rm delete \
+              --storage-account ${{ steps.storage.outputs.account }} \
+              --resource-group $RESOURCE_GROUP \
+              --name ${{ steps.storage.outputs.share }} \
+              --yes || true
+          fi

@@ -1,0 +1,191 @@
+name: Workload - stress test v2 (C-ACI)
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/workload-stress-test-v2.yml
+  workflow_dispatch:
+    inputs:
+      id:
+        type: string
+      location:
+        type: string
+        default: westeurope
+      cpu:
+        type: number
+        default: 4
+      memory_in_gb:
+        type: number
+        default: 16
+      cleanup:
+        type: boolean
+        default: true
+  workflow_call:
+    inputs:
+      id:
+        type: string
+      location:
+        type: string
+        default: westeurope
+      cpu:
+        type: number
+        default: 4
+      memory_in_gb:
+        type: number
+        default: 16
+      cleanup:
+        type: boolean
+        default: true
+      test_schedule:
+        type: string
+        default: ''
+
+env:
+  KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
+  KUSTO_DATABASE: ${{ secrets.KUSTO_DATABASE }}
+  KUSTO_TABLE: CACITestStepTrace
+  TEST_TYPE: aci
+  TEST_NAME: stress test v2 C-ACI
+  RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+  DEPLOYMENT_NAME: ${{ inputs.id || 'stress-v2-caci' }}-${{ inputs.location || 'westeurope' }}-${{ github.run_number }}
+  SUBSCRIPTION: ${{ vars.SUBSCRIPTION_ACI }}
+  RESOURCE_GROUP: c-aci-dashboard
+  REGISTRY: cacidashboardaci.azurecr.io
+  REPOSITORY: prebuilt-test-containers/stress-tests-noserver-ubuntu
+  TAG: "latest"
+  MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'westeurope' }}
+  LOCATION: ${{ inputs.location || 'westeurope' }}
+  CPU: ${{ inputs.cpu || 4 }}
+  MEMORY_IN_GB: ${{ inputs.memory_in_gb || 16 }}
+  CLEANUP: ${{ inputs.cleanup }}
+  POLICY_TYPE: allow_all
+  RUN_FEATURES: ''
+  SHARE_QUOTA_GIB: '51200'
+  STORAGE_TAG_PURPOSE: caci-testing-storage-premium
+
+jobs:
+  stress-test-v2:
+    name: ${{ inputs.id || 'stress-v2-caci' }}
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log into Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+
+      - name: Initialize Run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/init_run.sh
+
+      - name: Resolve storage account
+        id: storage
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Resolve storage account'
+          ACCOUNT=$(az storage account list \
+            --query "[?location=='$LOCATION' && tags.purpose=='$STORAGE_TAG_PURPOSE'].name | [0]" \
+            -o tsv)
+          if [ -z "$ACCOUNT" ]; then
+            ./scripts/tracing/trace_step.py --complete --strict --err "No $STORAGE_TAG_PURPOSE account in $LOCATION"
+            exit 1
+          fi
+          SHARE="stv2-${{ github.run_number }}-${{ github.run_attempt }}"
+          echo "Resolved storage account: $ACCOUNT (location=$LOCATION, share=$SHARE)"
+          echo "account=$ACCOUNT" >> "$GITHUB_OUTPUT"
+          echo "share=$SHARE" >> "$GITHUB_OUTPUT"
+          ./scripts/tracing/trace_step.py --complete --strict --output account=$ACCOUNT share=$SHARE
+
+      - name: Create 50TiB Azure Files share
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Create share'
+          az storage share-rm create \
+            --storage-account ${{ steps.storage.outputs.account }} \
+            --resource-group $RESOURCE_GROUP \
+            --name ${{ steps.storage.outputs.share }} \
+            --quota $SHARE_QUOTA_GIB \
+            --enabled-protocols SMB
+          ./scripts/tracing/trace_step.py --complete --strict
+
+      - name: Set Parameters
+        run: |
+          c-aci-testing aci param_set workloads/stress-test-v2 --parameter cpu=$CPU
+          c-aci-testing aci param_set workloads/stress-test-v2 --parameter memoryInGb=$MEMORY_IN_GB
+          c-aci-testing aci param_set workloads/stress-test-v2 --parameter branch=${GITHUB_REF_NAME}
+          c-aci-testing aci param_set workloads/stress-test-v2 --parameter shareName=${{ steps.storage.outputs.share }}
+
+      - name: Fill in allow_all policy
+        run: |
+          c-aci-testing policies gen workloads/stress-test-v2 --deployment-name $DEPLOYMENT_NAME --policy-type allow_all
+
+      - name: Deploy Container Group
+        run: |
+          ./scripts/aci_deploy_traced.sh workloads/stress-test-v2
+
+      - name: Wait for container completion
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Wait for ALL-DONE'
+          for i in $(seq 1 20); do
+            c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME 2>&1 | tee output.log || true
+            if grep -q "ALL-DONE" output.log; then
+              ./scripts/tracing/trace_step.py --complete --strict
+              exit 0
+            fi
+            sleep 30
+          done
+          ./scripts/tracing/trace_step.py --complete --strict --err "Timeout waiting for ALL-DONE"
+          exit 1
+
+      - name: Parse container output
+        if: always()
+        continue-on-error: true
+        run: |
+          if [ -f output.log ]; then
+            ./scripts/parse_container_output.py --must-have-output --error-count-threshold 100000 output.log
+          fi
+
+      - name: Report result
+        if: always()
+        run: |
+          ./scripts/trace_run_result.sh ${{ job.status }}
+
+      - name: Monitor Container Group (final)
+        if: always()
+        continue-on-error: true
+        run: |
+          c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME 2>&1 | tee output.log
+
+      - name: Get Container States
+        if: always()
+        continue-on-error: true
+        run: |
+          sleep 30
+          ./scripts/trace_container_states.sh
+
+      - name: Remove Container Group
+        if: always()
+        run: |
+          if [ "$CLEANUP" != false ]; then
+            c-aci-testing aci remove --deployment-name $DEPLOYMENT_NAME || true
+          fi
+
+      - name: Delete Azure Files share
+        if: always()
+        continue-on-error: true
+        run: |
+          if [ "$CLEANUP" != false ] && [ -n "${{ steps.storage.outputs.share }}" ]; then
+            az storage share-rm delete \
+              --storage-account ${{ steps.storage.outputs.account }} \
+              --resource-group $RESOURCE_GROUP \
+              --name ${{ steps.storage.outputs.share }} \
+              --yes || true
+          fi

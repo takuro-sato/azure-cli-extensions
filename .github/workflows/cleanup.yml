@@ -164,23 +164,22 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
 
-      - name: Recreate testshare in each storage account
+      - name: Delete all file shares in each storage account
         run: |
           for account in $(az storage account list -g c-aci-dashboard --query "[].name" -o tsv); do
             echo "Processing storage account: $account"
-            if az storage share show --name testshare --account-name "$account" --output none; then
-              echo "Deleting testshare in $account"
-              az storage share delete --name testshare --account-name "$account"
-              # Avoid "The specified share is being deleted. Try operation later."
-              sleep 60
-            fi
-            echo "Creating testshare in $account"
-            az storage share-rm create \
+            shares=$(az storage share-rm list \
               --storage-account "$account" \
               --resource-group c-aci-dashboard \
-              --name testshare \
-              --access-tier Hot \
-              --enabled-protocols SMB
+              --query "[].name" -o tsv)
+            for share in $shares; do
+              echo "Deleting share $share in $account"
+              az storage share-rm delete \
+                --storage-account "$account" \
+                --resource-group c-aci-dashboard \
+                --name "$share" \
+                --yes
+            done
           done
 
   cleanup-hsm:

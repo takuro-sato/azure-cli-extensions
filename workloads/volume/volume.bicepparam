@@ -13,3 +13,6 @@ param ccePolicies={
 param managedIDName=''
 
 param useVnet=true
+
+param storageAccountName=''
+param shareName='testshare'

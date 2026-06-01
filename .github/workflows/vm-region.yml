@@ -180,32 +180,6 @@ jobs:
       vmSize: 'Standard_DC8as_cc_v6'
       test_schedule: gh-daily
 
-  perf-cvm:
-    if: ${{ !cancelled() && inputs.location == 'uaenorth' }}
-    secrets: inherit
-    uses: ./.github/workflows/workload-perf-cvm.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        vmSize: ['DC4as_v6', 'DC8as_v6']
-    with:
-      id: perf-cvm-${{ matrix.vmSize }}
-      location: ${{ inputs.location }}
-      vmSize: Standard_${{ matrix.vmSize }}
-
-  perf-regular-vm:
-    if: ${{ !cancelled() && inputs.location == 'uaenorth' }}
-    secrets: inherit
-    uses: ./.github/workflows/workload-perf-regular-vm.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        vmSize: ['D4as_v6', 'D8as_v6']
-    with:
-      id: perf-regular-vm-${{ matrix.vmSize }}
-      location: ${{ inputs.location }}
-      vmSize: Standard_${{ matrix.vmSize }}
-
   # Disabled as it's currently broken
   # virtualclient:
   #   if: ${{ !cancelled() && inputs.location != '' && contains(vars.WS2025_VM_REGIONS, format(',{0},', inputs.location)) }}

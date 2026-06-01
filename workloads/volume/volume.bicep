@@ -12,8 +12,11 @@ param memoryInGb int = 4
 
 param useVnet bool = false
 
+param storageAccountName string
+param shareName string = 'testshare'
+
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' existing = {
-  name: uniqueString(subscription().id, resourceGroup().name, location, 'caci-testing-storage')
+  name: storageAccountName
 }
 
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' existing = {
@@ -83,7 +86,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
       {
         name: 'volume'
         azureFile: {
-          shareName: 'testshare'
+          shareName: shareName
           storageAccountName: storageAccount.name
           storageAccountKey: storageAccount.listKeys().keys[0].value
           readOnly: false

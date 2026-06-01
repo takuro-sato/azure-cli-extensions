@@ -92,6 +92,9 @@ resource regionalStorageAccount 'Microsoft.Storage/storageAccounts@2025-08-01' =
   name: uniqueString(subscription().id, resourceGroup().name, location, 'caci-testing-storage')
   location: location
   kind: 'StorageV2'
+  tags: {
+    purpose: 'caci-testing-storage'
+  }
   sku: {
     name: 'Standard_LRS'
   }
@@ -138,6 +141,100 @@ resource fileShare 'Microsoft.Storage/storageAccounts/fileServices/shares@2025-0
   properties: {
     accessTier: 'Hot'
     enabledProtocols: 'SMB'
+  }
+}
+
+// Premium FileStorage account for stress-test-v2 ACI tests (confidential variant).
+// Shares are created at pipeline run time and deleted afterwards to save cost.
+resource fioAciPremiumStorageAccount 'Microsoft.Storage/storageAccounts@2025-08-01' = {
+  name: uniqueString(subscription().id, resourceGroup().name, location, 'caci-testing-storage-premium')
+  location: location
+  kind: 'FileStorage'
+  tags: {
+    purpose: 'caci-testing-storage-premium'
+  }
+  sku: {
+    name: 'Premium_LRS'
+  }
+  properties: {
+    publicNetworkAccess: 'Enabled'
+    minimumTlsVersion: 'TLS1_2'
+    allowBlobPublicAccess: false
+    allowSharedKeyAccess: true
+    supportsHttpsTrafficOnly: true
+  }
+}
+
+resource fioAciPremiumFileService 'Microsoft.Storage/storageAccounts/fileServices@2025-08-01' = {
+  parent: fioAciPremiumStorageAccount
+  name: 'default'
+  properties: {
+    shareDeleteRetentionPolicy: {
+      enabled: false
+    }
+  }
+}
+
+// Premium FileStorage account for stress-test-v2 regular-VM tests (separate from ACI account
+// to allow ACI and VM tests to run in parallel without share contention).
+resource fioVmPremiumStorageAccount 'Microsoft.Storage/storageAccounts@2025-08-01' = {
+  name: uniqueString(subscription().id, resourceGroup().name, location, 'caci-vm-testing-storage-premium')
+  location: location
+  kind: 'FileStorage'
+  tags: {
+    purpose: 'caci-vm-testing-storage-premium'
+  }
+  sku: {
+    name: 'Premium_LRS'
+  }
+  properties: {
+    publicNetworkAccess: 'Enabled'
+    minimumTlsVersion: 'TLS1_2'
+    allowBlobPublicAccess: false
+    allowSharedKeyAccess: true
+    supportsHttpsTrafficOnly: true
+  }
+}
+
+resource fioVmPremiumFileService 'Microsoft.Storage/storageAccounts/fileServices@2025-08-01' = {
+  parent: fioVmPremiumStorageAccount
+  name: 'default'
+  properties: {
+    shareDeleteRetentionPolicy: {
+      enabled: false
+    }
+  }
+}
+
+// Premium FileStorage account for stress-test-v2 non-confidential ACI tests. Separate from the
+// confidential ACI account so that conf and non-conf runs in the same region don't contend
+// on the same storage account when running in parallel.
+resource fioAciNonconfPremiumStorageAccount 'Microsoft.Storage/storageAccounts@2025-08-01' = {
+  name: uniqueString(subscription().id, resourceGroup().name, location, 'caci-nonconf-testing-storage-premium')
+  location: location
+  kind: 'FileStorage'
+  tags: {
+    purpose: 'caci-nonconf-testing-storage-premium'
+  }
+  sku: {
+    name: 'Premium_LRS'
+  }
+  properties: {
+    publicNetworkAccess: 'Enabled'
+    minimumTlsVersion: 'TLS1_2'
+    allowBlobPublicAccess: false
+    allowSharedKeyAccess: true
+    supportsHttpsTrafficOnly: true
+  }
+}
+
+resource fioAciNonconfPremiumFileService 'Microsoft.Storage/storageAccounts/fileServices@2025-08-01' = {
+  parent: fioAciNonconfPremiumStorageAccount
+  name: 'default'
+  properties: {
+    shareDeleteRetentionPolicy: {
+      enabled: false
+    }
   }
 }
 

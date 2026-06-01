@@ -94,6 +94,7 @@ env:
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: ${{ inputs.policy_type || 'generated' }}
   RUN_FEATURES: azureFile,vnet
+  STORAGE_TAG_PURPOSE: caci-testing-storage
 
 jobs:
   volume:
@@ -119,11 +120,39 @@ jobs:
       - name: Pull Image
         run: c-aci-testing images pull workloads/volume
 
+      - name: Resolve storage account
+        id: storage
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Resolve storage account'
+          ACCOUNT=$(az storage account list \
+            --query "[?location=='$LOCATION' && tags.purpose=='$STORAGE_TAG_PURPOSE'].name | [0]" \
+            -o tsv)
+          if [ -z "$ACCOUNT" ]; then
+            ./scripts/tracing/trace_step.py --complete --strict --err "No $STORAGE_TAG_PURPOSE account in $LOCATION"
+            exit 1
+          fi
+          echo "Resolved storage account: $ACCOUNT (location=$LOCATION, share=testshare)"
+          echo "account=$ACCOUNT" >> "$GITHUB_OUTPUT"
+          ./scripts/tracing/trace_step.py --complete --strict --output account=$ACCOUNT
+
+      - name: Create testshare if not exist
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Create testshare'
+          az storage share-rm create \
+            --storage-account ${{ steps.storage.outputs.account }} \
+            --resource-group $RESOURCE_GROUP \
+            --name testshare \
+            --access-tier Hot \
+            --enabled-protocols SMB \
+            >/dev/null
+          ./scripts/tracing/trace_step.py --complete --strict
+
       - name: Set Parameters
         run: |
           c-aci-testing aci param_set workloads/volume --parameter cpu=$CPU
           c-aci-testing aci param_set workloads/volume --parameter memoryInGb=$MEMORY_IN_GB
           c-aci-testing aci param_set workloads/volume --parameter useVnet=true
+          c-aci-testing aci param_set workloads/volume --parameter storageAccountName=${{ steps.storage.outputs.account }}
 
       - name: Generate Security Policy
         run: |

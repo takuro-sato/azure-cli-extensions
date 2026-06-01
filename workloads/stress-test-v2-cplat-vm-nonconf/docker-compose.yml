@@ -1,0 +1,4 @@
+version: '3'
+services:
+  primary:
+    image: ${REGISTRY:-cacidashboardaci.azurecr.io}/${REPOSITORY:-prebuilt-test-containers/stress-tests-noserver-ubuntu}:${TAG:-latest}

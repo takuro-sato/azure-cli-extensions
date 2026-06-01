@@ -1,0 +1,17 @@
+name: Perf - West US 3
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '7 2 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  perf-westus3:
+    secrets: inherit
+    uses: ./.github/workflows/perf-region.yml
+    with:
+      location: westus3

@@ -1,0 +1,224 @@
+name: Workload - stress test v2 (regular VM)
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/workload-stress-test-v2-vm.yml
+  workflow_dispatch:
+    inputs:
+      id:
+        type: string
+      location:
+        type: string
+        default: westeurope
+      vmSize:
+        type: string
+        default: Standard_D4as_v6
+      cleanup:
+        type: boolean
+        default: true
+  workflow_call:
+    inputs:
+      id:
+        type: string
+      location:
+        type: string
+        default: westeurope
+      vmSize:
+        type: string
+        default: Standard_D4as_v6
+      cleanup:
+        type: boolean
+        default: true
+      test_schedule:
+        type: string
+        default: ''
+
+env:
+  KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
+  KUSTO_DATABASE: ${{ secrets.KUSTO_DATABASE }}
+  KUSTO_TABLE: CACITestStepTrace
+  TEST_TYPE: vm
+  TEST_NAME: stress test v2 regular VM
+  RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+  DEPLOYMENT_NAME: ${{ inputs.id || 'stress-v2-vm' }}-${{ inputs.location || 'westeurope' }}-${{ github.run_number }}
+  SUBSCRIPTION: ${{ vars.SUBSCRIPTION_ACI }}
+  RESOURCE_GROUP: c-aci-dashboard
+  LOCATION: ${{ inputs.location || 'westeurope' }}
+  CLEANUP: ${{ inputs.cleanup }}
+  VM_SIZE: ${{ inputs.vmSize || 'Standard_D4as_v6' }}
+  SHARE_QUOTA_GIB: '51200'
+  STORAGE_TAG_PURPOSE: caci-vm-testing-storage-premium
+
+jobs:
+  stress-test-v2-vm:
+    name: ${{ inputs.id || 'stress-v2-vm' }}
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log into Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+
+      - name: Initialize Run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/init_run.sh
+
+      - name: Resolve storage account
+        id: storage
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Resolve storage account'
+          ACCOUNT=$(az storage account list \
+            --query "[?location=='$LOCATION' && tags.purpose=='$STORAGE_TAG_PURPOSE'].name | [0]" \
+            -o tsv)
+          if [ -z "$ACCOUNT" ]; then
+            ./scripts/tracing/trace_step.py --complete --strict --err "No $STORAGE_TAG_PURPOSE account in $LOCATION"
+            exit 1
+          fi
+          SHARE="stv2-vm-${{ github.run_number }}-${{ github.run_attempt }}"
+          echo "Resolved storage account: $ACCOUNT (location=$LOCATION)"
+          echo "account=$ACCOUNT" >> "$GITHUB_OUTPUT"
+          echo "share=$SHARE" >> "$GITHUB_OUTPUT"
+          ./scripts/tracing/trace_step.py --complete --strict --output account=$ACCOUNT share=$SHARE
+
+      - name: Create 50TiB Azure Files share
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Create share'
+          az storage share-rm create \
+            --storage-account ${{ steps.storage.outputs.account }} \
+            --resource-group $RESOURCE_GROUP \
+            --name ${{ steps.storage.outputs.share }} \
+            --quota $SHARE_QUOTA_GIB \
+            --enabled-protocols SMB
+          ./scripts/tracing/trace_step.py --complete --strict
+
+      - name: Upload harness to blob and generate SAS
+        id: upload
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Upload harness'
+          CONTAINER_NAME="stress-test-v2-scripts"
+          az storage container create \
+            --account-name cacitestingstorageaci \
+            --name "$CONTAINER_NAME" \
+            --auth-mode login 2>/dev/null || true
+          BLOB_NAME="stress_test_v2-${{ github.run_id }}-${{ github.run_attempt }}.py"
+          az storage blob upload \
+            --account-name cacitestingstorageaci \
+            --container-name "$CONTAINER_NAME" \
+            --name "$BLOB_NAME" \
+            --file containers/stress_test_workloads/stress_test_v2.py \
+            --overwrite \
+            --auth-mode login
+          EXPIRY=$(date -u -d '4 hours' '+%Y-%m-%dT%H:%MZ')
+          ACCOUNT_KEY=$(az storage account keys list \
+            --account-name cacitestingstorageaci \
+            --resource-group c-aci-testing \
+            --query '[0].value' -o tsv)
+          HARNESS_URL=$(az storage blob generate-sas \
+            --account-name cacitestingstorageaci \
+            --account-key "$ACCOUNT_KEY" \
+            --container-name "$CONTAINER_NAME" \
+            --name "$BLOB_NAME" \
+            --permissions r \
+            --expiry "$EXPIRY" \
+            --full-uri -o tsv)
+          echo "::add-mask::$HARNESS_URL"
+          echo "harness_url=$HARNESS_URL" >> "$GITHUB_OUTPUT"
+          ./scripts/tracing/trace_step.py --complete --strict
+
+      - name: Deploy VM
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Deploy VM'
+          PASSWORD=$(head --bytes 8 /dev/urandom | base64)
+          az deployment group create \
+            --resource-group $RESOURCE_GROUP \
+            --name $DEPLOYMENT_NAME \
+            --template-file workloads/stress-test-v2-vm/vm.bicep \
+            --parameters \
+              "location=$LOCATION" \
+              "deploymentName=$DEPLOYMENT_NAME" \
+              "adminPassword=$PASSWORD" \
+              "vmSize=$VM_SIZE" \
+              "harnessUrl=${{ steps.upload.outputs.harness_url }}" \
+              "shareName=${{ steps.storage.outputs.share }}" \
+              "branch=${GITHUB_REF_NAME}"
+          ./scripts/tracing/trace_step.py --complete --strict
+
+      - name: Wait for VM test completion
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Wait for ALL-DONE'
+          for i in $(seq 1 20); do
+            OUTPUT=$(az vm run-command invoke \
+              --resource-group $RESOURCE_GROUP \
+              --name ${DEPLOYMENT_NAME}-vm \
+              --command-id RunShellScript \
+              --scripts "cat /tmp/stress-test-v2.log 2>/dev/null || echo 'Log not ready'" \
+              --query 'value[0].message' -o tsv 2>/dev/null || echo "")
+            echo "$OUTPUT" | tail -20
+            if echo "$OUTPUT" | grep -q "ALL-DONE"; then
+              ./scripts/tracing/trace_step.py --complete --strict
+              break
+            fi
+            if [ $i -eq 20 ]; then
+              ./scripts/tracing/trace_step.py --complete --strict --err "Timeout waiting for ALL-DONE"
+              exit 1
+            fi
+            sleep 30
+          done
+
+      - name: Fetch full VM log
+        if: always()
+        continue-on-error: true
+        run: |
+          az vm run-command invoke \
+            --resource-group $RESOURCE_GROUP \
+            --name ${DEPLOYMENT_NAME}-vm \
+            --command-id RunShellScript \
+            --scripts "cat /tmp/stress-test-v2.log" \
+            --query 'value[0].message' -o tsv | tee vm-output.log
+
+      - name: Parse VM output
+        if: always()
+        continue-on-error: true
+        run: |
+          if [ -f vm-output.log ]; then
+            ./scripts/parse_container_output.py --must-have-output --error-count-threshold 100000 vm-output.log
+          fi
+
+      - name: Report result
+        if: always()
+        run: |
+          ./scripts/trace_run_result.sh ${{ job.status }}
+
+      - name: Remove VM
+        if: always()
+        run: |
+          if [ "$CLEANUP" != false ]; then
+            az vm delete --resource-group $RESOURCE_GROUP --name ${DEPLOYMENT_NAME}-vm --yes --force-deletion yes --verbose || true
+            az network nic delete --resource-group $RESOURCE_GROUP --name ${DEPLOYMENT_NAME}-nic --verbose || true
+            az network public-ip delete --resource-group $RESOURCE_GROUP --name ${DEPLOYMENT_NAME}-ip --verbose || true
+            az network vnet delete --resource-group $RESOURCE_GROUP --name ${DEPLOYMENT_NAME}-vnet --verbose || true
+          fi
+
+      - name: Delete Azure Files share
+        if: always()
+        continue-on-error: true
+        run: |
+          if [ "$CLEANUP" != false ] && [ -n "${{ steps.storage.outputs.share }}" ]; then
+            az storage share-rm delete \
+              --storage-account ${{ steps.storage.outputs.account }} \
+              --resource-group $RESOURCE_GROUP \
+              --name ${{ steps.storage.outputs.share }} \
+              --yes || true
+          fi

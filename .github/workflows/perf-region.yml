@@ -5,9 +5,6 @@ permissions:
   contents: read
 
 on:
-  pull_request:
-    paths:
-      - .github/workflows/perf-region.yml
   workflow_call:
     inputs:
       location:
@@ -22,31 +19,167 @@ on:
         description: 'The location of the Azure Container Instances'
 
 jobs:
-  perf:
+  aci-nonconf:
     if: ${{ !cancelled() }}
-    name: perf
     secrets: inherit
-    uses: ./.github/workflows/workload-perf.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        policy_type: ['generated', 'debug', 'allow_all']
+    uses: ./.github/workflows/workload-stress-test-v2-nonconf.yml
     with:
-      id: perf-${{ matrix.policy_type }}
+      id: stv2-nonconf
       location: ${{ inputs.location }}
-      policy_type: ${{ matrix.policy_type }}
 
-  perf-nonconf:
+  caci:
     if: ${{ !cancelled() }}
-    name: perf-nonconf
+    needs: aci-nonconf
     secrets: inherit
-    uses: ./.github/workflows/workload-perf-nonconf.yml
+    uses: ./.github/workflows/workload-stress-test-v2.yml
     with:
-      id: perf-nonconf
+      id: stv2-caci
       location: ${{ inputs.location }}
+
+  vm-D8sv6:
+    if: ${{ !cancelled() }}
+    needs: caci
+    secrets: inherit
+    uses: ./.github/workflows/workload-stress-test-v2-vm.yml
+    with:
+      id: stv2-vm-D8sv6
+      location: ${{ inputs.location }}
+      vmSize: Standard_D8s_v6
+
+  vm-D4sv6:
+    if: ${{ !cancelled() }}
+    needs: vm-D8sv6
+    secrets: inherit
+    uses: ./.github/workflows/workload-stress-test-v2-vm.yml
+    with:
+      id: stv2-vm-D4sv6
+      location: ${{ inputs.location }}
+      vmSize: Standard_D4s_v6
+
+  vm-D8asv6:
+    if: ${{ !cancelled() }}
+    needs: vm-D4sv6
+    secrets: inherit
+    uses: ./.github/workflows/workload-stress-test-v2-vm.yml
+    with:
+      id: stv2-vm-D8asv6
+      location: ${{ inputs.location }}
+      vmSize: Standard_D8as_v6
+
+  cplat-vm-D8sv6-ck:
+    if: ${{ !cancelled() }}
+    needs: vm-D8asv6
+    secrets: inherit
+    uses: ./.github/workflows/vm-workload-stress-test-v2-in-cplat.yml
+    with:
+      id: stv2-cplat-D8sv6-pat2-ck
+      location: ${{ inputs.location }}
+      vmImage: official
+      cplatBlobName: cplat-0.128.8-patch2-with-conf-kernel
+      confidential: false
+      vmSize: Standard_D8s_v6
+
+  vm-D4asv6:
+    if: ${{ !cancelled() }}
+    needs: cplat-vm-D8sv6-ck
+    secrets: inherit
+    uses: ./.github/workflows/workload-stress-test-v2-vm.yml
+    with:
+      id: stv2-vm-D4asv6
+      location: ${{ inputs.location }}
+      vmSize: Standard_D4as_v6
+
+  cplat-vm-D8asv6-ck:
+    if: ${{ !cancelled() }}
+    needs: vm-D4asv6
+    secrets: inherit
+    uses: ./.github/workflows/vm-workload-stress-test-v2-in-cplat.yml
+    with:
+      id: stv2-cplat-D8asv6-ck
+      location: ${{ inputs.location }}
+      vmImage: official
+      cplatBlobName: cplat-0.128.8-patch2-with-conf-kernel
+      confidential: false
+      vmSize: Standard_D8as_v6
+
+  cplat-vm-D8sv6-0129aesni:
+    if: ${{ !cancelled() }}
+    needs: cplat-vm-D8asv6-ck
+    secrets: inherit
+    uses: ./.github/workflows/vm-workload-stress-test-v2-in-cplat.yml
+    with:
+      id: stv2-cplat-D8sv6-0129
+      location: ${{ inputs.location }}
+      vmImage: official
+      cplatBlobName: cplat-0.129.1-with-aes-ni-2
+      confidential: false
+      vmSize: Standard_D8s_v6
+
+  cplat-vm-D8asv6-0129aesni:
+    if: ${{ !cancelled() }}
+    needs: cplat-vm-D8sv6-0129aesni
+    secrets: inherit
+    uses: ./.github/workflows/vm-workload-stress-test-v2-in-cplat.yml
+    with:
+      id: stv2-cplat-D8asv6-0129
+      location: ${{ inputs.location }}
+      vmImage: official
+      cplatBlobName: cplat-0.129.1-with-aes-ni-2
+      confidential: false
+      vmSize: Standard_D8as_v6
+
+  cplat-vm-DC8asccv6-0214dev-conf:
+    if: ${{ !cancelled() }}
+    needs: cplat-vm-D8asv6-0129aesni
+    secrets: inherit
+    uses: ./.github/workflows/vm-workload-stress-test-v2-in-cplat.yml
+    with:
+      id: stv2-cplat-DC8asccv6-0214dev-conf
+      location: ${{ inputs.location }}
+      vmImage: official
+      cplatBlobName: cplat-0.2.14-dev.202603261649
+      confidential: true
+      vmSize: Standard_DC8as_cc_v6
+
+  cplat-vm-D8sv6-01288p2aesni:
+    if: ${{ !cancelled() }}
+    needs: cplat-vm-DC8asccv6-0214dev-conf
+    secrets: inherit
+    uses: ./.github/workflows/vm-workload-stress-test-v2-in-cplat.yml
+    with:
+      id: stv2-cplat-D8sv6-01288p2aesni
+      location: ${{ inputs.location }}
+      vmImage: official
+      cplatBlobName: cplat-0.128.8-patch2-with-aes-ni-2
+      confidential: false
+      vmSize: Standard_D8s_v6
+
+  cplat-vm-D8asv6-01288p2aesni:
+    if: ${{ !cancelled() }}
+    needs: cplat-vm-D8sv6-01288p2aesni
+    secrets: inherit
+    uses: ./.github/workflows/vm-workload-stress-test-v2-in-cplat.yml
+    with:
+      id: stv2-cplat-D8asv6-01288p2aesni
+      location: ${{ inputs.location }}
+      vmImage: official
+      cplatBlobName: cplat-0.128.8-patch2-with-aes-ni-2
+      confidential: false
+      vmSize: Standard_D8as_v6
+
+  cvm-DC4asv6:
+    if: ${{ !cancelled() }}
+    needs: cplat-vm-D8asv6-01288p2aesni
+    secrets: inherit
+    uses: ./.github/workflows/workload-stress-test-v2-cvm.yml
+    with:
+      id: stv2-cvm-DC4asv6
+      location: ${{ inputs.location }}
+      vmSize: Standard_DC4as_v6
 
   virtualclient:
     if: ${{ !cancelled() && inputs.location != 'centraluseuap' }}
+    needs: cvm-DC4asv6
     name: virtualclient
     secrets: inherit
     uses: ./.github/workflows/workload-virtualclient.yml
@@ -69,6 +202,7 @@ jobs:
 
   virtualclient-cuseuap:
     if: ${{ !cancelled() && inputs.location == 'centraluseuap' }}
+    needs: cvm-DC4asv6
     name: virtualclient
     secrets: inherit
     uses: ./.github/workflows/workload-virtualclient.yml
