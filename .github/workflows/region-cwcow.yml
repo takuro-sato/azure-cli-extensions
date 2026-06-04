@@ -1,0 +1,94 @@
+name: Region C-WCOW
+
+# Confidential WCOW equivalent of region.yml. Full per-region C-WCOW coverage:
+# fans out to every confidential WCOW dashboard workload in sequence on a single
+# region's ACISNP fleet.
+#
+# Jobs run sequentially (chained via `needs`) to avoid contending for the
+# region's confidential WCOW capacity — the AUC2 ACISNP fleet is small and the
+# elevated stress workload alone asks for 8 CPU / 16 GB.
+#
+# Every job uses policy_type allow_all (generated WCOW policies need confcom
+# 1.3.0+wcow + Windows Docker, unavailable on ubuntu-latest — see vm-cwcow.yml),
+# so there is no policy_type matrix like region.yml has for LCOW.
+
+permissions:
+  id-token: write
+  contents: read
+
+# Reusable only -- WCOW container groups need a region whose ACISNP clusters
+# carry the unified-l2bridge cplat (e.g. australiacentral2 today). Defaulting a
+# path-triggered run to westeurope fails with UnsupportedWindowsVersion.
+
+on:
+  workflow_call:
+    inputs:
+      location:
+        type: string
+        required: true
+        description: 'The location of the Azure Container Instances'
+  workflow_dispatch:
+    inputs:
+      location:
+        type: string
+        required: true
+        description: 'The location of the Azure Container Instances'
+
+jobs:
+  info:
+    if: ${{ !cancelled() }}
+    name: info
+    secrets: inherit
+    uses: ./.github/workflows/workload-info-cwcow.yml
+    with:
+      id: info-cwcow
+      location: ${{ inputs.location }}
+      test_schedule: gh-daily
+
+  minimal:
+    if: ${{ !cancelled() }}
+    name: minimal
+    secrets: inherit
+    needs: info
+    uses: ./.github/workflows/workload-minimal-cwcow.yml
+    with:
+      id: minimal-cwcow
+      location: ${{ inputs.location }}
+      workload: minimal_cwcow
+      expected_output: hello c-wcow
+      test_schedule: gh-daily
+
+  minimal-servercore:
+    if: ${{ !cancelled() }}
+    name: minimal-servercore
+    secrets: inherit
+    needs: minimal
+    uses: ./.github/workflows/workload-minimal-cwcow.yml
+    with:
+      id: minimal-cwcow-servercore
+      location: ${{ inputs.location }}
+      workload: minimal_cwcow_servercore
+      expected_output: hello c-wcow servercore
+      test_schedule: gh-daily
+
+  long-lived:
+    if: ${{ !cancelled() }}
+    name: long-lived
+    secrets: inherit
+    needs: minimal-servercore
+    uses: ./.github/workflows/workload-long-lived-cwcow.yml
+    with:
+      id: long-lived-cwcow
+      location: ${{ inputs.location }}
+      test_schedule: gh-daily
+
+  stress-tests:
+    if: ${{ !cancelled() }}
+    name: stress-tests
+    secrets: inherit
+    needs: long-lived
+    uses: ./.github/workflows/workload-stress-tests-cwcow.yml
+    with:
+      id: stress-tests-cwcow
+      location: ${{ inputs.location }}
+      test_schedule: gh-daily

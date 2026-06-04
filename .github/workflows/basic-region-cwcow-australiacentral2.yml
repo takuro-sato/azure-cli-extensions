@@ -1,0 +1,32 @@
+name: Region (Basic) C-WCOW - Australia Central 2
+
+# Australia Central 2 entry point for the C-WCOW basic-region workflow.
+# Mirrors basic-region-australiacentral2.yml but targets the C-WCOW info
+# workload. The 4 newly-provisioned ACISNP clusters in CBR2 ship a unified
+# l2bridge cplat (cri-containerd-confidential-0.0.1-unified-l2bridge) that
+# carries WCOW boot bits, so confidential WCOW container groups can deploy
+# on them too.
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/basic-region-cwcow-australiacentral2.yml
+      - .github/workflows/basic-region-cwcow.yml
+      - .github/workflows/workload-info-cwcow.yml
+      - workloads/info_cwcow/**
+      - scripts/init_run.sh
+      - scripts/install-c-aci-testing.sh
+  schedule:
+    - cron: '41 1-23 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  basic-cwcow-australiacentral2:
+    secrets: inherit
+    uses: ./.github/workflows/basic-region-cwcow.yml
+    with:
+      location: australiacentral2

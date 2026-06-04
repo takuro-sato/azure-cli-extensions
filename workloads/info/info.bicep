@@ -13,6 +13,12 @@ param memoryInGb int = 2
 
 param requireHostAmdCert bool = false
 
+@allowed([
+  'Prod'
+  'Test'
+])
+param expectUvmSignature string = 'Prod'
+
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' existing = {
   name: 'aci-long-lived-vnet-${location}'
 }
@@ -54,6 +60,10 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
             {
               name: 'EXPECT_HOST_AMD_CERT'
               value: requireHostAmdCert ? '1' : ''
+            }
+            {
+              name: 'EXPECT_UVM_SIGNATURE'
+              value: expectUvmSignature
             }
           ]
         }

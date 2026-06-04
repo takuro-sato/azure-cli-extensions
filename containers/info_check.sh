@@ -40,12 +40,36 @@ fi
 base64 -d < /security-context-*/reference-info-base64 > /tmp/reference-info
 echo "UVM reference info:"
 sign1util print -in /tmp/reference-info | tee /tmp/refinfo.txt
-if ! sign1util check \
-    --in /tmp/reference-info \
-    --did 'did:x509:0:sha256:I__iuL25oXEVFdTP_aBLx_eT1RPHbCQ_ECBQfYZpt9s::eku:1.3.6.1.4.1.311.76.59.1.2';
-    then
-    echo "ERROR: UVM reference info signature check failed"
-    has_err=1
+# Prod and Test DIDs share the same trust anchor (sha256 fingerprint) and
+# differ only by the EKU OID embedded in the leaf signing cert:
+#   Prod: ContainerPlat UVM EKU       1.3.6.1.4.1.311.76.59.1.2
+#   Test: Windows code-signing (test) 1.3.6.1.4.1.311.10.3.13
+PROD_UVM_DID='did:x509:0:sha256:I__iuL25oXEVFdTP_aBLx_eT1RPHbCQ_ECBQfYZpt9s::eku:1.3.6.1.4.1.311.76.59.1.2'
+TEST_UVM_DID='did:x509:0:sha256:I__iuL25oXEVFdTP_aBLx_eT1RPHbCQ_ECBQfYZpt9s::eku:1.3.6.1.4.1.311.10.3.13'
+
+# EXPECT_UVM_SIGNATURE selects which DID to validate against. Unset == "Prod"
+# preserves the prior hardcoded behaviour for backward compatibility.
+expected_signature="${EXPECT_UVM_SIGNATURE:-Prod}"
+case "$expected_signature" in
+    Prod) expected_did="$PROD_UVM_DID"; other_did="$TEST_UVM_DID"; other_label="Test" ;;
+    Test) expected_did="$TEST_UVM_DID"; other_did="$PROD_UVM_DID"; other_label="Prod" ;;
+    *)
+        echo "ERROR: EXPECT_UVM_SIGNATURE must be 'Prod' or 'Test' (got '$expected_signature')"
+        has_err=1
+        expected_did=""
+        ;;
+esac
+
+if [ -n "$expected_did" ]; then
+    if sign1util check --in /tmp/reference-info --did "$expected_did"; then
+        echo "UVM reference info signature OK (matches $expected_signature DID)"
+    elif sign1util check --in /tmp/reference-info --did "$other_did"; then
+        echo "ERROR: UVM reference info signature MISMATCH: expected $expected_signature signature but found $other_label signature"
+        has_err=1
+    else
+        echo "ERROR: UVM reference info signature check failed against both Prod and Test DIDs"
+        has_err=1
+    fi
 fi
 gawk -e '/^payload:$/ { payload=1; next } payload { print }' /tmp/refinfo.txt > /tmp/ref-payload.json
 

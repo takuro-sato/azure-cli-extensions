@@ -14,3 +14,4 @@ param ccePolicies={
 }
 
 param requireHostAmdCert=true
+param expectUvmSignature='Prod'

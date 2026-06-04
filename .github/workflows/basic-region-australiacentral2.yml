@@ -18,3 +18,12 @@ jobs:
     uses: ./.github/workflows/basic-region.yml
     with:
       location: australiacentral2
+      # The 4 newly-provisioned ACISNP clusters in CBR2 run a test-signed unified
+      # cplat package (ContainerPlat-Test-AMD-UVM-DoNotTrust), so the info workload
+      # validates the Test UVM DID (expect_uvm_signature: Test) until they are
+      # cycled onto the prod-signed cplat.
+      # require_host_amd_cert is disabled separately: the host AMD cert is currently
+      # missing due to a known bug (not because this is a test cplat) that still
+      # needs a fix; re-enable this check once that lands.
+      require_host_amd_cert: false
+      expect_uvm_signature: Test

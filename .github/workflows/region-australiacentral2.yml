@@ -15,3 +15,6 @@ jobs:
     uses: ./.github/workflows/region.yml
     with:
       location: australiacentral2
+      # See basic-region-australiacentral2.yml for the rationale.
+      require_host_amd_cert: false
+      expect_uvm_signature: Test

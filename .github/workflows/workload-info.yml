@@ -52,6 +52,14 @@ on:
         type: string
         description: The type of policy to use
         default: generated
+      require_host_amd_cert:
+        type: boolean
+        description: Whether the workload should fail if /security-context-*/host-amd-cert-base64 is missing
+        default: true
+      expect_uvm_signature:
+        type: string
+        description: Which UVM endorsement DID to validate against ('Prod' or 'Test')
+        default: Prod
   workflow_call:
     inputs:
       id:
@@ -85,6 +93,14 @@ on:
         type: string
         description: The type of policy to use
         default: generated
+      require_host_amd_cert:
+        type: boolean
+        description: Whether the workload should fail if /security-context-*/host-amd-cert-base64 is missing
+        default: true
+      expect_uvm_signature:
+        type: string
+        description: Which UVM endorsement DID to validate against ('Prod' or 'Test')
+        default: Prod
       test_schedule:
         type: string
         description: Trace marker by scheduled runs only
@@ -102,7 +118,10 @@ env:
   RESOURCE_GROUP: c-aci-dashboard
   REGISTRY: cacidashboardaci.azurecr.io
   REPOSITORY: prebuilt-test-containers
-  TAG: latest
+  # Pinned (not :latest) to the info image built from this PR's info_check.sh,
+  # which adds EXPECT_UVM_SIGNATURE / require_host_amd_cert validation. Bump
+  # this (or move back to :latest) once that script is published to :latest.
+  TAG: 20260602
   MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'westeurope' }}
   LOCATION: ${{ inputs.location || 'westeurope' }}
   ZONE: ${{ inputs.zone }}
@@ -111,6 +130,8 @@ env:
   MEMORY_IN_GB: ${{ inputs.memory_in_gb || 1 }}
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: ${{ inputs.policy_type || 'generated' }}
+  REQUIRE_HOST_AMD_CERT: ${{ inputs.require_host_amd_cert != false && 'true' || 'false' }}
+  EXPECT_UVM_SIGNATURE: ${{ inputs.expect_uvm_signature || 'Prod' }}
   TEST_SCHEDULE: ${{ inputs.test_schedule }}
   RUN_FEATURES: ${{ inputs.use_vnet && 'vnet' || '' }}
 
@@ -145,6 +166,8 @@ jobs:
           c-aci-testing aci param_set workloads/info --parameter useVnet=$USE_VNET
           c-aci-testing aci param_set workloads/info --parameter cpu=$CPU
           c-aci-testing aci param_set workloads/info --parameter memoryInGb=$MEMORY_IN_GB
+          c-aci-testing aci param_set workloads/info --parameter requireHostAmdCert=$REQUIRE_HOST_AMD_CERT
+          c-aci-testing aci param_set workloads/info --parameter "expectUvmSignature='$EXPECT_UVM_SIGNATURE'"
 
       - name: Generate Security Policy
         run: |

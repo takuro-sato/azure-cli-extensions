@@ -1,0 +1,27 @@
+name: Region C-WCOW - Australia Central 2
+
+# Australia Central 2 entry point for the full C-WCOW region workflow.
+# Mirrors region-australiacentral2.yml (the LCOW full-region entry): scheduled
+# daily plus manual dispatch, NOT pull_request triggered. The PR smoke test is
+# basic-region-cwcow-australiacentral2.yml (info_cwcow only); this is the full
+# per-region sweep across every confidential WCOW workload.
+#
+# The 4 newly-provisioned ACISNP clusters in CBR2 ship a unified l2bridge cplat
+# (cri-containerd-confidential-0.0.1-unified-l2bridge) that carries WCOW boot
+# bits, so confidential WCOW container groups can deploy on them.
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '30 3 * * *'
+  workflow_dispatch:
+
+jobs:
+  australiacentral2:
+    secrets: inherit
+    uses: ./.github/workflows/region-cwcow.yml
+    with:
+      location: australiacentral2

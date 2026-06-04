@@ -1,0 +1,160 @@
+name: Workload - Stress Tests C-WCOW
+
+# Confidential WCOW equivalent of workload-stress-tests.yml.
+#
+# Deploys workloads/stress_tests_cwcow as a confidential WCOW container group
+# with 4 CPU / 8 GB on the target region's ACISNP fleet (AUC2 confidential WCOW
+# capacity currently rejects larger asks such as 8 CPU / 16 GB).
+# The container runs a long `for /l` loop that emits a timestamped `tick N` line
+# every ~5s. We sleep, monitor the logs, and assert the first `tick 1` appeared,
+# which proves the confidential WCOW UVM booted and the container is executing.
+#
+# Same C-WCOW constraints as workload-info-cwcow.yml: digest-pinned image, no
+# ACR pull, policy_type always allow_all, dummy REGISTRY for argparse.
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      id:
+        type: string
+        description: ID of the run
+      location:
+        type: string
+        description: Where to deploy to
+        required: true
+      cpu:
+        type: number
+        description: The number of CPU cores in container
+        default: 4
+      memory_in_gb:
+        type: number
+        description: The memory in container in Gb
+        default: 8
+      cleanup:
+        type: boolean
+        description: Whether to cleanup the container group after testing
+        default: true
+  workflow_call:
+    inputs:
+      id:
+        type: string
+        description: ID of the run
+      location:
+        type: string
+        description: Where to deploy to
+        required: true
+      cpu:
+        type: number
+        description: The number of CPU cores in container
+        default: 4
+      memory_in_gb:
+        type: number
+        description: The memory in container in Gb
+        default: 8
+      cleanup:
+        type: boolean
+        description: Whether to cleanup the container group after testing
+        default: true
+      test_schedule:
+        type: string
+        description: Trace marker by scheduled runs only
+        default: ''
+
+env:
+  KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
+  KUSTO_DATABASE: ${{ secrets.KUSTO_DATABASE }}
+  KUSTO_TABLE: CACITestStepTrace
+  TEST_TYPE: aci
+  TEST_NAME: Stress Tests C-WCOW
+  RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+  DEPLOYMENT_NAME: ${{ inputs.id || 'stress-tests-cwcow' }}-${{ inputs.location }}-${{ github.run_number }}
+  SUBSCRIPTION: ${{ vars.SUBSCRIPTION_ACI }}
+  RESOURCE_GROUP: c-aci-dashboard
+  # WCOW workloads pull from mcr.microsoft.com (image is digest-pinned in
+  # bicep). REGISTRY is set only because c-aci-testing's argparse rejects a
+  # missing --registry even for --policy-type allow_all; the value is never
+  # actually used by the WCOW workloads.
+  REGISTRY: cacidashboardaci.azurecr.io
+  MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'westeurope' }}
+  LOCATION: ${{ inputs.location || 'westeurope' }}
+  CPU: ${{ inputs.cpu || 4 }}
+  MEMORY_IN_GB: ${{ inputs.memory_in_gb || 8 }}
+  CLEANUP: ${{ inputs.cleanup }}
+  POLICY_TYPE: 'allow_all'
+  TEST_SCHEDULE: ${{ inputs.test_schedule }}
+
+jobs:
+  stress-tests-cwcow:
+    name: ${{ inputs.id || 'stress-tests-cwcow' }}
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Log into Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+
+      - name: Initialize Run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/init_run.sh
+
+      - name: Set Parameters
+        run: |
+          c-aci-testing aci param_set workloads/stress_tests_cwcow --parameter cpu=$CPU
+          c-aci-testing aci param_set workloads/stress_tests_cwcow --parameter memoryInGb=$MEMORY_IN_GB
+
+      - name: Generate Security Policy
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Generate Policy'
+          c-aci-testing policies gen workloads/stress_tests_cwcow --deployment-name $DEPLOYMENT_NAME --policy-type allow_all
+
+      - name: Deploy Container Group
+        run: |
+          ./scripts/aci_deploy_traced.sh workloads/stress_tests_cwcow
+
+      - name: Report result
+        if: always()
+        run: |
+          ./scripts/trace_run_result.sh ${{ job.status }}
+
+      - name: Monitor Container Group
+        if: always()
+        continue-on-error: true
+        run: |
+          set -eo pipefail
+          ./scripts/tracing/trace_step.py --start 'Monitor Container Group'
+          sleep 120
+          c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME | tee output.log
+          cat output.log | jq -R -s '{stress_tests_cwcow: .}' | ./scripts/tracing/trace_step.py --complete --strict --output-from-stdin
+
+      - name: 'Check log contains expected tick'
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Check stress_tests_cwcow log'
+          if ! grep -q 'tick 1' output.log; then
+            ./scripts/tracing/trace_step.py --complete --err "stress_tests_cwcow log missing 'tick 1'"
+            exit 1
+          fi
+          ./scripts/tracing/trace_step.py --complete --strict
+
+      - name: Get Container States
+        if: always()
+        continue-on-error: true
+        run: |
+          sleep 60 # Ensure all states are up to date
+          ./scripts/trace_container_states.sh
+
+      - name: Remove Container Group
+        run: |
+          if [ "$CLEANUP" != false ]; then
+            c-aci-testing aci remove --deployment-name $DEPLOYMENT_NAME
+          fi

@@ -1,0 +1,4 @@
+version: '3'
+services:
+  primary:
+    image: mcr.microsoft.com/windows/servercore@sha256:4566c6115c63ea3a3f15fd368d78dbf7a08064bb94d56428fab00eec033aea67

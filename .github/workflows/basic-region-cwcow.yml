@@ -1,0 +1,43 @@
+name: Region (Basic) C-WCOW
+
+# Confidential WCOW equivalent of basic-region.yml. Smallest end-to-end smoke
+# of confidential WCOW on a given region: deploy info_cwcow as a confidential
+# ACI container group and assert the one-shot info dump completes.
+#
+# Only a single nonzoned-nonvnet variant is wired today — info_cwcow.bicep
+# does not declare useVnet/zone params, and vnet/zone matrices are
+# specific to the LCOW info workload (workload-info.yml). If we want
+# vnet/zoned C-WCOW variants we'll extend info_cwcow.bicep first.
+
+permissions:
+  id-token: write
+  contents: read
+
+# Reusable only -- WCOW container groups need a region whose ACISNP clusters
+# carry the unified-l2bridge cplat (e.g. australiacentral2 today). Defaulting
+# a path-triggered run to westeurope fails with UnsupportedWindowsVersion.
+
+on:
+  workflow_call:
+    inputs:
+      location:
+        type: string
+        required: true
+        description: 'The location of the Azure Container Instances'
+  workflow_dispatch:
+    inputs:
+      location:
+        type: string
+        required: true
+        description: 'The location of the Azure Container Instances'
+
+jobs:
+  info-cwcow-nonzoned-nonvnet:
+    if: ${{ !cancelled() && !contains(vars.ACI_VNET_ONLY_REGIONS, format(',{0},', inputs.location)) && !contains(vars.ACI_ONLY_ZONAL_VNET_REGIONS, format(',{0},', inputs.location)) }}
+    name: info-cwcow-allow_all
+    secrets: inherit
+    uses: ./.github/workflows/workload-info-cwcow.yml
+    with:
+      id: info-cwcow-allow_all
+      location: ${{ inputs.location }}
+      test_schedule: gh-hourly

@@ -14,12 +14,28 @@ on:
         type: string
         required: true
         description: 'The location of the Azure Container Instances'
+      require_host_amd_cert:
+        type: boolean
+        description: Whether the info workload should fail if /security-context-*/host-amd-cert-base64 is missing
+        default: true
+      expect_uvm_signature:
+        type: string
+        description: Which UVM endorsement DID to validate against ('Prod' or 'Test')
+        default: Prod
   workflow_dispatch:
     inputs:
       location:
         type: string
         required: true
         description: 'The location of the Azure Container Instances'
+      require_host_amd_cert:
+        type: boolean
+        description: Whether the info workload should fail if /security-context-*/host-amd-cert-base64 is missing
+        default: true
+      expect_uvm_signature:
+        type: string
+        description: Which UVM endorsement DID to validate against ('Prod' or 'Test')
+        default: Prod
 
 jobs:
   minimal:
@@ -56,6 +72,8 @@ jobs:
       policy_type: ${{ matrix.policy_type }}
       use_vnet: ${{ matrix.use_vnet }}
       test_schedule: gh-daily
+      require_host_amd_cert: ${{ inputs.require_host_amd_cert != false }}
+      expect_uvm_signature: ${{ inputs.expect_uvm_signature || 'Prod' }}
 
   server:
     if: "${{ !cancelled() && !contains(vars.REGIONS_WITH_PROBLEMATIC_PUBLIC_IP, format(',{0},', inputs.location)) }}"

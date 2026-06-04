@@ -14,12 +14,28 @@ on:
         type: string
         required: true
         description: 'The location of the Azure Container Instances'
+      require_host_amd_cert:
+        type: boolean
+        description: Whether the info workload should fail if /security-context-*/host-amd-cert-base64 is missing
+        default: true
+      expect_uvm_signature:
+        type: string
+        description: Which UVM endorsement DID to validate against ('Prod' or 'Test')
+        default: Prod
   workflow_dispatch:
     inputs:
       location:
         type: string
         required: true
         description: 'The location of the Azure Container Instances'
+      require_host_amd_cert:
+        type: boolean
+        description: Whether the info workload should fail if /security-context-*/host-amd-cert-base64 is missing
+        default: true
+      expect_uvm_signature:
+        type: string
+        description: Which UVM endorsement DID to validate against ('Prod' or 'Test')
+        default: Prod
 
 jobs:
   info-nonzoned-nonvnet:
@@ -33,6 +49,8 @@ jobs:
       use_vnet: false
       policy_type: allow_all
       test_schedule: gh-hourly
+      require_host_amd_cert: ${{ inputs.require_host_amd_cert != false }}
+      expect_uvm_signature: ${{ inputs.expect_uvm_signature || 'Prod' }}
 
   info-nonzoned-vnet:
     if: ${{ !cancelled() && !contains(vars.ACI_ONLY_ZONAL_VNET_REGIONS, format(',{0},', inputs.location)) }}
@@ -45,6 +63,8 @@ jobs:
       use_vnet: true
       policy_type: allow_all
       test_schedule: gh-hourly
+      require_host_amd_cert: ${{ inputs.require_host_amd_cert != false }}
+      expect_uvm_signature: ${{ inputs.expect_uvm_signature || 'Prod' }}
 
   info-zoned-1-2:
     if: ${{ !cancelled() && contains(vars.ACI_ZONE_1_2_REGIONS, format(',{0},', inputs.location)) }}
@@ -64,6 +84,8 @@ jobs:
       zone: ${{ matrix.zone }}
       policy_type: allow_all
       test_schedule: gh-hourly
+      require_host_amd_cert: ${{ inputs.require_host_amd_cert != false }}
+      expect_uvm_signature: ${{ inputs.expect_uvm_signature || 'Prod' }}
 
   info-zoned:
     if: ${{ !cancelled() && contains(vars.ACI_ZONED_REGIONS, format(',{0},', inputs.location)) }}
@@ -83,3 +105,5 @@ jobs:
       zone: ${{ matrix.zone }}
       policy_type: allow_all
       test_schedule: gh-hourly
+      require_host_amd_cert: ${{ inputs.require_host_amd_cert != false }}
+      expect_uvm_signature: ${{ inputs.expect_uvm_signature || 'Prod' }}
