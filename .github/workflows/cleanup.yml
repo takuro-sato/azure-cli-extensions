@@ -27,10 +27,20 @@ jobs:
             --resource-group c-aci-dashboard \
             | jq -r '.[]|select((.name|startswith("uptime-")|not) and (.name|startswith("long-lived-maa-test-")|not))|.id')"
 
+          has_failure=0
+          set +e # don't stop on error
           for container in $RUNNING_CONTAINERS; do
               echo "Deleting container group: ${container}"
               az resource delete --ids ${container}
+              if [ $? -ne 0 ]; then
+                has_failure=1
+                echo "Failed to delete container group: ${container}"
+              fi
           done
+          if [ $has_failure -eq 1 ]; then
+            echo "Some container groups failed to delete"
+            exit 1
+          fi
 
   cleanup-vms:
     name: Cleanup Virtual Machines
@@ -46,14 +56,25 @@ jobs:
       - name: Cleanup VMs
         run: |
           RUNNING_VMS=$(az vm list --resource-group c-aci-dashboard --query '[].id' -o tsv)
+          has_failure=0
+          set +e # don't stop on error
           for vm in $RUNNING_VMS; do
               echo "Deleting VM: ${vm}"
               az vm delete --ids ${vm} --yes --force-deletion yes --verbose
-              vm_deployment_name=`echo $vm | grep -oP '(?<=/virtualMachines/).*(?=-vm)'`
-              echo "Deleting vnet and nsg: ${vm_deployment_name}-..."
-              az resource delete --resource-group c-aci-dashboard -n ${vm_deployment_name}-vnet --resource-type Microsoft.Network/virtualNetworks --verbose
-              az resource delete --resource-group c-aci-dashboard -n ${vm_deployment_name}-nsg --resource-type Microsoft.Network/networkSecurityGroups --verbose
+              if [ $? -ne 0 ]; then
+                has_failure=1
+                echo "Failed to delete VM: ${vm}"
+              else
+                vm_deployment_name=`echo $vm | grep -oP '(?<=/virtualMachines/).*(?=-vm)'`
+                echo "Deleting vnet and nsg: ${vm_deployment_name}-..."
+                az resource delete --resource-group c-aci-dashboard -n ${vm_deployment_name}-vnet --resource-type Microsoft.Network/virtualNetworks --verbose
+                az resource delete --resource-group c-aci-dashboard -n ${vm_deployment_name}-nsg --resource-type Microsoft.Network/networkSecurityGroups --verbose
+              fi
           done
+          if [ $has_failure -eq 1 ]; then
+            echo "Some VMs failed to delete"
+            exit 1
+          fi
 
   cleanup-images:
     name: Cleanup Docker Images
@@ -76,6 +97,7 @@ jobs:
     name: Cleanup Network Interfaces
     runs-on: ubuntu-latest
     needs: cleanup-vms
+    if: ${{ !cancelled() }}
     steps:
       - name: Log into Azure
         uses: azure/login@v2
@@ -94,6 +116,8 @@ jobs:
     name: Cleanup Virtual Networks
     # Both container groups and VMs might be in a vnet, and we can't delete the vnet until they're gone
     needs: ['cleanup-container-groups', 'cleanup-nics']
+    # Run even if upstream cleanup jobs reported failures (still want to attempt vnet cleanup)
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     steps:
       - name: Log into Azure
@@ -116,6 +140,7 @@ jobs:
     name: Cleanup Network Security Groups
     runs-on: ubuntu-latest
     needs: cleanup-vnets
+    if: ${{ !cancelled() }}
     steps:
       - name: Log into Azure
         uses: azure/login@v2
@@ -146,6 +171,7 @@ jobs:
 
       - name: Cleanup ARM Deployments
         run: |
+          set +e # don't stop on error
           for deployment in $(az deployment group list -g c-aci-dashboard --query "[].name" -o tsv); do
               echo "Deleting deployment: ${deployment}"
               az deployment group delete --name $deployment -g c-aci-dashboard &
@@ -166,21 +192,32 @@ jobs:
 
       - name: Delete all file shares in each storage account
         run: |
-          for account in $(az storage account list -g c-aci-dashboard --query "[].name" -o tsv); do
+          ACCOUNTS=$(az storage account list -g c-aci-dashboard --query "[].name" -o tsv)
+          has_failure=0
+          set +e # don't stop on error
+          for account in $ACCOUNTS; do
             echo "Processing storage account: $account"
             shares=$(az storage share-rm list \
               --storage-account "$account" \
               --resource-group c-aci-dashboard \
               --query "[].name" -o tsv)
+            if [ $? -ne 0 ]; then
+              echo "Failed to list shares in storage account: $account"
+              continue
+            fi
             for share in $shares; do
               echo "Deleting share $share in $account"
               az storage share-rm delete \
                 --storage-account "$account" \
                 --resource-group c-aci-dashboard \
                 --name "$share" \
-                --yes
+                --yes || has_failure=1
             done
           done
+          if [ $has_failure -eq 1 ]; then
+            echo "Some file shares failed to delete"
+            exit 1
+          fi
 
   cleanup-hsm:
     name: Cleanup HSM Keys
