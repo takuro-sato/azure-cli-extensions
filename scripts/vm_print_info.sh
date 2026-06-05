@@ -6,7 +6,7 @@ c-aci-testing vm exec --deployment-name $DEPLOYMENT_NAME '
   Get-ItemProperty "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" > C:\info.txt
   echo "" >> C:\info.txt
   echo "CPU model name from host:" >> C:\info.txt
-  (Get-ItemProperty -Path 'HKLM:\HARDWARE\DESCRIPTION\System\CentralProcessor\0' -Name ProcessorNameString).ProcessorNameString >> C:\info.txt
+  (Get-ItemProperty -Path "HKLM:\HARDWARE\DESCRIPTION\System\CentralProcessor\0" -Name ProcessorNameString).ProcessorNameString >> C:\info.txt
   Set-Alias -Name shimdiag -Value C:\ContainerPlat\shimdiag.exe
   echo "uname:" >> C:\info.txt
   shimdiag exec (shimdiag list)[0] uname -a >> C:\info.txt
