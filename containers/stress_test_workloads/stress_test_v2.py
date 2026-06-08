@@ -330,7 +330,9 @@ def main():
     sb_mem_out = {"sysbench_memory_mib_per_sec": sb_mem_max} if sb_mem_max is not None else None
 
     # Emit OUTPUT lines at the end so they survive upstream log truncation
-    # (notably `az vm run-command invoke`).
+    # (notably `az vm run-command invoke`, but also ACI container logs).
+    # Dump environment again just to make sure it's captured.
+    dump_environment()
     emit(metadata_output)
     for out in (sb_cpu1_out, sb_cpu4_out, fio_local_out, fio_local_seq_out, fio_azf_rand_out, fio_azf_seq_out, sb_mem_out):
         if out is not None:
