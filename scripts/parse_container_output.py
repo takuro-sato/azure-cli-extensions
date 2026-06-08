@@ -65,7 +65,7 @@ HOST_BUILD_RE = re.compile(r"Hyper-V: Host Build (.+)$", re.MULTILINE)
 LINUX_UNAME_RE = re.compile(r"(Linux .+ \#.+)$", re.MULTILINE)
 REFERENCE_INFO_SHA256_RE = re.compile(r"\WReference info SHA256SUM: ([0-9a-fA-F]+)", re.MULTILINE)
 REFERENCE_INFO_PARSED = re.compile(r"UVM Reference info parsed: (.+)$", re.MULTILINE)
-CPU_MODEL_RE = re.compile(r"(?im)^\s*model name\s*:\s+(.+)$")
+CPU_MODEL_RE = re.compile(r"(?im)model name\s*:\s+(.+)$")
 
 extractions = [
     ("kernel_cmdline", KERNEL_CMDLINE_LINE_RE),
