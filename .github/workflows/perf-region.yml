@@ -167,9 +167,19 @@ jobs:
       confidential: false
       vmSize: Standard_D8as_v6
 
-  cvm-DC4asv6:
+  vm-D4asv5:
     if: ${{ !cancelled() }}
     needs: cplat-vm-D8asv6-01288p2aesni
+    secrets: inherit
+    uses: ./.github/workflows/workload-stress-test-v2-vm.yml
+    with:
+      id: stv2-vm-D4asv5
+      location: ${{ inputs.location }}
+      vmSize: Standard_D4as_v5
+
+  cvm-DC4asv6:
+    if: ${{ !cancelled() }}
+    needs: vm-D4asv5
     secrets: inherit
     uses: ./.github/workflows/workload-stress-test-v2-cvm.yml
     with:
