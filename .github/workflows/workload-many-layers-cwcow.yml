@@ -1,31 +1,19 @@
-name: Workload - Info C-WCOW
+name: Workload - Many Layers C-WCOW
 
-# Confidential WCOW equivalent of workload-info.yml.
+# Confidential WCOW many-layers workload.
 #
-# Deploys workloads/info_cwcow as a confidential ACI container group on the
-# target region's ACISNP cluster fleet, then verifies the one-shot info +
-# attestation dump completes.
+# Deploys workloads/many_layers_cwcow (the repo-prebuilt attestation-cwcow image,
+# intentionally near the cimfs layer ceiling) as a confidential Windows ACI
+# container group with a trivial command override, and asserts the deep-layer
+# image mounts and boots (the container prints ===MANY_LAYERS_OK=== and exits).
+# It does NOT assert attestation — that is attestation_cwcow's job.
 #
-# The image is our repo-prebuilt `attestation-cwcow` (built by
-# build-test-containers.yaml), which embeds psputilgo.exe and runs attest.py.
-# Per micromaomao's PR #332 review, info_cwcow now mirrors the LCOW `info`
-# container: it dumps guest info AND fetches a raw AMD SEV-SNP attestation
-# report locally, emitting both the legacy ===HOSTNAME===/===EOF=== markers
-# (asserted below) and an `OUTPUT: {json}` line (scraped into Kusto by
-# scripts/parse_container_output.py).
-#
-# Differences vs workload-info.yml:
-#   * REGISTRY/REPOSITORY/TAG are REAL — the image is pulled from our ACR
-#     (anonymous pull enabled) and param_set onto the bicep. During branch
-#     validation, before `latest` is published on main, pass a YYYYMMDD tag.
-#   * Policy type is always 'allow_all' — `c-aci-testing policies gen
-#     --policy-type generated` for WCOW requires confcom 1.3.0+wcow and
-#     Windows Docker (not available on ubuntu-latest). See vm-cwcow.yml for
-#     the same rationale.
-#   * No require_host_amd_cert / expect_uvm_signature inputs.
-#   * No useVnet / zone params — info_cwcow.bicep does not declare them
-#     today. If we need vnet/zoned variants on AUC2 later we'll extend the
-#     bicep first.
+# C-WCOW constraints (same as the other *-cwcow workflows):
+#   * No vnet — ACI Windows groups don't support subnet injection.
+#   * Policy type is always 'allow_all' — generated WCOW policies need confcom
+#     1.3.0+wcow and Windows Docker, unavailable on ubuntu-latest.
+#   * REGISTRY/REPOSITORY/TAG are REAL here (image pulled from our ACR, anonymous
+#     pull enabled) and are param_set onto the bicep.
 
 permissions:
   id-token: write
@@ -56,11 +44,11 @@ on:
       cpu:
         type: number
         description: The number of CPU cores in container
-        default: 2
+        default: 4
       memory_in_gb:
         type: number
         description: The memory in container in Gb
-        default: 4
+        default: 8
       cleanup:
         type: boolean
         description: Whether to cleanup the container group after testing
@@ -89,11 +77,11 @@ on:
       cpu:
         type: number
         description: The number of CPU cores in container
-        default: 2
+        default: 4
       memory_in_gb:
         type: number
         description: The memory in container in Gb
-        default: 4
+        default: 8
       cleanup:
         type: boolean
         description: Whether to cleanup the container group after testing
@@ -108,28 +96,26 @@ env:
   KUSTO_DATABASE: ${{ secrets.KUSTO_DATABASE }}
   KUSTO_TABLE: CACITestStepTrace
   TEST_TYPE: aci
-  TEST_NAME: Info C-WCOW
+  TEST_NAME: Many Layers C-WCOW
   RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-  DEPLOYMENT_NAME: ${{ inputs.id || 'info-cwcow' }}-${{ inputs.location }}-${{ github.run_number }}
+  WORKLOAD: workloads/many_layers_cwcow
+  DEPLOYMENT_NAME: ${{ inputs.id || 'many-layers-cwcow' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION_ACI }}
   RESOURCE_GROUP: c-aci-dashboard
-  # The image is our repo-prebuilt attestation-cwcow, pulled from our ACR
-  # (anonymous pull enabled). REGISTRY/REPOSITORY/TAG are param_set onto the
-  # bicep and consumed by docker-compose.yml.
   REGISTRY: ${{ inputs.registry || 'cacidashboardaci.azurecr.io' }}
   REPOSITORY: ${{ inputs.repository || 'prebuilt-test-containers' }}
   TAG: ${{ inputs.tag || 'latest' }}
   MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'westeurope' }}
   LOCATION: ${{ inputs.location || 'westeurope' }}
-  CPU: ${{ inputs.cpu || 2 }}
-  MEMORY_IN_GB: ${{ inputs.memory_in_gb || 4 }}
+  CPU: ${{ inputs.cpu || 4 }}
+  MEMORY_IN_GB: ${{ inputs.memory_in_gb || 8 }}
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: 'allow_all'
   TEST_SCHEDULE: ${{ inputs.test_schedule }}
 
 jobs:
-  info-cwcow:
-    name: ${{ inputs.id || 'info-cwcow' }}
+  many-layers-cwcow:
+    name: ${{ inputs.id || 'many-layers-cwcow' }}
     runs-on: ubuntu-latest
     steps:
 
@@ -150,20 +136,20 @@ jobs:
 
       - name: Set Parameters
         run: |
-          c-aci-testing aci param_set workloads/info_cwcow --parameter cpu=$CPU
-          c-aci-testing aci param_set workloads/info_cwcow --parameter memoryInGb=$MEMORY_IN_GB
-          c-aci-testing aci param_set workloads/info_cwcow --parameter registry=$REGISTRY
-          c-aci-testing aci param_set workloads/info_cwcow --parameter repository=$REPOSITORY
-          c-aci-testing aci param_set workloads/info_cwcow --parameter tag=$TAG
+          c-aci-testing aci param_set $WORKLOAD --parameter cpu=$CPU
+          c-aci-testing aci param_set $WORKLOAD --parameter memoryInGb=$MEMORY_IN_GB
+          c-aci-testing aci param_set $WORKLOAD --parameter registry=$REGISTRY
+          c-aci-testing aci param_set $WORKLOAD --parameter repository=$REPOSITORY
+          c-aci-testing aci param_set $WORKLOAD --parameter tag=$TAG
 
       - name: Generate Security Policy
         run: |
           ./scripts/tracing/trace_step.py --start 'Generate Policy'
-          c-aci-testing policies gen workloads/info_cwcow --deployment-name $DEPLOYMENT_NAME --policy-type allow_all
+          c-aci-testing policies gen $WORKLOAD --deployment-name $DEPLOYMENT_NAME --policy-type allow_all
 
       - name: Deploy Container Group
         run: |
-          ./scripts/aci_deploy_traced.sh workloads/info_cwcow
+          ./scripts/aci_deploy_traced.sh $WORKLOAD
 
       - name: Report result
         if: always()
@@ -176,35 +162,18 @@ jobs:
         run: |
           set -eo pipefail
           ./scripts/tracing/trace_step.py --start 'Monitor Container Group'
-          time=0
-          # Confidential WCOW pods boot slower than LCOW, and psputilgo's report
-          # fetch adds latency; give it a wide window before reading OUTPUT.
-          while [ $time -lt 20 ]; do
-            sleep 15
-            c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME | tee output.log
-            if grep -q 'OUTPUT: ' output.log; then
-              break
-            fi
-            time=$((time + 1))
-          done
-          cat output.log | jq -R -s '{info_cwcow: .}' | ./scripts/tracing/trace_step.py --complete --strict --output-from-stdin
+          sleep 120
+          c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME | tee output.log
+          cat output.log | jq -R -s '{many_layers_cwcow: .}' | ./scripts/tracing/trace_step.py --complete --strict --output-from-stdin
 
-      - name: 'Check info_cwcow log contains expected markers'
+      - name: 'Check many_layers_cwcow log contains expected marker'
         run: |
-          ./scripts/tracing/trace_step.py --start 'Check info_cwcow log'
-          ok=1
-          grep -q '===HOSTNAME===' output.log || ok=0
-          grep -q '===EOF===' output.log || ok=0
-          if [ $ok -ne 1 ]; then
-            ./scripts/tracing/trace_step.py --complete --err 'info_cwcow log missing ===HOSTNAME=== or ===EOF==='
+          ./scripts/tracing/trace_step.py --start 'Check many_layers_cwcow log'
+          if ! grep -q '===MANY_LAYERS_OK===' output.log; then
+            ./scripts/tracing/trace_step.py --complete --err 'many_layers_cwcow log missing ===MANY_LAYERS_OK==='
             exit 1
           fi
           ./scripts/tracing/trace_step.py --complete --strict
-
-      - name: Parse output
-        if: always()
-        run: |
-          ./scripts/parse_container_output.py --must-have-output --fail-on-error output.log
 
       - name: Get Container States
         if: always()

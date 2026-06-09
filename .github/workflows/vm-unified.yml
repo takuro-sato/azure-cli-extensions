@@ -1,28 +1,28 @@
-name: VM C-WCOW
+name: VM Unified
 
-# Standalone-VM confidential WCOW test workflow.
+# Combined single-VM confidential test: proves that ONE confidential VM running
+# the unified cplat package (cri-containerd-confidential-0.0.2-unified.zip) hosts
+# BOTH confidential runtimes back-to-back:
+#   * C-LCOW  - workloads/info        (Linux container, lcow-v2 shim)
+#   * C-WCOW  - workloads/minimal_cwcow + info_cwcow (Windows UVM, runhcs-v1 shim)
 #
-# Mirrors vm-simple.yml: provisions one Windows confidential VM with the
-# cri-containerd-confidential cplat, then exercises each of the C-WCOW
-# dashboard workloads on it via `c-aci-testing vm runc`. Sequential, one pod
-# at a time: `vm runc`'s generated run.ps1 only tears down a pod of the *same*
-# name before redeploying, so each workload would otherwise leave its pod
-# resident as an idle "Ready" sandbox. On confidential WCOW every sandbox
-# reserves a large fixed UVM memory allocation, and accumulating all five
-# workloads exhausts the single DC8as_cc_v5 VM ("Not enough memory resources
-# are available"). We therefore explicitly stop each pod (scripts/vm_stop_pod.sh)
-# once we've asserted on its output, keeping at most one UVM resident at a time.
+# The unified package bundles both UVMs + both shims in one package.zip
+# (LinuxBootFiles\ + WindowsBootFiles\Confidential\), so no separate uvmBlobName
+# is needed. Mirrors vm-cwcow.yml's VM provisioning (same nightly host image,
+# DC8as_cc_v5, allow_all policy); the only addition is a C-LCOW workload on the
+# same host.
 #
-# Policy type is fixed to `allow_all`: `c-aci-testing policies gen` with
-# --policy-type generated requires confcom 1.3.0+wcow installed on the host
-# running the command, plus Windows Docker (per the c-aci-testing project
-# README). Neither is available on ubuntu-latest. The `allow_all` path uses
-# the static WCOW Rego template baked into c-aci-testing, no docker needed.
+# Pods are stopped between workloads (scripts/vm_stop_pod.sh): every confidential
+# sandbox reserves a large fixed UVM memory allocation, so accumulating them
+# exhausts the single DC8as_cc_v5 VM. We keep at most one UVM resident at a time.
 #
-# IMPORTANT: CPLAT_BLOB_NAME must point to a blob containing a cri-containerd
-# package with confidential WCOW support (runhcs-wcow-hypervisor runtime,
-# confidential WCOW boot files). The default value of CPLAT_NEXT_6_1_BLOB_NAME
-# may not satisfy this — override via workflow_dispatch if needed.
+# Policy type is fixed to allow_all (generated WCOW policy needs confcom
+# 1.3.0+wcow + Windows Docker, unavailable on ubuntu-latest).
+#
+# IMPORTANT: CPLAT_BLOB_NAME must point to a UNIFIED cri-containerd package that
+# supports both confidential LCOW and WCOW, packaged in the bootstrap-consumable
+# form (gzip-tar with a containerplat_build/ top dir + a deploy.exe that runs
+# bare). Override via workflow_dispatch if needed.
 
 permissions:
   id-token: write
@@ -31,7 +31,8 @@ permissions:
 on:
   pull_request:
     paths:
-      - .github/workflows/vm-cwcow.yml
+      - .github/workflows/vm-unified.yml
+      - 'workloads/info/**'
       - 'workloads/*_cwcow/**'
       - 'workloads/*_cwcow_*/**'
       - scripts/init_run.sh
@@ -42,7 +43,8 @@ on:
       - scripts/vm_create_traced.sh
   push:
     paths:
-      - .github/workflows/vm-cwcow.yml
+      - .github/workflows/vm-unified.yml
+      - 'workloads/info/**'
       - 'workloads/*_cwcow/**'
       - 'workloads/*_cwcow_*/**'
       - scripts/init_run.sh
@@ -82,7 +84,7 @@ on:
         default: true
       cplatBlobName:
         type: string
-        description: Name of the containerplat blob (must include confidential WCOW support)
+        description: Name of the unified containerplat blob (LCOW + WCOW support)
         default: ''
   workflow_call:
     inputs:
@@ -113,7 +115,7 @@ on:
         default: true
       cplatBlobName:
         type: string
-        description: Name of the containerplat blob (must include confidential WCOW support)
+        description: Name of the unified containerplat blob (LCOW + WCOW support)
         default: ''
       test_schedule:
         type: string
@@ -125,39 +127,41 @@ env:
   KUSTO_DATABASE: ${{ secrets.KUSTO_DATABASE }}
   KUSTO_TABLE: CACITestStepTrace
   TEST_TYPE: vm
-  TEST_NAME: VM C-WCOW
+  TEST_NAME: VM Unified
   RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-  DEPLOYMENT_NAME: ${{ inputs.id || 'vm-cwcow' }}-${{ inputs.location }}-${{ github.run_number }}
+  DEPLOYMENT_NAME: ${{ inputs.id || 'vm-unified' }}-${{ inputs.location }}-${{ github.run_number }}
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION_ACI }}
   RESOURCE_GROUP: c-aci-dashboard
   STORAGE_ACCOUNT: cacitestingstorageaci
-  # WCOW workloads pull from mcr.microsoft.com (image is pinned by digest in
-  # bicep). REGISTRY is set only because c-aci-testing's argparse rejects a
-  # missing --registry even for --policy-type allow_all; the value is never
-  # actually used by the WCOW workloads.
+  # The LCOW info workload uses the shared prebuilt Linux image (registry/
+  # repository/tag). WCOW workloads pull Windows images (digest-pinned in bicep
+  # for minimal_cwcow; mcr-by-tag for info_cwcow). REGISTRY is required because
+  # c-aci-testing's argparse rejects a missing --registry even for allow_all.
   REGISTRY: cacidashboardaci.azurecr.io
+  REPOSITORY: prebuilt-test-containers
+  TAG: latest
   LOCATION: ${{ inputs.location || 'westeurope' }}
   MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'westeurope' }}
   CLEANUP: ${{ inputs.cleanup }}
   VM_SIZE: ${{ inputs.vmSize || 'Standard_DC8as_cc_v5' }}
-  # Track the latest image in the NightlyOSImage gallery (lt_release_svc_prod1)
-  # rather than pinning a version: confidential WCOW depends on bleeding-edge
-  # hypervisor bits, and tracking 'latest' is deliberate so the suite surfaces
-  # regressions introduced by a new Windows image (per PR review feedback). The
-  # marketplace WindowsServer/2025-datacenter-g2/latest image is NOT a
-  # substitute. The CI federated identity needs Reader on the NightlyOSImage
-  # gallery in subscription 824db9f9-... (resource group cwcow-automation).
+  # Track the latest NightlyOSImage (lt_release_svc_prod1), same as vm-cwcow.yml:
+  # confidential WCOW depends on bleeding-edge hypervisor bits, so tracking
+  # 'latest' is deliberate to surface regressions from new Windows images. The CI
+  # federated identity needs Reader on the NightlyOSImage gallery in 824db9f9-...
   VM_IMAGE: ${{ inputs.vmImage || '/subscriptions/824db9f9-0ff1-49f2-ab3e-4b72dfb9dd6a/resourceGroups/cwcow-automation/providers/Microsoft.Compute/galleries/NightlyOSImage/images/lt_release_svc_prod1/versions/latest' }}
   USE_OFFICIAL_IMAGES: ''
-  CPLAT_BLOB_NAME: ${{ inputs.cplatBlobName || 'cri-containerd-confidential-0.0.1-unified-l2bridge.zip' }}
+  # Unified package: bundles BOTH runtimes + both UVMs. Must be in the
+  # bootstrap-consumable form (gzip-tar + containerplat_build/ + bare-runnable
+  # deploy.exe).
+  CPLAT_BLOB_NAME: ${{ inputs.cplatBlobName || 'cri-containerd-confidential-0.0.2-unified.zip' }}
   WIN_FLAVOR: 'ws2025'
   VM_ZONE: ${{ inputs.zone || '' }}
   POLICY_TYPE: 'allow_all'
   TEST_SCHEDULE: ${{ inputs.test_schedule }}
 
 jobs:
-  vm-cwcow:
-    name: ${{ inputs.id || 'vm-cwcow' }}
+  vm-unified:
+    name: ${{ inputs.id || 'vm-unified' }}
     runs-on: ubuntu-latest
     steps:
 
@@ -181,10 +185,14 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: ./scripts/init_run.sh
 
+      - name: Pull LCOW image
+        run: c-aci-testing images pull workloads/info
+
       - name: Generate Security Policies
         run: |
           ./scripts/tracing/trace_step.py --start 'Generate Policies'
-          for wl in minimal_cwcow minimal_cwcow_servercore info_cwcow long_lived_cwcow stress_tests_cwcow; do
+          c-aci-testing policies gen workloads/info --deployment-name $DEPLOYMENT_NAME --policy-type allow_all
+          for wl in minimal_cwcow info_cwcow; do
             c-aci-testing policies gen workloads/$wl --deployment-name $DEPLOYMENT_NAME --policy-type allow_all
           done
 
@@ -194,62 +202,65 @@ jobs:
       - name: Print info
         run: scripts/vm_print_info.sh
 
-      # ---------- One-shot workloads: container runs, prints output, exits ----------
+      # ---------- C-LCOW half: Linux container in an LCOW UVM ----------
 
-      - name: 'Workload - minimal_cwcow'
+      - name: 'C-LCOW - info'
+        env:
+          STEP_PREFIX: 'lcow_info'
+        run: |
+          ./scripts/tracing/trace_step.py --start 'vm runc'
+          c-aci-testing aci param_set workloads/info --parameter 'requireHostAmdCert=false'
+          c-aci-testing vm runc workloads/info --deployment-name $DEPLOYMENT_NAME --prefix lcow_info
+
+      - name: 'C-LCOW - info check output'
+        env:
+          STEP_PREFIX: 'lcow_info'
+        run: |
+          ./scripts/vm_check_container_output.sh
+          grep -q 'info: success' container_output.log || { echo "missing 'info: success' in LCOW info output"; exit 1; }
+
+      - name: 'C-LCOW - info stop pod'
+        env:
+          STEP_PREFIX: 'lcow_info'
+        run: ./scripts/vm_stop_pod.sh
+
+      # ---------- C-WCOW half: Windows containers in a WCOW UVM ----------
+
+      - name: 'C-WCOW - minimal_cwcow'
         env:
           STEP_PREFIX: 'minimal_cwcow'
+          # minimal_cwcow pins nanoserver by digest only when tag is empty; the
+          # workflow-level TAG (needed by the LCOW info image) would otherwise
+          # force the broken 'nanoserver:latest' linux/amd64 resolution. Override
+          # back to empty here so the digest pin is used.
+          TAG: ''
         run: |
           ./scripts/tracing/trace_step.py --start 'vm runc'
           c-aci-testing vm runc workloads/minimal_cwcow --deployment-name $DEPLOYMENT_NAME --prefix minimal_cwcow
 
-      - name: 'Workload - minimal_cwcow check output'
+      - name: 'C-WCOW - minimal_cwcow check output'
         env:
           STEP_PREFIX: 'minimal_cwcow'
         run: |
           ./scripts/vm_check_container_output.sh
           grep -q 'hello c-wcow' container_output.log || { echo "missing 'hello c-wcow' in minimal_cwcow output"; exit 1; }
 
-      - name: 'Workload - minimal_cwcow stop pod'
+      - name: 'C-WCOW - minimal_cwcow stop pod'
         env:
           STEP_PREFIX: 'minimal_cwcow'
         run: ./scripts/vm_stop_pod.sh
 
-      - name: 'Workload - minimal_cwcow_servercore'
-        env:
-          STEP_PREFIX: 'minimal_cwcow_servercore'
-        run: |
-          ./scripts/tracing/trace_step.py --start 'vm runc'
-          c-aci-testing vm runc workloads/minimal_cwcow_servercore --deployment-name $DEPLOYMENT_NAME --prefix minimal_cwcow_servercore
-
-      - name: 'Workload - minimal_cwcow_servercore check output'
-        env:
-          STEP_PREFIX: 'minimal_cwcow_servercore'
-        run: |
-          ./scripts/vm_check_container_output.sh
-          grep -q 'hello c-wcow servercore' container_output.log || { echo "missing 'hello c-wcow servercore' in minimal_cwcow_servercore output"; exit 1; }
-
-      - name: 'Workload - minimal_cwcow_servercore stop pod'
-        env:
-          STEP_PREFIX: 'minimal_cwcow_servercore'
-        run: ./scripts/vm_stop_pod.sh
-
-      - name: 'Workload - info_cwcow'
+      - name: 'C-WCOW - info_cwcow'
         env:
           STEP_PREFIX: 'info_cwcow'
         run: |
           ./scripts/tracing/trace_step.py --start 'vm runc'
-          # --no-resolve-manifest-hash: info_cwcow uses our Windows-only
-          # attestation-cwcow image referenced by tag. Without this flag, vm runc
-          # pre-resolves the tag via `oras manifest fetch --platform linux/amd64`
-          # (vm.py resolve_manifest_hash), which fails for a windows/amd64 image.
-          # Skipping resolution lets the Windows VM pull the image by tag and pick
-          # the correct platform. Safe here: cwcow workloads use allow_all policy,
-          # so the image digest is not pinned in the CCE policy. The other VM
-          # cwcow workloads avoid this because their bicep images are digest-pinned.
+          # --no-resolve-manifest-hash: info_cwcow uses a Windows-only image by
+          # tag; without this, vm runc pre-resolves via linux/amd64 and fails
+          # (see vm-cwcow.yml / handbook F33). Safe under allow_all.
           c-aci-testing vm runc workloads/info_cwcow --deployment-name $DEPLOYMENT_NAME --prefix info_cwcow --no-resolve-manifest-hash
 
-      - name: 'Workload - info_cwcow check output'
+      - name: 'C-WCOW - info_cwcow check output'
         env:
           STEP_PREFIX: 'info_cwcow'
         run: |
@@ -257,38 +268,10 @@ jobs:
           grep -q '===HOSTNAME===' container_output.log || { echo "missing ===HOSTNAME=== marker"; exit 1; }
           grep -q '===EOF===' container_output.log || { echo "missing ===EOF=== marker (info dump did not complete)"; exit 1; }
 
-      - name: 'Workload - info_cwcow stop pod'
+      - name: 'C-WCOW - info_cwcow stop pod'
         env:
           STEP_PREFIX: 'info_cwcow'
         run: ./scripts/vm_stop_pod.sh
-
-      # ---------- Long-running workloads: harness check.ps1 (run inside vm runc) is the assertion ----------
-
-      - name: 'Workload - long_lived_cwcow'
-        env:
-          STEP_PREFIX: 'long_lived_cwcow'
-        run: |
-          ./scripts/tracing/trace_step.py --start 'vm runc'
-          c-aci-testing vm runc workloads/long_lived_cwcow --deployment-name $DEPLOYMENT_NAME --prefix long_lived_cwcow
-
-      - name: 'Workload - long_lived_cwcow stop pod'
-        env:
-          STEP_PREFIX: 'long_lived_cwcow'
-        run: ./scripts/vm_stop_pod.sh
-
-      - name: 'Workload - stress_tests_cwcow'
-        env:
-          STEP_PREFIX: 'stress_tests_cwcow'
-        run: |
-          ./scripts/tracing/trace_step.py --start 'vm runc'
-          c-aci-testing vm runc workloads/stress_tests_cwcow --deployment-name $DEPLOYMENT_NAME --prefix stress_tests_cwcow
-
-      - name: 'Workload - stress_tests_cwcow check output'
-        env:
-          STEP_PREFIX: 'stress_tests_cwcow'
-        run: |
-          ./scripts/vm_check_container_output.sh
-          grep -q 'tick 1' container_output.log || { echo "missing 'tick 1' in stress_tests_cwcow output"; exit 1; }
 
       # ---------- Cleanup ----------
 

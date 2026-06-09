@@ -1,8 +1,13 @@
 using './info_cwcow.bicep'
 
-// Image info — tag retained for c-aci-testing parameter parity; left empty so
-// the bicep template pins the nanoserver image by digest (see its inline
-// comment for why a tag ref breaks the VM harness's manifest resolution).
+// Image info — the prebuilt confidential-WCOW attestation-cwcow image lives in
+// our ACR (anonymous pull enabled). Left empty so the bicep falls back to
+// cacidashboardaci.azurecr.io/prebuilt-test-containers/attestation-cwcow:latest;
+// the workflow param_sets registry/repository/tag. During branch validation
+// (before `latest` is published on main) pass a YYYYMMDD tag via the workflow's
+// TAG input/default, then flip back to latest at merge.
+param registry = ''
+param repository = ''
 param tag = ''
 
 // Deployment info

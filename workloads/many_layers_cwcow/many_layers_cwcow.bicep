@@ -1,27 +1,28 @@
-// Confidential WCOW info + attestation workload.
+// Confidential WCOW many-layers workload.
 //
-// Mirrors workloads/info (the LCOW info container): runs our repo-prebuilt
-// `attestation-cwcow` image, which dumps Windows guest info AND fetches a raw
-// AMD SEV-SNP attestation report via an embedded psputilgo.exe (attest.py). This
-// is the WCOW equivalent of the LCOW info container embedding get-snp-report —
-// see micromaomao's PR #332 review: "do an attestation report, using a PspUtil
-// embedded in the image (like the LCOW info)... output stuff in JSON like
-// OUTPUT: {...} so it gets into Kusto via parse_container_output.py".
+// Windows analogue of workloads/many_layers. The LCOW version pulls a deep
+// multi-layer image and just echoes a marker — the point is to exercise the
+// guest's overlay/layer handling, not to run anything meaningful.
 //
-// attest.py emits the legacy ===HOSTNAME===/===EOF=== markers (so the existing
-// log check still passes) AND an `OUTPUT: {json}` attestation result.
+// We reuse the repo-prebuilt `attestation-cwcow` image, which is intentionally
+// near the confidential-WCOW cimfs layer ceiling (~12 layers: servercore python
+// installer collapsed into a nanoserver base + COPY'd python + psputilgo +
+// attest.py). The command is overridden to a trivial marker so this workload
+// asserts only that a deep-layer confidential Windows image mounts and boots —
+// it does NOT depend on attestation succeeding (that is attestation_cwcow's
+// job).
 //
 // AUC2-only (real ACI): uses the registry/repository/tag image-ref pattern (like
 // workloads/info), not the digest-pin ternary the vm-cwcow workloads need.
 param location string
-param tag string
 param ccePolicies object
 
 param registry string
 param repository string
+param tag string
 
-param cpu int = 2
-param memoryInGb int = 4
+param cpu int = 4
+param memoryInGb int = 8
 
 resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01' = {
   name: deployment().name
@@ -31,7 +32,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
     sku: 'Confidential'
     restartPolicy: 'Never'
     confidentialComputeProperties: {
-      ccePolicy: ccePolicies.info_cwcow
+      ccePolicy: ccePolicies.many_layers_cwcow
     }
     containers: [
       {
@@ -40,7 +41,8 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
           image: '${empty(registry) ? 'cacidashboardaci.azurecr.io' : registry}/${empty(repository) ? 'prebuilt-test-containers' : repository}/attestation-cwcow:${empty(tag) ? 'latest' : tag}'
           command: [
             'python'
-            './attest.py'
+            '-c'
+            'print("===MANY_LAYERS_OK===")'
           ]
           resources: {
             requests: {

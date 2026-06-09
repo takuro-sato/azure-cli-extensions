@@ -4,6 +4,9 @@ on:
   pull_request:
     paths:
       - .github/workflows/build-test-containers.yaml
+      - containers/attestation_cwcow.Dockerfile
+      - containers/attest.py
+      - containers/psputil/**
   workflow_dispatch:
 
 permissions:
@@ -48,3 +51,88 @@ jobs:
         run: |
           # Rebuilding the image won't change it due to caching
           cd containers && make REGISTRY=$REGISTRY REPOSITORY=$REPOSITORY TAG=latest push
+
+  # Confidential-WCOW info/attestation image. Built on a Windows Server 2025
+  # runner because (a) it is a Windows container image (Linux buildx can't
+  # produce it) and (b) it is FROM ltsc2025 bases (os.version 10.0.26100) which
+  # AUC2 confidential WCOW requires -- only a Server 2025 host (build 26100) can
+  # process-isolate the servercore RUN stages. windows-latest (Server 2022 /
+  # 10.0.20348) cannot. psputilgo.exe is a native Go build COPY'd into the image
+  # (there is no ltsc2025 golang base image for an in-Dockerfile builder stage).
+  build-and-push-windows:
+    runs-on: windows-2025
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23'
+
+      - name: Log into Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+
+      - name: Login to ACR
+        run: az acr login --name ${{ env.REGISTRY }}
+
+      - name: Use short date as tag
+        shell: pwsh
+        run: |
+          $tag = Get-Date -Format 'yyyyMMdd'
+          Write-Host "TAG=$tag"
+          "TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Build psputilgo.exe
+        shell: pwsh
+        working-directory: containers/psputil
+        env:
+          GOOS: windows
+          GOARCH: amd64
+        run: go build -o psputilgo.exe .
+
+      - name: Set up oras
+        uses: oras-project/setup-oras@v1
+
+      - name: Pull amdsnppspapi.dll from ACR
+        shell: pwsh
+        working-directory: containers/psputil
+        env:
+          # x64 amdsnppspapi.dll, stored as an OCI artifact in the team ACR
+          # (origin: internal rs_base2_hyp Windows build, 2025-08-30). Bundled
+          # into the image next to psputilgo.exe so NewLazyDLL can load it from
+          # the exe directory inside the confidential guest.
+          DLL_REF: ${{ env.REGISTRY }}/${{ env.REPOSITORY }}/amdsnppspapi-dll:20250830
+        run: |
+          oras pull "$env:DLL_REF"
+          if ($LASTEXITCODE -ne 0) { throw "oras pull failed" }
+          if (-not (Test-Path amdsnppspapi.dll)) { throw "amdsnppspapi.dll not present after pull" }
+          Write-Host "Pulled amdsnppspapi.dll ($((Get-Item amdsnppspapi.dll).Length) bytes)"
+
+      - name: Build and push attestation-cwcow image
+        shell: pwsh
+        working-directory: containers
+        env:
+          # Windows-container builds use the classic builder; BuildKit/buildx
+          # is not available for Windows containers on the windows-2025 runner.
+          DOCKER_BUILDKIT: 0
+        run: |
+          $image = "$env:REGISTRY/$env:REPOSITORY/attestation-cwcow"
+          docker build -t "${image}:$env:TAG" -f attestation_cwcow.Dockerfile .
+          if ($LASTEXITCODE -ne 0) { throw "docker build failed" }
+          docker push "${image}:$env:TAG"
+          if ($LASTEXITCODE -ne 0) { throw "docker push (tag) failed" }
+
+      - name: Tag with latest
+        if: github.ref == 'refs/heads/main'
+        shell: pwsh
+        working-directory: containers
+        run: |
+          $image = "$env:REGISTRY/$env:REPOSITORY/attestation-cwcow"
+          docker tag "${image}:$env:TAG" "${image}:latest"
+          docker push "${image}:latest"
+          if ($LASTEXITCODE -ne 0) { throw "docker push (latest) failed" }

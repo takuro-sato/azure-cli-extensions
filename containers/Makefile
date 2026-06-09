@@ -15,7 +15,7 @@ IMAGE_PLATFORM ?= linux/amd64
 PLATFORM_TAG := $(subst /,-,$(IMAGE_PLATFORM))
 
 all: build login push_arch merge_manifests
-.PHONY: all build login push push_arch merge_manifests build_networking run_networking run_stress_server_alpine build_stress_server_alpine run_stress_server_ubuntu build_stress_server_ubuntu build_stress_noserver run_stress_noserver_alpine run_stress_noserver_ubuntu build_info run_info build_ccf_verify_uvm run_ccf_verify_uvm build_skr_proxy run_skr_proxy killall
+.PHONY: all build login push push_arch merge_manifests build_networking run_networking run_stress_server_alpine build_stress_server_alpine run_stress_server_ubuntu build_stress_server_ubuntu build_stress_noserver run_stress_noserver_alpine run_stress_noserver_ubuntu build_info run_info build_ccf_verify_uvm run_ccf_verify_uvm build_skr_proxy run_skr_proxy killall build_psputil fetch_snp_dll build_attestation_cwcow push_attestation_cwcow
 
 login:
 	az acr login --name $(REGISTRY)
@@ -170,3 +170,33 @@ run_skr_proxy: build_skr_proxy
 
 killall:
 	docker ps --format '{{ .ID }}' | xargs --no-run-if-empty docker stop -s KILL
+
+# --- Windows (WCOW) prebuilt image ------------------------------------------
+# The confidential-WCOW info/attestation image. The Linux buildx rules above
+# cannot produce a Windows container image, so this is built and pushed by the
+# `build-and-push-windows` job (runs-on: windows-2025) in
+# .github/workflows/build-test-containers.yaml, NOT by the `all`/`push` targets.
+#
+# These targets exist for local parity on a Windows Server 2025 host with Docker
+# in Windows-container mode and Go installed. psputilgo.exe is a native
+# GOOS=windows build (public deps only). amdsnppspapi.dll is NOT a build-time
+# dependency of the Go tool, but it MUST be bundled into the image next to
+# psputilgo.exe (the Go tool loads it from the exe directory at runtime via
+# NewLazyDLL). `fetch_snp_dll` pulls it from the team ACR (OCI artifact) into
+# ./psputil/ so the Dockerfile can COPY it.
+WIN_IMAGE ?= attestation-cwcow
+SNP_DLL_REF ?= $(REGISTRY)/$(REPOSITORY)/amdsnppspapi-dll:20250830
+
+build_psputil:
+	cd psputil && go build -o psputilgo.exe .
+
+# Requires oras (https://oras.land) + ACR pull access. Pulls amdsnppspapi.dll
+# into ./psputil/ next to psputilgo.exe.
+fetch_snp_dll:
+	cd psputil && oras pull $(SNP_DLL_REF)
+
+build_attestation_cwcow: build_psputil fetch_snp_dll attestation_cwcow.Dockerfile attest.py
+	docker build -t $(REGISTRY)/$(REPOSITORY)/$(WIN_IMAGE):$(TAG) -f attestation_cwcow.Dockerfile .
+
+push_attestation_cwcow: build_attestation_cwcow
+	docker push $(REGISTRY)/$(REPOSITORY)/$(WIN_IMAGE):$(TAG)

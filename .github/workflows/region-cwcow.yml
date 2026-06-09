@@ -27,12 +27,42 @@ on:
         type: string
         required: true
         description: 'The location of the Azure Container Instances'
+      registry:
+        type: string
+        required: false
+        default: cacidashboardaci.azurecr.io
+        description: 'Registry holding the attestation-cwcow image (info/attestation/many-layers)'
+      repository:
+        type: string
+        required: false
+        default: prebuilt-test-containers
+        description: 'Repository path within the registry'
+      tag:
+        type: string
+        required: false
+        default: latest
+        description: 'attestation-cwcow image tag (a YYYYMMDD tag during validation, or latest)'
   workflow_dispatch:
     inputs:
       location:
         type: string
         required: true
         description: 'The location of the Azure Container Instances'
+      registry:
+        type: string
+        required: false
+        default: cacidashboardaci.azurecr.io
+        description: 'Registry holding the attestation-cwcow image (info/attestation/many-layers)'
+      repository:
+        type: string
+        required: false
+        default: prebuilt-test-containers
+        description: 'Repository path within the registry'
+      tag:
+        type: string
+        required: false
+        default: latest
+        description: 'attestation-cwcow image tag (a YYYYMMDD tag during validation, or latest)'
 
 jobs:
   info:
@@ -43,6 +73,9 @@ jobs:
     with:
       id: info-cwcow
       location: ${{ inputs.location }}
+      registry: ${{ inputs.registry }}
+      repository: ${{ inputs.repository }}
+      tag: ${{ inputs.tag }}
       test_schedule: gh-daily
 
   minimal:
@@ -91,4 +124,54 @@ jobs:
     with:
       id: stress-tests-cwcow
       location: ${{ inputs.location }}
+      test_schedule: gh-daily
+
+  server:
+    if: ${{ !cancelled() }}
+    name: server
+    secrets: inherit
+    needs: stress-tests
+    uses: ./.github/workflows/workload-server-cwcow.yml
+    with:
+      id: server-cwcow
+      location: ${{ inputs.location }}
+      test_schedule: gh-daily
+
+  managed-identity:
+    if: ${{ !cancelled() }}
+    name: managed-identity
+    secrets: inherit
+    needs: server
+    uses: ./.github/workflows/workload-managed-identity-cwcow.yml
+    with:
+      id: managed-identity-cwcow
+      location: ${{ inputs.location }}
+      test_schedule: gh-daily
+
+  many-layers:
+    if: ${{ !cancelled() }}
+    name: many-layers
+    secrets: inherit
+    needs: managed-identity
+    uses: ./.github/workflows/workload-many-layers-cwcow.yml
+    with:
+      id: many-layers-cwcow
+      location: ${{ inputs.location }}
+      registry: ${{ inputs.registry }}
+      repository: ${{ inputs.repository }}
+      tag: ${{ inputs.tag }}
+      test_schedule: gh-daily
+
+  attestation:
+    if: ${{ !cancelled() }}
+    name: attestation
+    secrets: inherit
+    needs: many-layers
+    uses: ./.github/workflows/workload-attestation-cwcow.yml
+    with:
+      id: attestation-cwcow
+      location: ${{ inputs.location }}
+      registry: ${{ inputs.registry }}
+      repository: ${{ inputs.repository }}
+      tag: ${{ inputs.tag }}
       test_schedule: gh-daily
