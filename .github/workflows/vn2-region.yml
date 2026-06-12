@@ -243,7 +243,7 @@ jobs:
           subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
 
       - name: 'Test case - stress test (18cpu, 64gb)'
-        if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' && (inputs.location == 'eastus2euap') }}
+        if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' && contains(vars.VN2_BIG_CONTAINERS_REGIONS, format(',{0},', inputs.location)) }}
         env:
           CPU: 18
           MEMORY_IN_GB: 64
