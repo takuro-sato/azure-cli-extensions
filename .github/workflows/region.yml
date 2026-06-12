@@ -163,14 +163,9 @@ jobs:
     secrets: inherit
     needs: many-layers
     uses: ./.github/workflows/workload-non-confidential.yml
-    strategy:
-      fail-fast: false
-      matrix:
-        policy_type: ['allow_all']
     with:
       id: non-confidential-${{ matrix.policy_type }}
       location: ${{ inputs.location }}
-      policy_type: ${{ matrix.policy_type }}
       test_schedule: gh-daily
 
   stress-tests:

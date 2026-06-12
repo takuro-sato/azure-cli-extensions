@@ -1,4 +1,4 @@
 version: '3'
 services:
-  server:
-    image: mcr.microsoft.com/azuredocs/aci-helloworld:${TAG:-latest}
+  ubuntu:
+    image: ${REGISTRY:-cacidashboardaci.azurecr.io}/${REPOSITORY:-prebuilt-test-containers}/info:${TAG:-latest}

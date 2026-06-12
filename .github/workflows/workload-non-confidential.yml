@@ -28,6 +28,14 @@ on:
         type: string
         description: Where to deploy to
         required: true
+      zone:
+        type: string
+        description: The availability zone to deploy to
+        default: ''
+      use_vnet:
+        type: boolean
+        description: Whether to use a virtual network for the container group
+        default: false
       cpu:
         type: number
         description: The number of CPU cores in container
@@ -40,10 +48,6 @@ on:
         type: boolean
         description: Whether to cleanup the container group after testing
         default: true
-      policy_type:
-        type: string
-        description: The type of policy to use
-        default: generated
   workflow_call:
     inputs:
       id:
@@ -53,6 +57,14 @@ on:
         type: string
         description: Where to deploy to
         required: true
+      zone:
+        type: string
+        description: The availability zone to deploy to
+        default: ''
+      use_vnet:
+        type: boolean
+        description: Whether to use a virtual network for the container group
+        default: false
       cpu:
         type: number
         description: The number of CPU cores in container
@@ -65,10 +77,6 @@ on:
         type: boolean
         description: Whether to cleanup the container group after testing
         default: true
-      policy_type:
-        type: string
-        description: The type of policy to use
-        default: generated
       test_schedule:
         type: string
         description: Trace marker by scheduled runs only
@@ -85,14 +93,17 @@ env:
   SUBSCRIPTION: ${{ vars.SUBSCRIPTION_ACI }}
   RESOURCE_GROUP: c-aci-dashboard
   REGISTRY: cacidashboardaci.azurecr.io
+  REPOSITORY: prebuilt-test-containers
+  TAG: latest
   MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'westeurope' }}
   LOCATION: ${{ inputs.location || 'westeurope' }}
+  ZONE: ${{ inputs.zone }}
+  USE_VNET: ${{ inputs.use_vnet || false }}
   CPU: ${{ inputs.cpu || 2 }}
   MEMORY_IN_GB: ${{ inputs.memory_in_gb || 4 }}
   CLEANUP: ${{ inputs.cleanup }}
-  POLICY_TYPE: ${{ inputs.policy_type || 'generated' }}
   TEST_SCHEDULE: ${{ inputs.test_schedule }}
-  RUN_FEATURES: 'public_ip'
+  RUN_FEATURES: ${{ inputs.use_vnet && 'vnet' || '' }}
 
 jobs:
   non-confidential:
@@ -120,22 +131,14 @@ jobs:
 
       - name: Set Parameters
         run: |
+          c-aci-testing aci param_set workloads/non_confidential --parameter "zone='$ZONE'"
+          c-aci-testing aci param_set workloads/non_confidential --parameter useVnet=$USE_VNET
           c-aci-testing aci param_set workloads/non_confidential --parameter cpu=$CPU
           c-aci-testing aci param_set workloads/non_confidential --parameter memoryInGb=$MEMORY_IN_GB
 
       - name: Deploy Container Group
         run: |
           ./scripts/aci_deploy_traced.sh workloads/non_confidential
-
-      - name: Wait for IP address
-        run: |
-          ./scripts/aci_get_ip.sh
-
-      - name: Curl Server
-        run: |
-          ./scripts/tracing/trace_step.py --start 'Curl Server'
-          echo "Attempting to send a request..."
-          curl http://$ip_address:80
 
       - name: Report result
         if: always()
@@ -145,7 +148,18 @@ jobs:
       - name: Monitor Container Group
         if: always()
         continue-on-error: true
-        run: c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME
+        run: |
+          set -eo pipefail
+          ./scripts/tracing/trace_step.py --start 'Monitor Container Group'
+          sleep 120
+          c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME | tee output.log
+          cat output.log | jq -R -s '{info: .}' | ./scripts/tracing/trace_step.py --complete --strict --output-from-stdin
+
+      - name: Parse output
+        run: |
+          # sev-guest / security-context validation is expected to fail on a
+          # non-confidential container group, so allow those errors through.
+          ./scripts/parse_container_output.py --fail-on-error --error-count-threshold 10 output.log
 
       - name: Get Container States
         if: always()
