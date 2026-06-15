@@ -175,3 +175,14 @@ jobs:
       repository: ${{ inputs.repository }}
       tag: ${{ inputs.tag }}
       test_schedule: gh-daily
+
+  vnet:
+    if: ${{ !cancelled() }}
+    name: vnet
+    secrets: inherit
+    needs: attestation
+    uses: ./.github/workflows/workload-vnet-cwcow.yml
+    with:
+      id: vnet-cwcow
+      location: ${{ inputs.location }}
+      test_schedule: gh-daily

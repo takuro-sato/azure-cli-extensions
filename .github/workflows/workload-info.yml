@@ -118,10 +118,7 @@ env:
   RESOURCE_GROUP: c-aci-dashboard
   REGISTRY: cacidashboardaci.azurecr.io
   REPOSITORY: prebuilt-test-containers
-  # Pinned (not :latest) to the info image built from this PR's info_check.sh,
-  # which adds EXPECT_UVM_SIGNATURE / require_host_amd_cert validation. Bump
-  # this (or move back to :latest) once that script is published to :latest.
-  TAG: 20260602
+  TAG: latest
   MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'westeurope' }}
   LOCATION: ${{ inputs.location || 'westeurope' }}
   ZONE: ${{ inputs.zone }}
