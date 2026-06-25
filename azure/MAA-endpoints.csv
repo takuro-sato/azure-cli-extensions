@@ -59,7 +59,6 @@ PROD,uksouth,shareduks.uks.attest.azure.net,C-ACI
 PROD,ukwest,sharedukw.ukw.attest.azure.net,C-ACI
 PROD,westcentralus,sharedwcus.wcus.attest.azure.net,None
 PROD,westeurope,sharedweu.weu.attest.azure.net,C-ACI
-PROD,westindia,sharedwin.win.attest.azure.net,None
 PROD,westus,sharedwus.wus.attest.azure.net,C-ACI
 PROD,westus2,sharedwus2.wus2.attest.azure.net,C-ACI
 PROD,westus3,sharedwus3.wus3.attest.azure.net,C-ACI
