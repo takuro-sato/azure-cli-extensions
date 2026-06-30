@@ -4,4 +4,4 @@ services:
     image: $REGISTRY/prebuilt-test-containers/skr_proxy:$TAG
     network_mode: "host"
   sidecar:
-    image: mcr.microsoft.com/aci/skr:2.12
+    image: mcr.microsoft.com/aci/skr:2.14

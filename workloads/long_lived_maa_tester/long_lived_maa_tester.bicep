@@ -3,7 +3,7 @@ param registry string
 param repository string
 param tag string
 param ccePolicies object
-param skrTag string = '2.12'
+param skrTag string = '2.14'
 param managedIDGroup string = resourceGroup().name
 param managedIDName string
 
@@ -71,7 +71,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
       {
         name: 'skr'
         properties: {
-          image: 'cacidashboardaci.azurecr.io/skr-next'
+          image: 'mcr.microsoft.com/aci/skr:${skrTag}'
           ports: [
             {
               protocol: 'TCP'

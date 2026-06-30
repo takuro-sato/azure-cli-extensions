@@ -11,3 +11,5 @@ param ccePolicies={
   long_lived_maa_tester: ''
 }
 param managedIDName=''
+
+param skrTag='2.14'

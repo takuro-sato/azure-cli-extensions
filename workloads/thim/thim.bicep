@@ -32,7 +32,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
       {
         name: 'primary'
         properties: {
-          image: 'mcr.microsoft.com/aci/skr:${empty(tag) ? 'latest': tag}'
+          image: 'mcr.microsoft.com/aci/skr:${empty(tag) ? '2.14': tag}'
           resources: {
             requests: {
               memoryInGB: memoryInGb
@@ -43,6 +43,10 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
             {
               name: 'VN2_THIM_ENDPOINT'
               value: '===VIRTUALNODE2.CC.THIM.ENDPOINT==='
+            }
+            {
+              name: 'SkrSideCarArgs'
+              value: base64('{"maaconfig":{"user_agent":"confidential-aci-testing"}}')
             }
           ]
           command: [

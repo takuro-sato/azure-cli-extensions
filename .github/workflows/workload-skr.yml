@@ -70,7 +70,7 @@ env:
   RESOURCE_GROUP: c-aci-dashboard
   REGISTRY: cacidashboardaci.azurecr.io
   MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'westeurope' }}
-  TAG: "2.12"
+  TAG: "2.14"
   LOCATION: ${{ inputs.location || 'westeurope' }}
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: ${{ inputs.policy_type || 'generated' }}

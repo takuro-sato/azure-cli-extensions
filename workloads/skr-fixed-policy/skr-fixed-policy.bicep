@@ -58,7 +58,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
       {
         name: 'http-sidecar'
         properties: {
-          image: 'mcr.microsoft.com/aci/skr:2.12'
+          image: 'mcr.microsoft.com/aci/skr:2.14'
           ports: [
             {
               protocol: 'TCP'
@@ -69,6 +69,10 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
             {
               name: 'LogLevel'
               value: 'debug'
+            }
+            {
+              name: 'SkrSideCarArgs'
+              value: base64('{"maaconfig":{"user_agent":"confidential-aci-testing"}}')
             }
           ]
           resources: {
@@ -82,7 +86,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
       {
         name: 'grpc-sidecar'
         properties: {
-          image: 'mcr.microsoft.com/aci/skr:2.12'
+          image: 'mcr.microsoft.com/aci/skr:2.14'
           environmentVariables: [
             {
               name: 'ServerType'
@@ -95,6 +99,10 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
             {
               name: 'LogLevel'
               value: 'debug'
+            }
+            {
+              name: 'SkrSideCarArgs'
+              value: base64('{"maaconfig":{"user_agent":"confidential-aci-testing"}}')
             }
           ]
           ports: [

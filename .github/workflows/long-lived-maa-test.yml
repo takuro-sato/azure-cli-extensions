@@ -51,7 +51,7 @@ env:
   LOCATION: ${{ inputs.location || 'westeurope' }}
   POLICY_TYPE: ${{ inputs.policy_type || 'allow_all' }}
   TAG: latest
-  SKR_TAG: "2.12"
+  SKR_TAG: "2.14"
   TEST_SCHEDULE: ${{ inputs.test_schedule }}
   RUN_FEATURES: 'managed_identity'
 

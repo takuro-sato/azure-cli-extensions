@@ -146,7 +146,7 @@ containers := [
       }
     ],
     "exec_processes": [],
-    "id": "cacidashboardaci.azurecr.io/prebuilt-test-containers/skr_proxy:latest",
+    "id": "cacidashboardaci.azurecr.io/prebuilt-test-containers/skr_proxy:skr-fixed-policy",
     "layers": [
       "4264fef0a6d05a59bb036a53bc76e687c3cadb4b983dd106c357ae612c1251ae",
       "4a9d6b2957ab386cc5d72dfb571917e006ecd9a85a0ec376842404f6baf90141",
@@ -256,6 +256,11 @@ containers := [
         "strategy": "string"
       },
       {
+        "pattern": "SkrSideCarArgs=eyJtYWFjb25maWciOnsidXNlcl9hZ2VudCI6ImNvbmZpZGVudGlhbC1hY2ktdGVzdGluZyJ9fQ==",
+        "required": false,
+        "strategy": "string"
+      },
+      {
         "pattern": "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
         "required": false,
         "strategy": "string"
@@ -317,13 +322,13 @@ containers := [
       }
     ],
     "exec_processes": [],
-    "id": "mcr.microsoft.com/aci/skr:2.12",
+    "id": "mcr.microsoft.com/aci/skr:2.14",
     "layers": [
-      "335710fca9480be919670dc57ef086019417ca61b4ab6e414ec6564dbf44aba8",
-      "c9b8c6aedca4caf903228a9f7394ebc4bf12b5d15d28b1a0e47960c776cc30a0",
-      "4b67070364eb1b13a866bf03d82328bd63e3bea26c248962b2088ab1a509c701",
-      "b5ee6d35e21278d78cb5cdda5b6c8ee8494bae6509ba4001362988b704df4e17",
-      "f5935ad47ced2fa7afb356ed328a953455a03379f43ada55d06cf67be61b2848",
+      "a189b02d4858578459fda1dfbd7c6a4557c44208b9829e02b931771a6d611c39",
+      "300f9661fb3d46c0f299ad6f552b7ad0c41ea5141755b0b3feaca3081a108f7a",
+      "0afffca98bacf8e7b6e6f7982459a03219f60555523163c73c4b092e0a3deef2",
+      "eefefd5009aed4ba4478876995d1a18aa3a670661fcc61d2e4cba6e2b79da0a1",
+      "b868a7e1bebef40e5bf4d58fe271c0a10a351e68b12179ec019af9f6c75781ae",
       "8b4842f06982817534a75bcf71865213b09dfa8313229c384e5201dadbd75e25"
     ],
     "mounts": [
@@ -432,6 +437,11 @@ containers := [
         "strategy": "string"
       },
       {
+        "pattern": "SkrSideCarArgs=eyJtYWFjb25maWciOnsidXNlcl9hZ2VudCI6ImNvbmZpZGVudGlhbC1hY2ktdGVzdGluZyJ9fQ==",
+        "required": false,
+        "strategy": "string"
+      },
+      {
         "pattern": "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
         "required": false,
         "strategy": "string"
@@ -493,13 +503,13 @@ containers := [
       }
     ],
     "exec_processes": [],
-    "id": "mcr.microsoft.com/aci/skr:2.12",
+    "id": "mcr.microsoft.com/aci/skr:2.14",
     "layers": [
-      "335710fca9480be919670dc57ef086019417ca61b4ab6e414ec6564dbf44aba8",
-      "c9b8c6aedca4caf903228a9f7394ebc4bf12b5d15d28b1a0e47960c776cc30a0",
-      "4b67070364eb1b13a866bf03d82328bd63e3bea26c248962b2088ab1a509c701",
-      "b5ee6d35e21278d78cb5cdda5b6c8ee8494bae6509ba4001362988b704df4e17",
-      "f5935ad47ced2fa7afb356ed328a953455a03379f43ada55d06cf67be61b2848",
+      "a189b02d4858578459fda1dfbd7c6a4557c44208b9829e02b931771a6d611c39",
+      "300f9661fb3d46c0f299ad6f552b7ad0c41ea5141755b0b3feaca3081a108f7a",
+      "0afffca98bacf8e7b6e6f7982459a03219f60555523163c73c4b092e0a3deef2",
+      "eefefd5009aed4ba4478876995d1a18aa3a670661fcc61d2e4cba6e2b79da0a1",
+      "b868a7e1bebef40e5bf4d58fe271c0a10a351e68b12179ec019af9f6c75781ae",
       "8b4842f06982817534a75bcf71865213b09dfa8313229c384e5201dadbd75e25"
     ],
     "mounts": [
@@ -656,3 +666,5 @@ scratch_unmount := data.framework.scratch_unmount
 rw_mount_device := data.framework.rw_mount_device
 
 reason := {"errors": data.framework.errors}
+
+
