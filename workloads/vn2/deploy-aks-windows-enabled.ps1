@@ -42,7 +42,6 @@ function az {
 $NodeCount         = 1                      # Number of nodes
 $SubnetName        = 'cg'                   # Subnet name
 $SubnetPrefix      = '10.225.0.0/24'        # Address range for the new subnet (starting from 10.225.0.0)
-$AksIdentitySuffix = 'agentpool'            # Expected suffix of the AKS managed identity
 $Role              = 'Contributor'          # Role to assign
 $NodeVmSizesToTry  = @(
     'harvest_e4s_v3'
@@ -194,11 +193,10 @@ if (-not $AddWindowsNodePool) {
     }
 }
 
-# 5) Assign Contributor Role to AKS Managed Identity on MC Resource Group
-# Find the managed identity (this identity will typically have a name that ends with "agentpool")
+# 5) Assign roles to the AKS kubelet identity
 Write-Host "Fetching AKS Managed Identity..."
-$AksManagedIdentityClientId = az identity list --resource-group $McResourceGroup --query "[?contains(name, '$AksIdentitySuffix')].clientId" -o tsv
-if ([string]::IsNullOrEmpty($AksManagedIdentityClientId)) {
+$AksKubeletIdentityClientId = az aks show --resource-group $ResourceGroup --name $ClusterName --query 'identityProfile.kubeletidentity.clientId' -o tsv
+if ([string]::IsNullOrEmpty($AksKubeletIdentityClientId)) {
     Write-Error "Error: Managed Identity not found. Please check the AKS cluster and try again."
     exit 1
 }
@@ -209,11 +207,22 @@ $SubscriptionId = az account show --query id -o tsv
 
 # Assign Contributor role on the AKS resource group
 $Scope = "/subscriptions/$SubscriptionId/resourceGroups/$McResourceGroup"
-Write-Host "Assigning 'Contributor' role to Managed Identity '$AksManagedIdentityClientId' on '$McResourceGroup'..."
+Write-Host "Assigning 'Contributor' role to Managed Identity '$AksKubeletIdentityClientId' on '$McResourceGroup'..."
 az role assignment create `
-    --assignee $AksManagedIdentityClientId `
+    --assignee $AksKubeletIdentityClientId `
     --role $Role `
     --scope $Scope
+
+if ([string]::IsNullOrEmpty($env:REGISTRY)) {
+    Write-Error 'REGISTRY must identify the ACR used by VN2 workloads.'
+    exit 1
+}
+$RegistryId = az acr show --name $env:REGISTRY --query id -o tsv
+Write-Host "Assigning 'AcrPull' role to AKS kubelet identity on '$env:REGISTRY'..."
+az role assignment create `
+    --assignee $AksKubeletIdentityClientId `
+    --role AcrPull `
+    --scope $RegistryId
 
 
 Write-Host "Getting AKS credentials..."
@@ -253,9 +262,9 @@ az role assignment create `
 
 # Allow the AKS identity to have Managed Identity Operator on the cacidashboard-${region} identity so that we can test VN2 managed identity containers
 $Scope = "/subscriptions/$ConfidentialTestingSubscriptionId/resourceGroups/$RunnerIdentityResourceGroup/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$RegionalIdentityName"
-Write-Host "Assigning 'Managed Identity Operator' role to Managed Identity '$AksManagedIdentityClientId' on '$RegionalIdentityName'..."
+Write-Host "Assigning 'Managed Identity Operator' role to Managed Identity '$AksKubeletIdentityClientId' on '$RegionalIdentityName'..."
 az role assignment create `
-    --assignee $AksManagedIdentityClientId `
+    --assignee $AksKubeletIdentityClientId `
     --role 'Managed Identity Operator' `
     --scope $Scope
 

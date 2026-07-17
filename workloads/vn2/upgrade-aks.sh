@@ -10,7 +10,7 @@ set -e
 RESOURCE_GROUP=$1
 CLUSTER_NAME=$2
 
-nodes=$(az aks nodepool list -g vn2-aks-eastus --cluster-name vn2-aks-eastus --query '[].name' -o tsv)
+nodes=$(az aks nodepool list --resource-group "$RESOURCE_GROUP" --cluster-name "$CLUSTER_NAME" --query '[].name' -o tsv)
 for node in $nodes; do
     echo "upgrading nodepool $node"
     az aks nodepool upgrade \
