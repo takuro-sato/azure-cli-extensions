@@ -1,0 +1,22 @@
+name: VN2 - France Central
+
+permissions:
+   id-token: write
+   contents: read
+
+on:
+  schedule:
+    - cron: '18 18 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/vn2-francecentral.yml
+
+jobs:
+  vn2-francecentral:
+    secrets: inherit
+    uses: ./.github/workflows/vn2-region.yml
+    with:
+      location: francecentral
+      resource_group: c-aci-vn2
+      aks_cluster_name: vn2-aks-francecentral

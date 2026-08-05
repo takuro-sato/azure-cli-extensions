@@ -9,7 +9,7 @@ on:
     paths:
       - .github/workflows/vn2-southafricawest.yml
   schedule:
-    - cron: '52 21 * * *'  # managed by scripts/spread_out_schedules.py
+    - cron: '34 19 * * *'  # managed by scripts/spread_out_schedules.py
   workflow_dispatch:
 
 jobs:

@@ -6,6 +6,17 @@ This repo is a dashboard / test harness for Confidential ACI. Tests are organize
 
 The repo also has a **VN2** path that runs workloads on AKS instead of ACI; those test cases are all sequential steps inside `.github/workflows/vn2-region.yml`.
 
+## Region coverage
+
+Use the current C-ACI and C-VN2 region availability matrix as the source of truth when auditing or adding regional tests:
+
+- Every region that supports C-ACI must have `.github/workflows/basic-region-<region>.yml`.
+- Every region that supports non-VNet C-ACI must also have `.github/workflows/region-<region>.yml` and `.github/workflows/attestation-<region>.yml`. Regions that support only VNet C-ACI do not require these two workflows.
+- Every region that supports C-VN2 must have `.github/workflows/vn2-<region>.yml`, regardless of whether it supports C-ACI.
+- Every C-VN2 region must also have exactly one cluster row in `workloads/vn2/aks-instances.csv`, with the ARM region name in the `location` column. Keep the CSV and the `vn2-<region>.yml` workflow set synchronized.
+
+When checking coverage, compare ARM region names from the availability matrix against the filename suffixes. Ignore shared workflow implementations such as `region.yml`, `vn2-region.yml`, and C-WCOW-specific regional workflows; they are not per-region coverage entries.
+
 Tooling:
 - [c-aci-testing](https://github.com/microsoft/confidential-aci-testing) (`c-aci-testing` CLI) drives image build/pull, CCE policy generation, ACI/VN2 deployment, and cleanup.
 - `scripts/tracing/` ingests step timings and results into a Kusto table (`CACITestStepTrace`) so runs are observable.

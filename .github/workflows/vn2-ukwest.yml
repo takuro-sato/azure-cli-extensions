@@ -1,0 +1,22 @@
+name: VN2 - UK West
+
+permissions:
+   id-token: write
+   contents: read
+
+on:
+  pull_request:
+    paths:
+      - .github/workflows/vn2-ukwest.yml
+  schedule:
+    - cron: '14 20 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+
+jobs:
+  vn2-ukwest:
+    secrets: inherit
+    uses: ./.github/workflows/vn2-region.yml
+    with:
+      location: ukwest
+      resource_group: c-aci-vn2
+      aks_cluster_name: vn2-aks-ukwest

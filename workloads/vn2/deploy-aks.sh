@@ -15,6 +15,8 @@ SUBNET_NAME="cg"                  # Subnet name
 SUBNET_PREFIX="10.225.0.0/24"     # Address range for the new subnet (starting from 10.225.0.0)
 ROLE="Contributor"                # Role to assign
 NODE_VM_SIZES_TO_TRY=(
+    "harvest_e4s_v3"
+
     "Standard_DC4as_cc_v6"
     "Standard_DC2as_cc_v6"
     "Standard_DC4as_cc_v5"

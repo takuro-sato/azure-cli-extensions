@@ -9,7 +9,7 @@ on:
     paths:
       - .github/workflows/attestation-uksouth.yml
   schedule:
-    - cron: '40 1-23 * * *'  # managed by scripts/spread_out_schedules.py
+    - cron: '43 1-23 * * *'  # managed by scripts/spread_out_schedules.py
   workflow_dispatch:
 
 jobs:

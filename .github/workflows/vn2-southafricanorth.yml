@@ -1,0 +1,22 @@
+name: VN2 - South Africa North
+
+permissions:
+   id-token: write
+   contents: read
+
+on:
+  schedule:
+    - cron: '30 19 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/vn2-southafricanorth.yml
+
+jobs:
+  vn2-southafricanorth:
+    secrets: inherit
+    uses: ./.github/workflows/vn2-region.yml
+    with:
+      location: southafricanorth
+      resource_group: c-aci-vn2
+      aks_cluster_name: vn2-aks-southafricanorth

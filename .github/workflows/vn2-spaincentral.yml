@@ -1,0 +1,22 @@
+name: VN2 - Spain Central
+
+permissions:
+   id-token: write
+   contents: read
+
+on:
+  schedule:
+    - cron: '50 19 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/vn2-spaincentral.yml
+
+jobs:
+  vn2-spaincentral:
+    secrets: inherit
+    uses: ./.github/workflows/vn2-region.yml
+    with:
+      location: spaincentral
+      resource_group: c-aci-vn2
+      aks_cluster_name: vn2-aks-spaincentral

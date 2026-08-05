@@ -1,0 +1,22 @@
+name: VN2 - Japan West
+
+permissions:
+   id-token: write
+   contents: read
+
+on:
+  schedule:
+    - cron: '54 18 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/vn2-japanwest.yml
+
+jobs:
+  vn2-japanwest:
+    secrets: inherit
+    uses: ./.github/workflows/vn2-region.yml
+    with:
+      location: japanwest
+      resource_group: c-aci-vn2
+      aks_cluster_name: vn2-aks-japanwest

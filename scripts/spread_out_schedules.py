@@ -15,28 +15,26 @@ workflows = sorted(glob.glob("*.yml", root_dir=workflows_dir))
 class TestType:
     ty: str
     rough_time_mins: int
-    max_concurrency: int
     shift: int
     priority: int
 
 
 test_types = [
-    # For VM tests, once they're deployed, they can run concurrently with the
-    # ACI tests without hitting max deployment counts.  However, VM tests deploy
-    # a few VMs in parallel at the start, so we reduce the max concurrency
-    TestType("vm", 10, 8, 1, 1),
-    TestType("perf", 10, 8, 1, 2),
+    TestType("vm", 10, 4, 1),
+    TestType("perf", 10, 4, 2),
 
-    TestType("region", 110, 4, 1, 3),
-    TestType("vn2", 20, 20, 1, 4),
-    TestType("uptime", 5, 20, 1, 5),
-    TestType("high-spec", 5, 10, 1, 6),
+    # The old batching gave this an effective 28-minute shift. Reduce it to
+    # keep the full schedule within a single UTC day.
+    TestType("region", 110, 16, 3),
+    TestType("vn2", 20, 4, 4),
+    TestType("uptime", 5, 4, 5),
+    TestType("high-spec", 5, 4, 6),
 ]
 
 # These tests are special - it runs every hour for continuous monitoring
 continuous_test_types = [
-    TestType("basic-region", 5, 50, 1, 0),
-    TestType("attestation-", 3, 50, 1, 1),
+    TestType("basic-region", 5, 1, 0),
+    TestType("attestation-", 3, 1, 1),
 ]
 
 tests = []
@@ -86,7 +84,6 @@ for wf in workflows:
     add_to_list.append((wf, t))
 
 last_t = None
-curr_concurrency = 0
 accumulated_time = 0
 
 def minutes_to_cron(minutes: int) -> str:
@@ -123,23 +120,16 @@ def write_cron(workflow: str, cron: str):
         f.write(content)
 
 for wf, t in sorted(tests, key=lambda x: (x[1].priority, x[0])):
-    if last_t and t.ty != last_t.ty and curr_concurrency > 0:
+    if last_t and t.ty != last_t.ty:
         # wait for last test type to finish
         accumulated_time += last_t.rough_time_mins
-        curr_concurrency = 0
-        last_t = None
-    if curr_concurrency >= t.max_concurrency:
-        accumulated_time += t.rough_time_mins
-        curr_concurrency = 0
-    else:
-        accumulated_time += t.shift
-    curr_concurrency += 1
+    accumulated_time += t.shift
     last_t = t
     cron = minutes_to_cron(accumulated_time)
     print(f"Setting {wf} to {cron}")
     write_cron(wf, cron)
 
-if curr_concurrency > 0:
+if last_t:
     accumulated_time += last_t.rough_time_mins
 
 # schedule the continuous tests

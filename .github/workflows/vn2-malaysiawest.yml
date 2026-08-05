@@ -1,0 +1,22 @@
+name: VN2 - Malaysia West
+
+permissions:
+   id-token: write
+   contents: read
+
+on:
+  schedule:
+    - cron: '6 19 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/vn2-malaysiawest.yml
+
+jobs:
+  vn2-malaysiawest:
+    secrets: inherit
+    uses: ./.github/workflows/vn2-region.yml
+    with:
+      location: malaysiawest
+      resource_group: c-aci-vn2
+      aks_cluster_name: vn2-aks-malaysiawest

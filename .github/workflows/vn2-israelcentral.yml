@@ -1,0 +1,22 @@
+name: VN2 - Israel Central
+
+permissions:
+   id-token: write
+   contents: read
+
+on:
+  schedule:
+    - cron: '42 18 * * *'  # managed by scripts/spread_out_schedules.py
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/vn2-israelcentral.yml
+
+jobs:
+  vn2-israelcentral:
+    secrets: inherit
+    uses: ./.github/workflows/vn2-region.yml
+    with:
+      location: israelcentral
+      resource_group: c-aci-vn2
+      aks_cluster_name: vn2-aks-israelcentral
