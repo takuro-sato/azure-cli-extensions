@@ -5,6 +5,9 @@ on:
     paths:
       - .github/workflows/build-test-containers.yaml
       - containers/attestation_cwcow.Dockerfile
+      - containers/maa_attest.py
+      - containers/info_cwcow.Dockerfile
+      - containers/many_layers_cwcow.Dockerfile
       - containers/attest.py
       - containers/psputil/**
   workflow_dispatch:
@@ -52,7 +55,7 @@ jobs:
           # Rebuilding the image won't change it due to caching
           cd containers && make REGISTRY=$REGISTRY REPOSITORY=$REPOSITORY TAG=latest push
 
-  # Confidential-WCOW info/attestation image. Built on a Windows Server 2025
+  # Confidential-WCOW images. Built on a Windows Server 2025
   # runner because (a) it is a Windows container image (Linux buildx can't
   # produce it) and (b) it is FROM ltsc2025 bases (os.version 10.0.26100) which
   # AUC2 confidential WCOW requires -- only a Server 2025 host (build 26100) can
@@ -113,7 +116,7 @@ jobs:
           if (-not (Test-Path amdsnppspapi.dll)) { throw "amdsnppspapi.dll not present after pull" }
           Write-Host "Pulled amdsnppspapi.dll ($((Get-Item amdsnppspapi.dll).Length) bytes)"
 
-      - name: Build and push attestation-cwcow image
+      - name: Build and push C-WCOW images
         shell: pwsh
         working-directory: containers
         env:
@@ -121,10 +124,22 @@ jobs:
           # is not available for Windows containers on the windows-2025 runner.
           DOCKER_BUILDKIT: 0
         run: |
-          $image = "$env:REGISTRY/$env:REPOSITORY/attestation-cwcow"
-          docker build -t "${image}:$env:TAG" -f attestation_cwcow.Dockerfile .
+          $infoImage = "$env:REGISTRY/$env:REPOSITORY/info-cwcow"
+          docker build -t "${infoImage}:$env:TAG" -f info_cwcow.Dockerfile .
           if ($LASTEXITCODE -ne 0) { throw "docker build failed" }
-          docker push "${image}:$env:TAG"
+          docker push "${infoImage}:$env:TAG"
+          if ($LASTEXITCODE -ne 0) { throw "docker push (tag) failed" }
+
+          $attestationImage = "$env:REGISTRY/$env:REPOSITORY/attestation-cwcow"
+          docker build -t "${attestationImage}:$env:TAG" -f attestation_cwcow.Dockerfile .
+          if ($LASTEXITCODE -ne 0) { throw "docker build failed" }
+          docker push "${attestationImage}:$env:TAG"
+          if ($LASTEXITCODE -ne 0) { throw "docker push (tag) failed" }
+
+          $manyLayersImage = "$env:REGISTRY/$env:REPOSITORY/many-layers-cwcow"
+          docker build -t "${manyLayersImage}:$env:TAG" -f many_layers_cwcow.Dockerfile .
+          if ($LASTEXITCODE -ne 0) { throw "docker build failed" }
+          docker push "${manyLayersImage}:$env:TAG"
           if ($LASTEXITCODE -ne 0) { throw "docker push (tag) failed" }
 
       - name: Tag with latest
@@ -132,7 +147,9 @@ jobs:
         shell: pwsh
         working-directory: containers
         run: |
-          $image = "$env:REGISTRY/$env:REPOSITORY/attestation-cwcow"
-          docker tag "${image}:$env:TAG" "${image}:latest"
-          docker push "${image}:latest"
-          if ($LASTEXITCODE -ne 0) { throw "docker push (latest) failed" }
+          foreach ($name in @('info-cwcow', 'attestation-cwcow', 'many-layers-cwcow')) {
+            $image = "$env:REGISTRY/$env:REPOSITORY/$name"
+            docker tag "${image}:$env:TAG" "${image}:latest"
+            docker push "${image}:latest"
+            if ($LASTEXITCODE -ne 0) { throw "docker push (latest) failed" }
+          }

@@ -1,13 +1,10 @@
 using './attestation_cwcow.bicep'
 
-// Image info — the prebuilt confidential-WCOW attestation image lives in our
-// ACR (anonymous pull enabled). Left empty so the bicep falls back to
-// cacidashboardaci.azurecr.io/prebuilt-test-containers/attestation-cwcow:latest;
-// the workflow param_sets registry/repository/tag (e.g. a YYYYMMDD tag during
-// branch validation before `latest` is published on main).
+// The workflow supplies the environment's registry and prebuilt repository.
 param registry = ''
 param repository = ''
 param tag = ''
+param attestationEndpoint = 'sharedweu.weu.attest.azure.net'
 
 // Deployment info
 param location = 'westeurope'

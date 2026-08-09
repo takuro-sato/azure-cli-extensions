@@ -21,6 +21,10 @@ on:
       - main
   workflow_dispatch:
     inputs:
+      environment:
+        type: string
+        description: Environment file to load
+        default: cacitesting.env
       id:
         type: string
         description: ID of the run
@@ -66,6 +70,10 @@ on:
         default: false
   workflow_call:
     inputs:
+      environment:
+        type: string
+        description: Environment file to load
+        default: cacitesting.env
       id:
         type: string
         description: ID of the run
@@ -109,9 +117,6 @@ env:
   TEST_NAME: ${{ inputs.is_big_containers_test && 'Stress Tests (BigContainers)' || 'Stress Tests' }}
   RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
   DEPLOYMENT_NAME: ${{ inputs.id || 'stress' }}-${{ inputs.location }}-${{ github.run_number }}
-  SUBSCRIPTION: ${{ vars.SUBSCRIPTION_ACI }}
-  RESOURCE_GROUP: c-aci-dashboard
-  REGISTRY: cacidashboardaci.azurecr.io
   REPOSITORY: prebuilt-test-containers/stress-tests-server-alpine
   TAG: latest
   MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'westus' }}
@@ -134,12 +139,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Load Environment
+        id: environment
+        run: ./scripts/load_environment.sh "${{ inputs.environment || 'cacitesting.env' }}"
+
       - name: Log into Azure
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+          subscription-id: ${{ steps.environment.outputs.subscription }}
 
       - name: Initialize Run
         env:

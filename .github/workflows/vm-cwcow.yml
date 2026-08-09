@@ -240,7 +240,7 @@ jobs:
         run: |
           ./scripts/tracing/trace_step.py --start 'vm runc'
           # --no-resolve-manifest-hash: info_cwcow uses our Windows-only
-          # attestation-cwcow image referenced by tag. Without this flag, vm runc
+          # info-cwcow image referenced by tag. Without this flag, vm runc
           # pre-resolves the tag via `oras manifest fetch --platform linux/amd64`
           # (vm.py resolve_manifest_hash), which fails for a windows/amd64 image.
           # Skipping resolution lets the Windows VM pull the image by tag and pick

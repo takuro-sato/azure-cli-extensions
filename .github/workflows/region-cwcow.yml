@@ -23,46 +23,34 @@ permissions:
 on:
   workflow_call:
     inputs:
+      environment:
+        type: string
+        description: Environment file to load
+        default: cacitesting.env
       location:
         type: string
         required: true
         description: 'The location of the Azure Container Instances'
-      registry:
-        type: string
-        required: false
-        default: cacidashboardaci.azurecr.io
-        description: 'Registry holding the attestation-cwcow image (info/attestation/many-layers)'
-      repository:
-        type: string
-        required: false
-        default: prebuilt-test-containers
-        description: 'Repository path within the registry'
       tag:
         type: string
         required: false
         default: latest
-        description: 'attestation-cwcow image tag (a YYYYMMDD tag during validation, or latest)'
+        description: 'Prebuilt C-WCOW image tag (a YYYYMMDD tag during validation, or latest)'
   workflow_dispatch:
     inputs:
+      environment:
+        type: string
+        description: Environment file to load
+        default: cacitesting.env
       location:
         type: string
         required: true
         description: 'The location of the Azure Container Instances'
-      registry:
-        type: string
-        required: false
-        default: cacidashboardaci.azurecr.io
-        description: 'Registry holding the attestation-cwcow image (info/attestation/many-layers)'
-      repository:
-        type: string
-        required: false
-        default: prebuilt-test-containers
-        description: 'Repository path within the registry'
       tag:
         type: string
         required: false
         default: latest
-        description: 'attestation-cwcow image tag (a YYYYMMDD tag during validation, or latest)'
+        description: 'Prebuilt C-WCOW image tag (a YYYYMMDD tag during validation, or latest)'
 
 jobs:
   info:
@@ -72,9 +60,8 @@ jobs:
     uses: ./.github/workflows/workload-info-cwcow.yml
     with:
       id: info-cwcow
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
-      registry: ${{ inputs.registry }}
-      repository: ${{ inputs.repository }}
       tag: ${{ inputs.tag }}
       test_schedule: gh-daily
 
@@ -86,6 +73,7 @@ jobs:
     uses: ./.github/workflows/workload-minimal-cwcow.yml
     with:
       id: minimal-cwcow
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       workload: minimal_cwcow
       expected_output: hello c-wcow
@@ -99,6 +87,7 @@ jobs:
     uses: ./.github/workflows/workload-minimal-cwcow.yml
     with:
       id: minimal-cwcow-servercore
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       workload: minimal_cwcow_servercore
       expected_output: hello c-wcow servercore
@@ -112,6 +101,7 @@ jobs:
     uses: ./.github/workflows/workload-long-lived-cwcow.yml
     with:
       id: long-lived-cwcow
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       test_schedule: gh-daily
 
@@ -123,6 +113,7 @@ jobs:
     uses: ./.github/workflows/workload-stress-tests-cwcow.yml
     with:
       id: stress-tests-cwcow
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       test_schedule: gh-daily
 
@@ -134,6 +125,7 @@ jobs:
     uses: ./.github/workflows/workload-server-cwcow.yml
     with:
       id: server-cwcow
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       test_schedule: gh-daily
 
@@ -145,6 +137,7 @@ jobs:
     uses: ./.github/workflows/workload-managed-identity-cwcow.yml
     with:
       id: managed-identity-cwcow
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       test_schedule: gh-daily
 
@@ -156,9 +149,8 @@ jobs:
     uses: ./.github/workflows/workload-many-layers-cwcow.yml
     with:
       id: many-layers-cwcow
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
-      registry: ${{ inputs.registry }}
-      repository: ${{ inputs.repository }}
       tag: ${{ inputs.tag }}
       test_schedule: gh-daily
 
@@ -170,9 +162,8 @@ jobs:
     uses: ./.github/workflows/workload-attestation-cwcow.yml
     with:
       id: attestation-cwcow
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
-      registry: ${{ inputs.registry }}
-      repository: ${{ inputs.repository }}
       tag: ${{ inputs.tag }}
       test_schedule: gh-daily
 
@@ -184,5 +175,6 @@ jobs:
     uses: ./.github/workflows/workload-vnet-cwcow.yml
     with:
       id: vnet-cwcow
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       test_schedule: gh-daily

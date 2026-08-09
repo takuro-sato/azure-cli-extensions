@@ -2,14 +2,11 @@ name: Workload - Many Layers C-WCOW
 
 # Confidential WCOW many-layers workload.
 #
-# Deploys workloads/many_layers_cwcow (the repo-prebuilt attestation-cwcow image,
-# intentionally near the cimfs layer ceiling) as a confidential Windows ACI
-# container group with a trivial command override, and asserts the deep-layer
-# image mounts and boots (the container prints ===MANY_LAYERS_OK=== and exits).
-# It does NOT assert attestation — that is attestation_cwcow's job.
+# Deploys the dedicated many-layers-cwcow image, which adds 20 non-empty
+# filesystem layers above Nano Server, and asserts that it mounts and boots.
 #
 # C-WCOW constraints (same as the other *-cwcow workflows):
-#   * No vnet — ACI Windows groups don't support subnet injection.
+#   * This workload does not expose a vnet option.
 #   * Policy type is always 'allow_all' — generated WCOW policies need confcom
 #     1.3.0+wcow and Windows Docker, unavailable on ubuntu-latest.
 #   * REGISTRY/REPOSITORY/TAG are REAL here (image pulled from our ACR, anonymous
@@ -22,6 +19,10 @@ permissions:
 on:
   workflow_dispatch:
     inputs:
+      environment:
+        type: string
+        description: Environment file to load
+        default: cacitesting.env
       id:
         type: string
         description: ID of the run
@@ -29,14 +30,6 @@ on:
         type: string
         description: Where to deploy to
         required: true
-      registry:
-        type: string
-        description: Container registry holding the attestation-cwcow image
-        default: cacidashboardaci.azurecr.io
-      repository:
-        type: string
-        description: Repository path within the registry
-        default: prebuilt-test-containers
       tag:
         type: string
         description: Image tag (e.g. a YYYYMMDD tag during branch validation, or latest)
@@ -55,6 +48,10 @@ on:
         default: true
   workflow_call:
     inputs:
+      environment:
+        type: string
+        description: Environment file to load
+        default: cacitesting.env
       id:
         type: string
         description: ID of the run
@@ -62,14 +59,6 @@ on:
         type: string
         description: Where to deploy to
         required: true
-      registry:
-        type: string
-        description: Container registry holding the attestation-cwcow image
-        default: cacidashboardaci.azurecr.io
-      repository:
-        type: string
-        description: Repository path within the registry
-        default: prebuilt-test-containers
       tag:
         type: string
         description: Image tag (e.g. a YYYYMMDD tag during branch validation, or latest)
@@ -100,10 +89,6 @@ env:
   RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
   WORKLOAD: workloads/many_layers_cwcow
   DEPLOYMENT_NAME: ${{ inputs.id || 'many-layers-cwcow' }}-${{ inputs.location }}-${{ github.run_number }}
-  SUBSCRIPTION: ${{ vars.SUBSCRIPTION_ACI }}
-  RESOURCE_GROUP: c-aci-dashboard
-  REGISTRY: ${{ inputs.registry || 'cacidashboardaci.azurecr.io' }}
-  REPOSITORY: ${{ inputs.repository || 'prebuilt-test-containers' }}
   TAG: ${{ inputs.tag || 'latest' }}
   MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'westeurope' }}
   LOCATION: ${{ inputs.location || 'westeurope' }}
@@ -122,12 +107,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Load Environment
+        id: environment
+        run: ./scripts/load_environment.sh "${{ inputs.environment || 'cacitesting.env' }}"
+
       - name: Log into Azure
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+          subscription-id: ${{ steps.environment.outputs.subscription }}
 
       - name: Initialize Run
         env:
@@ -139,7 +128,6 @@ jobs:
           c-aci-testing aci param_set $WORKLOAD --parameter cpu=$CPU
           c-aci-testing aci param_set $WORKLOAD --parameter memoryInGb=$MEMORY_IN_GB
           c-aci-testing aci param_set $WORKLOAD --parameter registry=$REGISTRY
-          c-aci-testing aci param_set $WORKLOAD --parameter repository=$REPOSITORY
           c-aci-testing aci param_set $WORKLOAD --parameter tag=$TAG
 
       - name: Generate Security Policy

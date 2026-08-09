@@ -1,7 +1,7 @@
 // Confidential WCOW info + attestation workload.
 //
 // Mirrors workloads/info (the LCOW info container): runs our repo-prebuilt
-// `attestation-cwcow` image, which dumps Windows guest info AND fetches a raw
+// `info-cwcow` image, which dumps Windows guest info AND fetches a raw
 // AMD SEV-SNP attestation report via an embedded psputilgo.exe (attest.py). This
 // is the WCOW equivalent of the LCOW info container embedding get-snp-report —
 // see micromaomao's PR #332 review: "do an attestation report, using a PspUtil
@@ -19,9 +19,19 @@ param ccePolicies object
 
 param registry string
 param repository string
+param useVnet bool = false
 
 param cpu int = 2
 param memoryInGb int = 4
+
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' existing = {
+  name: 'aci-long-lived-vnet-${location}'
+}
+
+resource subnet 'Microsoft.Network/virtualNetworks/subnets@2021-02-01' existing = {
+  parent: virtualNetwork
+  name: 'acisubnet'
+}
 
 resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01' = {
   name: deployment().name
@@ -29,6 +39,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
   properties: {
     osType: 'Windows'
     sku: 'Confidential'
+    subnetIds: useVnet ? [{ id: subnet.id }] : []
     restartPolicy: 'Never'
     confidentialComputeProperties: {
       ccePolicy: ccePolicies.info_cwcow
@@ -37,11 +48,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
       {
         name: 'primary'
         properties: {
-          image: '${empty(registry) ? 'cacidashboardaci.azurecr.io' : registry}/${empty(repository) ? 'prebuilt-test-containers' : repository}/attestation-cwcow:${empty(tag) ? 'latest' : tag}'
-          command: [
-            'python'
-            './attest.py'
-          ]
+          image: '${empty(registry) ? 'cacidashboardaci.azurecr.io' : registry}/${empty(repository) ? 'prebuilt-test-containers' : repository}/info-cwcow:${empty(tag) ? 'latest' : tag}'
           resources: {
             requests: {
               memoryInGB: memoryInGb

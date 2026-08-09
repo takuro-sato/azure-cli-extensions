@@ -1,9 +1,7 @@
 using './many_layers_cwcow.bicep'
 
-// Image info — reuses the prebuilt confidential-WCOW attestation-cwcow image
-// (intentionally near the cimfs layer ceiling). Left empty so the bicep falls
-// back to cacidashboardaci.azurecr.io/prebuilt-test-containers/attestation-cwcow
-// :latest; the workflow param_sets registry/repository/tag.
+// Dedicated image with 20 non-empty filesystem layers above Nano Server.
+// The workflow supplies registry/repository/tag.
 param registry = ''
 param repository = ''
 param tag = ''

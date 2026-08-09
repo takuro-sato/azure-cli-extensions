@@ -11,20 +11,31 @@ on:
 
 jobs:
   cleanup-container-groups:
-    name: Cleanup Container Groups
+    name: Cleanup Container Groups (${{ matrix.environment }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [cacitesting.env, cacitesting.e2e.env]
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load Environment
+        id: environment
+        run: ./scripts/load_environment.sh "${{ matrix.environment }}"
+
       - name: Log into Azure
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+          subscription-id: ${{ steps.environment.outputs.subscription }}
 
       - name: Cleanup Container Groups
         run: |
           RUNNING_CONTAINERS="$(az container list \
-            --resource-group c-aci-dashboard \
+            --resource-group "$RESOURCE_GROUP" \
             | jq -r '.[]|select((.name|startswith("uptime-")|not) and (.name|startswith("long-lived-maa-test-")|not))|.id')"
 
           has_failure=0
@@ -46,16 +57,23 @@ jobs:
     name: Cleanup Virtual Machines
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load Environment
+        id: environment
+        run: ./scripts/load_environment.sh cacitesting.env
+
       - name: Log into Azure
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+          subscription-id: ${{ steps.environment.outputs.subscription }}
 
       - name: Cleanup VMs
         run: |
-          RUNNING_VMS=$(az vm list --resource-group c-aci-dashboard --query '[].id' -o tsv)
+          RUNNING_VMS=$(az vm list --resource-group "$RESOURCE_GROUP" --query '[].id' -o tsv)
           has_failure=0
           set +e # don't stop on error
           for vm in $RUNNING_VMS; do
@@ -67,8 +85,8 @@ jobs:
               else
                 vm_deployment_name=`echo $vm | grep -oP '(?<=/virtualMachines/).*(?=-vm)'`
                 echo "Deleting vnet and nsg: ${vm_deployment_name}-..."
-                az resource delete --resource-group c-aci-dashboard -n ${vm_deployment_name}-vnet --resource-type Microsoft.Network/virtualNetworks --verbose
-                az resource delete --resource-group c-aci-dashboard -n ${vm_deployment_name}-nsg --resource-type Microsoft.Network/networkSecurityGroups --verbose
+                az resource delete --resource-group "$RESOURCE_GROUP" -n ${vm_deployment_name}-vnet --resource-type Microsoft.Network/virtualNetworks --verbose
+                az resource delete --resource-group "$RESOURCE_GROUP" -n ${vm_deployment_name}-nsg --resource-type Microsoft.Network/networkSecurityGroups --verbose
               fi
           done
           if [ $has_failure -eq 1 ]; then
@@ -80,18 +98,26 @@ jobs:
     name: Cleanup Docker Images
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load Environment
+        id: environment
+        run: ./scripts/load_environment.sh cacitesting.env
+
       - name: Log into Azure
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+          subscription-id: ${{ steps.environment.outputs.subscription }}
 
       - name: Cleanup pushed images
         run: |
-          az acr run --registry cacidashboardaci --cmd 'acr purge --filter "^stress_tests/.+:.*" --ago 0d --keep 1 --untagged' /dev/null
-          az acr run --registry cacidashboardaci --cmd 'acr purge --filter "^stress_tests_noserver/.+:.*" --ago 0d --keep 1 --untagged' /dev/null
-          az acr run --registry cacidashboardaci --cmd 'acr purge --filter "^workload-sidecar-with-fragments/.+:.*" --ago 0d --keep 1 --untagged' /dev/null
+          ACR_NAME=${REGISTRY%%.*}
+          az acr run --registry "$ACR_NAME" --cmd 'acr purge --filter "^stress_tests/.+:.*" --ago 0d --keep 1 --untagged' /dev/null
+          az acr run --registry "$ACR_NAME" --cmd 'acr purge --filter "^stress_tests_noserver/.+:.*" --ago 0d --keep 1 --untagged' /dev/null
+          az acr run --registry "$ACR_NAME" --cmd 'acr purge --filter "^workload-sidecar-with-fragments/.+:.*" --ago 0d --keep 1 --untagged' /dev/null
 
   cleanup-nics:
     name: Cleanup Network Interfaces
@@ -99,41 +125,59 @@ jobs:
     needs: cleanup-vms
     if: ${{ !cancelled() }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load Environment
+        id: environment
+        run: ./scripts/load_environment.sh cacitesting.env
+
       - name: Log into Azure
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+          subscription-id: ${{ steps.environment.outputs.subscription }}
 
       - name: Cleanup NICs
         run: |
-          for NIC in $(az network nic list -g c-aci-dashboard --query "[].name" -o tsv); do
-              az network nic delete --no-wait -g c-aci-dashboard -n $NIC || true
+          for NIC in $(az network nic list -g "$RESOURCE_GROUP" --query "[].name" -o tsv); do
+              az network nic delete --no-wait -g "$RESOURCE_GROUP" -n $NIC || true
           done
 
   cleanup-vnets:
-    name: Cleanup Virtual Networks
+    name: Cleanup Virtual Networks (${{ matrix.environment }})
     # Both container groups and VMs might be in a vnet, and we can't delete the vnet until they're gone
     needs: ['cleanup-container-groups', 'cleanup-nics']
     # Run even if upstream cleanup jobs reported failures (still want to attempt vnet cleanup)
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [cacitesting.env, cacitesting.e2e.env]
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load Environment
+        id: environment
+        run: ./scripts/load_environment.sh "${{ matrix.environment }}"
+
       - name: Log into Azure
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+          subscription-id: ${{ steps.environment.outputs.subscription }}
 
       - name: Cleanup VNETs
         run: |
-          for VNET in $(az network vnet list -g c-aci-dashboard --query "[].name" -o tsv); do
+          for VNET in $(az network vnet list -g "$RESOURCE_GROUP" --query "[].name" -o tsv); do
               if [[ "$VNET" == aci-long-lived-vnet* ]]; then
                   continue
               fi
-              az network vnet delete --no-wait -g c-aci-dashboard -n $VNET || true
+              az network vnet delete --no-wait -g "$RESOURCE_GROUP" -n $VNET || true
           done
 
   cleanup-nsgs:
@@ -142,64 +186,93 @@ jobs:
     needs: cleanup-vnets
     if: ${{ !cancelled() }}
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load Environment
+        id: environment
+        run: ./scripts/load_environment.sh cacitesting.env
+
       - name: Log into Azure
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+          subscription-id: ${{ steps.environment.outputs.subscription }}
 
       - name: Cleanup NSGs
         run: |
-          for NSG in $(az network nsg list -g c-aci-dashboard --query "[].name" -o tsv); do
+          for NSG in $(az network nsg list -g "$RESOURCE_GROUP" --query "[].name" -o tsv); do
               if [[ "$NSG" == *aci-long-lived-vnet* ]]; then
                   continue
               fi
-              az network nsg delete --no-wait -g c-aci-dashboard -n $NSG || true
+              az network nsg delete --no-wait -g "$RESOURCE_GROUP" -n $NSG || true
           done
 
   cleanup-deployments:
-    name: Cleanup ARM Deployments
+    name: Cleanup ARM Deployments (${{ matrix.environment }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [cacitesting.env, cacitesting.e2e.env]
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load Environment
+        id: environment
+        run: ./scripts/load_environment.sh "${{ matrix.environment }}"
+
       - name: Log into Azure
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+          subscription-id: ${{ steps.environment.outputs.subscription }}
 
       - name: Cleanup ARM Deployments
         run: |
           set +e # don't stop on error
-          for deployment in $(az deployment group list -g c-aci-dashboard --query "[].name" -o tsv); do
+          for deployment in $(az deployment group list -g "$RESOURCE_GROUP" --query "[].name" -o tsv); do
               echo "Deleting deployment: ${deployment}"
-              az deployment group delete --name $deployment -g c-aci-dashboard &
+              az deployment group delete --name $deployment -g "$RESOURCE_GROUP" &
               sleep 0.5
           done
           wait
 
   cleanup-storage-shares:
-    name: Cleanup Storage File Shares
+    name: Cleanup Storage File Shares (${{ matrix.environment }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: [cacitesting.env, cacitesting.e2e.env]
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load Environment
+        id: environment
+        run: ./scripts/load_environment.sh "${{ matrix.environment }}"
+
       - name: Log into Azure
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+          subscription-id: ${{ steps.environment.outputs.subscription }}
 
       - name: Delete all file shares in each storage account
         run: |
-          ACCOUNTS=$(az storage account list -g c-aci-dashboard --query "[].name" -o tsv)
+          ACCOUNTS=$(az storage account list -g "$RESOURCE_GROUP" --query "[].name" -o tsv)
           has_failure=0
           set +e # don't stop on error
           for account in $ACCOUNTS; do
             echo "Processing storage account: $account"
             shares=$(az storage share-rm list \
               --storage-account "$account" \
-              --resource-group c-aci-dashboard \
+              --resource-group "$RESOURCE_GROUP" \
               --query "[].name" -o tsv)
             if [ $? -ne 0 ]; then
               echo "Failed to list shares in storage account: $account"
@@ -209,7 +282,7 @@ jobs:
               echo "Deleting share $share in $account"
               az storage share-rm delete \
                 --storage-account "$account" \
-                --resource-group c-aci-dashboard \
+                --resource-group "$RESOURCE_GROUP" \
                 --name "$share" \
                 --yes || has_failure=1
             done
@@ -220,19 +293,31 @@ jobs:
           fi
 
   cleanup-hsm:
-    name: Cleanup HSM Keys
+    name: Cleanup HSM Keys (${{ matrix.environment }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        environment: [cacitesting.env, cacitesting.e2e.env]
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load Environment
+        id: environment
+        run: ./scripts/load_environment.sh "${{ matrix.environment }}"
+
       - name: Log into Azure
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION }}
+          subscription-id: ${{ steps.environment.outputs.subscription }}
 
       - name: Delete HSM keys
         run: |
-          HSM_NAME=${{ vars.HSM_ENDPOINT }}
+          HSM_NAME=$HSM_ENDPOINT
           HSM_NAME=${HSM_NAME%.managedhsm.azure.net}
           az keyvault key list --hsm-name $HSM_NAME \
             --query "[].kid" -o tsv | \
@@ -240,7 +325,7 @@ jobs:
 
       - name: Purge deleted keys
         run: |
-          HSM_NAME=${{ vars.HSM_ENDPOINT }}
+          HSM_NAME=$HSM_ENDPOINT
           HSM_NAME=${HSM_NAME%.managedhsm.azure.net}
           az keyvault key list-deleted --hsm-name $HSM_NAME \
             --query "[].kid" -o tsv | \

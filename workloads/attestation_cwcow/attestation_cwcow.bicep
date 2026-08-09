@@ -1,33 +1,15 @@
-// Confidential WCOW attestation workload.
-//
-// Windows analogue of workloads/attestation, but built on the SAME mechanism as
-// the LCOW `info` container rather than the LCOW `attestation` container:
-//   * LCOW `attestation` uses an `mcr.microsoft.com/aci/skr` sidecar to obtain a
-//     MAA-signed JWT. There is no Windows SKR sidecar, so that path is NOT
-//     portable to WCOW.
-//   * Instead, this runs our repo-prebuilt `attestation-cwcow` image, which
-//     embeds `psputilgo.exe`. That tool calls amdsnppspapi.dll
-//     (SnpPspIsSnpMode / SnpPspFetchAttestationReport, lazy-loaded from the
-//     UVM's System32) to fetch a RAW AMD SEV-SNP attestation report from inside
-//     the confidential Windows guest. Successfully fetching a hardware report is
-//     itself the attestation assertion.
-//
-// The container's attest.py emits `OUTPUT: {json}` (snp_mode/report_fetched/
-// cert_url) on success and `ERROR: ...` + `OUTPUT: {...,"snp_mode":false}` on
-// failure, which scripts/parse_container_output.py scrapes.
-//
-// AUC2-only (real ACI): this is never deployed via the OneBox VM harness, so it
-// uses the registry/repository/tag image-ref pattern (like workloads/info)
-// rather than the digest-pin ternary the vm-cwcow workloads need.
+// Windows equivalent of workloads/attestation: a primary client calls a
+// colocated SKR sidecar and prints the MAA response for workflow validation.
 param location string
 param ccePolicies object
 
 param registry string
 param repository string
 param tag string
+param attestationEndpoint string
 
-param cpu int = 4
-param memoryInGb int = 8
+param cpu int = 2
+param memoryInGb int = 4
 
 resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01' = {
   name: deployment().name
@@ -44,12 +26,51 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
         name: 'primary'
         properties: {
           image: '${empty(registry) ? 'cacidashboardaci.azurecr.io' : registry}/${empty(repository) ? 'prebuilt-test-containers' : repository}/attestation-cwcow:${empty(tag) ? 'latest' : tag}'
-          // No command override: the image's default CMD runs `python attest.py`,
-          // which fetches the SNP report and emits OUTPUT/ERROR then exits.
+          environmentVariables: [
+            {
+              name: 'ATTESTATION_ENDPOINT'
+              value: attestationEndpoint
+            }
+          ]
           resources: {
             requests: {
               memoryInGB: memoryInGb
               cpu: cpu
+            }
+          }
+        }
+      }
+      {
+        name: 'attestation'
+        properties: {
+          image: '${empty(registry) ? 'cacidashboardaci.azurecr.io' : registry}/skr-windows:latest'
+          command: [
+            'C:\\app\\skr.exe'
+          ]
+          ports: [
+            {
+              protocol: 'TCP'
+              port: 8080
+            }
+          ]
+          environmentVariables: [
+            {
+              name: 'Port'
+              value: '8080'
+            }
+            {
+              name: 'LogLevel'
+              value: 'debug'
+            }
+            {
+              name: 'SkrSideCarArgs'
+              value: base64('{"maaconfig":{"user_agent":"confidential-aci-testing"}}')
+            }
+          ]
+          resources: {
+            requests: {
+              memoryInGB: 1
+              cpu: 1
             }
           }
         }

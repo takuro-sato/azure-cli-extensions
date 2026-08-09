@@ -29,6 +29,10 @@ on:
       - main
   workflow_dispatch:
     inputs:
+      environment:
+        type: string
+        description: Environment file to load
+        default: cacitesting.env
       id:
         type: string
         description: ID of the run
@@ -46,6 +50,10 @@ on:
         default: generated
   workflow_call:
     inputs:
+      environment:
+        type: string
+        description: Environment file to load
+        default: cacitesting.env
       id:
         type: string
         description: ID of the run
@@ -74,9 +82,6 @@ env:
   TEST_NAME: SKR Fixed Policy
   RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
   DEPLOYMENT_NAME: ${{ inputs.id || 'skr-fixed-policy' }}-${{ inputs.location }}-${{ github.run_number }}
-  SUBSCRIPTION: ${{ vars.SUBSCRIPTION_ACI }}
-  RESOURCE_GROUP: c-aci-dashboard
-  REGISTRY: cacidashboardaci.azurecr.io
   REPOSITORY: prebuilt-test-containers
   MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'westeurope' }}
   # Pinned to a dedicated tag (not 'latest') so future pushes to
@@ -86,8 +91,6 @@ env:
   LOCATION: ${{ inputs.location || 'westeurope' }}
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: ${{ inputs.policy_type || 'generated' }}
-  ATTESTATION_ENDPOINT: ${{ vars.ATTESTATION_ENDPOINT }}
-  HSM_ENDPOINT: ${{ vars.HSM_ENDPOINT_ACI }}
   TEST_SCHEDULE: ${{ inputs.test_schedule }}
   RUN_FEATURES: 'managed_identity,public_ip'
 
@@ -100,12 +103,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Load Environment
+        id: environment
+        run: ./scripts/load_environment.sh "${{ inputs.environment || 'cacitesting.env' }}"
+
       - name: Log into Azure
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+          subscription-id: ${{ steps.environment.outputs.subscription }}
 
       - name: Initialize Run
         env:
@@ -121,7 +128,7 @@ jobs:
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+          subscription-id: ${{ steps.environment.outputs.subscription }}
 
       - name: Test SKR
         run: |

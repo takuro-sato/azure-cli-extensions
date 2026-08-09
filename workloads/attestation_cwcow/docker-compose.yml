@@ -2,3 +2,5 @@ version: '3'
 services:
   primary:
     image: ${REGISTRY:-cacidashboardaci.azurecr.io}/${REPOSITORY:-prebuilt-test-containers}/attestation-cwcow:${TAG:-latest}
+  attestation:
+    image: ${REGISTRY:-cacidashboardaci.azurecr.io}/skr-windows:latest

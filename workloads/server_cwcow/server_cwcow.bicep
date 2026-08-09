@@ -1,7 +1,6 @@
 // Confidential WCOW equivalent of workloads/server.
 //
-// ACI Windows container groups are single-container only (multi-container is
-// Linux-only), so this is one confidential Windows container exposing an HTTP
+// This workload uses one confidential Windows container exposing an HTTP
 // server on a public IP. It uses the Windows Server Core IIS image, whose
 // built-in ServiceMonitor entrypoint serves the default IIS page on :80 — no
 // command override needed.

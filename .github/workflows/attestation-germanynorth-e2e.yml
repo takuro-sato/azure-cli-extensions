@@ -1,0 +1,23 @@
+name: Attestation - Germany North E2E
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: '21 1-23 * * *'
+  pull_request:
+    paths:
+      - .github/workflows/attestation-germanynorth-e2e.yml
+
+jobs:
+  attestation-germanynorth-e2e:
+    secrets: inherit
+    uses: ./.github/workflows/workload-attestation.yml
+    with:
+      location: germanynorth
+      environment: cacitesting.e2e.env
+      policy_type: allow_all
+      test_schedule: gh-hourly

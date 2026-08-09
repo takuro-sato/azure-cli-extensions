@@ -7,12 +7,20 @@ permissions:
 on:
   workflow_call:
     inputs:
+      environment:
+        type: string
+        description: Environment file to load
+        default: cacitesting.env
       location:
         type: string
         required: true
         description: 'The location of the Azure Container Instances'
   workflow_dispatch:
     inputs:
+      environment:
+        type: string
+        description: Environment file to load
+        default: cacitesting.env
       location:
         type: string
         required: true
@@ -25,6 +33,7 @@ jobs:
     uses: ./.github/workflows/workload-stress-test-v2-nonconf.yml
     with:
       id: stv2-nonconf
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
 
   caci:
@@ -34,40 +43,44 @@ jobs:
     uses: ./.github/workflows/workload-stress-test-v2.yml
     with:
       id: stv2-caci
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
 
   vm-D8sv6:
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && inputs.environment != 'cacitesting.e2e.env' }}
     needs: caci
     secrets: inherit
     uses: ./.github/workflows/workload-stress-test-v2-vm.yml
     with:
       id: stv2-vm-D8sv6
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       vmSize: Standard_D8s_v6
 
   vm-D4sv6:
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && inputs.environment != 'cacitesting.e2e.env' }}
     needs: vm-D8sv6
     secrets: inherit
     uses: ./.github/workflows/workload-stress-test-v2-vm.yml
     with:
       id: stv2-vm-D4sv6
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       vmSize: Standard_D4s_v6
 
   vm-D8asv6:
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && inputs.environment != 'cacitesting.e2e.env' }}
     needs: vm-D4sv6
     secrets: inherit
     uses: ./.github/workflows/workload-stress-test-v2-vm.yml
     with:
       id: stv2-vm-D8asv6
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       vmSize: Standard_D8as_v6
 
   cplat-vm-D8sv6-ck:
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && inputs.environment != 'cacitesting.e2e.env' }}
     needs: vm-D8asv6
     secrets: inherit
     uses: ./.github/workflows/vm-workload-stress-test-v2-in-cplat.yml
@@ -80,17 +93,18 @@ jobs:
       vmSize: Standard_D8s_v6
 
   vm-D4asv6:
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && inputs.environment != 'cacitesting.e2e.env' }}
     needs: cplat-vm-D8sv6-ck
     secrets: inherit
     uses: ./.github/workflows/workload-stress-test-v2-vm.yml
     with:
       id: stv2-vm-D4asv6
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       vmSize: Standard_D4as_v6
 
   cplat-vm-D8asv6-ck:
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && inputs.environment != 'cacitesting.e2e.env' }}
     needs: vm-D4asv6
     secrets: inherit
     uses: ./.github/workflows/vm-workload-stress-test-v2-in-cplat.yml
@@ -103,7 +117,7 @@ jobs:
       vmSize: Standard_D8as_v6
 
   cplat-vm-D8sv6-0129aesni:
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && inputs.environment != 'cacitesting.e2e.env' }}
     needs: cplat-vm-D8asv6-ck
     secrets: inherit
     uses: ./.github/workflows/vm-workload-stress-test-v2-in-cplat.yml
@@ -116,7 +130,7 @@ jobs:
       vmSize: Standard_D8s_v6
 
   cplat-vm-D8asv6-0129aesni:
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && inputs.environment != 'cacitesting.e2e.env' }}
     needs: cplat-vm-D8sv6-0129aesni
     secrets: inherit
     uses: ./.github/workflows/vm-workload-stress-test-v2-in-cplat.yml
@@ -129,7 +143,7 @@ jobs:
       vmSize: Standard_D8as_v6
 
   cplat-vm-DC8asccv6-0214dev-conf:
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && inputs.environment != 'cacitesting.e2e.env' }}
     needs: cplat-vm-D8asv6-0129aesni
     secrets: inherit
     uses: ./.github/workflows/vm-workload-stress-test-v2-in-cplat.yml
@@ -142,7 +156,7 @@ jobs:
       vmSize: Standard_DC8as_cc_v6
 
   cplat-vm-D8sv6-01288p2aesni:
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && inputs.environment != 'cacitesting.e2e.env' }}
     needs: cplat-vm-DC8asccv6-0214dev-conf
     secrets: inherit
     uses: ./.github/workflows/vm-workload-stress-test-v2-in-cplat.yml
@@ -155,7 +169,7 @@ jobs:
       vmSize: Standard_D8s_v6
 
   cplat-vm-D8asv6-01288p2aesni:
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && inputs.environment != 'cacitesting.e2e.env' }}
     needs: cplat-vm-D8sv6-01288p2aesni
     secrets: inherit
     uses: ./.github/workflows/vm-workload-stress-test-v2-in-cplat.yml
@@ -168,27 +182,29 @@ jobs:
       vmSize: Standard_D8as_v6
 
   vm-D4asv5:
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && inputs.environment != 'cacitesting.e2e.env' }}
     needs: cplat-vm-D8asv6-01288p2aesni
     secrets: inherit
     uses: ./.github/workflows/workload-stress-test-v2-vm.yml
     with:
       id: stv2-vm-D4asv5
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       vmSize: Standard_D4as_v5
 
   cvm-DC4asv6:
-    if: ${{ !cancelled() }}
+    if: ${{ !cancelled() && inputs.environment != 'cacitesting.e2e.env' }}
     needs: vm-D4asv5
     secrets: inherit
     uses: ./.github/workflows/workload-stress-test-v2-cvm.yml
     with:
       id: stv2-cvm-DC4asv6
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       vmSize: Standard_DC4as_v6
 
   virtualclient:
-    if: ${{ !cancelled() && inputs.location != 'centraluseuap' }}
+    if: ${{ !cancelled() && inputs.environment != 'cacitesting.e2e.env' && inputs.location != 'centraluseuap' }}
     needs: cvm-DC4asv6
     name: virtualclient
     secrets: inherit
@@ -207,11 +223,12 @@ jobs:
             profileName: custom-profile-POSTGRESQL-HAMMERDB-TPCC.json
     with:
       id: virtualclient-${{ matrix.short }}
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       profileName: ${{ matrix.profileName }}
 
   virtualclient-cuseuap:
-    if: ${{ !cancelled() && inputs.location == 'centraluseuap' }}
+    if: ${{ !cancelled() && inputs.environment != 'cacitesting.e2e.env' && inputs.location == 'centraluseuap' }}
     needs: cvm-DC4asv6
     name: virtualclient
     secrets: inherit
@@ -226,5 +243,6 @@ jobs:
             profileName: PERF-COMPRESSION.json
     with:
       id: virtualclient-${{ matrix.short }}
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       profileName: ${{ matrix.profileName }}

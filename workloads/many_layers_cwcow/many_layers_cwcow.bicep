@@ -4,13 +4,9 @@
 // multi-layer image and just echoes a marker — the point is to exercise the
 // guest's overlay/layer handling, not to run anything meaningful.
 //
-// We reuse the repo-prebuilt `attestation-cwcow` image, which is intentionally
-// near the confidential-WCOW cimfs layer ceiling (~12 layers: servercore python
-// installer collapsed into a nanoserver base + COPY'd python + psputilgo +
-// attest.py). The command is overridden to a trivial marker so this workload
-// asserts only that a deep-layer confidential Windows image mounts and boots —
-// it does NOT depend on attestation succeeding (that is attestation_cwcow's
-// job).
+// The dedicated `many-layers-cwcow` image adds exactly 20 non-empty filesystem
+// layers above its Nano Server base. This workload asserts that the resulting
+// confidential Windows image mounts and boots.
 //
 // AUC2-only (real ACI): uses the registry/repository/tag image-ref pattern (like
 // workloads/info), not the digest-pin ternary the vm-cwcow workloads need.
@@ -38,12 +34,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
       {
         name: 'primary'
         properties: {
-          image: '${empty(registry) ? 'cacidashboardaci.azurecr.io' : registry}/${empty(repository) ? 'prebuilt-test-containers' : repository}/attestation-cwcow:${empty(tag) ? 'latest' : tag}'
-          command: [
-            'python'
-            '-c'
-            'print("===MANY_LAYERS_OK===")'
-          ]
+          image: '${empty(registry) ? 'cacidashboardaci.azurecr.io' : registry}/${empty(repository) ? 'prebuilt-test-containers' : repository}/many-layers-cwcow:${empty(tag) ? 'latest' : tag}'
           resources: {
             requests: {
               memoryInGB: memoryInGb

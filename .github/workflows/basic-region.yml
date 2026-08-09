@@ -10,6 +10,10 @@ on:
       - .github/workflows/basic-region.yml
   workflow_call:
     inputs:
+      environment:
+        type: string
+        description: Environment file to load
+        default: cacitesting.env
       location:
         type: string
         required: true
@@ -24,6 +28,10 @@ on:
         default: Prod
   workflow_dispatch:
     inputs:
+      environment:
+        type: string
+        description: Environment file to load
+        default: cacitesting.env
       location:
         type: string
         required: true
@@ -45,6 +53,7 @@ jobs:
     uses: ./.github/workflows/workload-info.yml
     with:
       id: info-allow_all
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       use_vnet: false
       policy_type: allow_all
@@ -59,6 +68,7 @@ jobs:
     uses: ./.github/workflows/workload-info.yml
     with:
       id: info-vnet-allow_all
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       use_vnet: true
       policy_type: allow_all
@@ -79,6 +89,7 @@ jobs:
         zone: ["1", "2"]
     with:
       id: info-zone${{ matrix.zone }}-${{ matrix.use_vnet && 'vnet-' || '' }}allow_all
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       use_vnet: ${{ matrix.use_vnet }}
       zone: ${{ matrix.zone }}
@@ -100,6 +111,7 @@ jobs:
         zone: ["1", "2", "3"]
     with:
       id: info-zone${{ matrix.zone }}-${{ matrix.use_vnet && 'vnet-' || '' }}allow_all
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       use_vnet: ${{ matrix.use_vnet }}
       zone: ${{ matrix.zone }}

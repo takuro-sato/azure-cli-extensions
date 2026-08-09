@@ -4,10 +4,8 @@ name: Region (Basic) C-WCOW
 # of confidential WCOW on a given region: deploy info_cwcow as a confidential
 # ACI container group and assert the one-shot info dump completes.
 #
-# Only a single nonzoned-nonvnet variant is wired today — info_cwcow.bicep
-# does not declare useVnet/zone params, and vnet/zone matrices are
-# specific to the LCOW info workload (workload-info.yml). If we want
-# vnet/zoned C-WCOW variants we'll extend info_cwcow.bicep first.
+# Non-VNet and VNet variants use the same info image and checks. Zonal C-WCOW
+# coverage is not wired because info_cwcow does not yet declare a zone param.
 
 permissions:
   id-token: write
@@ -20,12 +18,20 @@ permissions:
 on:
   workflow_call:
     inputs:
+      environment:
+        type: string
+        description: Environment file to load
+        default: cacitesting.env
       location:
         type: string
         required: true
         description: 'The location of the Azure Container Instances'
   workflow_dispatch:
     inputs:
+      environment:
+        type: string
+        description: Environment file to load
+        default: cacitesting.env
       location:
         type: string
         required: true
@@ -39,5 +45,19 @@ jobs:
     uses: ./.github/workflows/workload-info-cwcow.yml
     with:
       id: info-cwcow-allow_all
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
+      use_vnet: false
+      test_schedule: gh-hourly
+
+  info-cwcow-nonzoned-vnet:
+    if: ${{ !cancelled() && !contains(vars.ACI_ONLY_ZONAL_VNET_REGIONS, format(',{0},', inputs.location)) }}
+    name: info-cwcow-vnet-allow_all
+    secrets: inherit
+    uses: ./.github/workflows/workload-info-cwcow.yml
+    with:
+      id: info-cwcow-vnet-allow_all
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
+      location: ${{ inputs.location }}
+      use_vnet: true
       test_schedule: gh-hourly

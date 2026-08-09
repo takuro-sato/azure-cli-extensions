@@ -10,6 +10,10 @@ on:
       - .github/workflows/region.yml
   workflow_call:
     inputs:
+      environment:
+        type: string
+        description: Environment file to load
+        default: cacitesting.env
       location:
         type: string
         required: true
@@ -24,6 +28,10 @@ on:
         default: Prod
   workflow_dispatch:
     inputs:
+      environment:
+        type: string
+        description: Environment file to load
+        default: cacitesting.env
       location:
         type: string
         required: true
@@ -49,6 +57,7 @@ jobs:
         policy_type: ['generated', 'debug', 'allow_all']
     with:
       id: minimal-${{ matrix.policy_type }}
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
       cpu: 1
@@ -68,6 +77,7 @@ jobs:
         use_vnet: [true, false]
     with:
       id: info-${{ matrix.policy_type }}${{ matrix.use_vnet && '-vnet' || '' }}
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
       use_vnet: ${{ matrix.use_vnet }}
@@ -87,6 +97,7 @@ jobs:
         policy_type: ['generated', 'debug', 'allow_all']
     with:
       id: server-${{ matrix.policy_type }}
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
       test_schedule: gh-daily
@@ -103,6 +114,7 @@ jobs:
         policy_type: ['generated', 'debug', 'allow_all']
     with:
       id: vnet-${{ matrix.policy_type }}
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
       test_schedule: gh-daily
@@ -120,6 +132,7 @@ jobs:
         use_vnet: [true, false]
     with:
       id: managed-id-${{ matrix.policy_type }}${{ matrix.use_vnet && '-vnet' || '' }}
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
       use_vnet: ${{ matrix.use_vnet }}
@@ -137,6 +150,7 @@ jobs:
         policy_type: ['generated', 'debug', 'allow_all']
     with:
       id: attestation-${{ matrix.policy_type }}
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
       test_schedule: gh-daily
@@ -153,6 +167,7 @@ jobs:
         policy_type: ['generated']
     with:
       id: many-layers-${{ matrix.policy_type }}
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
       test_schedule: gh-daily
@@ -165,6 +180,7 @@ jobs:
     uses: ./.github/workflows/workload-non-confidential.yml
     with:
       id: non-confidential-${{ matrix.policy_type }}
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       test_schedule: gh-daily
 
@@ -181,6 +197,7 @@ jobs:
         script: ['fio', 'tar', 'cpu', 'exec', 'cpu_fio', 'multicpu_fio']
     with:
       id: stress-${{ matrix.policy_type }}-${{ matrix.script }}
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
       script: workload_${{ matrix.script }}
@@ -198,6 +215,7 @@ jobs:
         policy_type: ['generated', 'debug', 'allow_all']
     with:
       id: common-images-${{ matrix.policy_type }}
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
       test_schedule: gh-daily
@@ -214,6 +232,7 @@ jobs:
         policy_type: ['generated', 'debug', 'allow_all']
     with:
       id: sidecar-fragment-${{ matrix.policy_type }}
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
       test_schedule: gh-daily
@@ -230,6 +249,7 @@ jobs:
         policy_type: ['generated', 'debug', 'allow_all']
     with:
       id: sidecar-fragment-wait-${{ matrix.policy_type }}
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
       test_schedule: gh-daily
@@ -247,6 +267,7 @@ jobs:
         has_managed_identity: [true, false]
     with:
       id: thim-${{ matrix.policy_type }}${{ matrix.has_managed_identity && '-mi' || '' }}
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
       has_managed_identity: ${{ matrix.has_managed_identity }}
@@ -264,6 +285,7 @@ jobs:
         policy_type: ['generated', 'debug', 'allow_all']
     with:
       id: skr-${{ matrix.policy_type }}
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
       test_schedule: gh-daily
@@ -276,6 +298,7 @@ jobs:
     uses: ./.github/workflows/workload-skr-fixed-policy.yml
     with:
       id: skr-fixed-policy
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       test_schedule: gh-daily
 
@@ -287,6 +310,7 @@ jobs:
     uses: ./.github/workflows/workload-volume.yml
     with:
       id: volume-generated
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       policy_type: generated
       test_schedule: gh-daily
@@ -299,6 +323,7 @@ jobs:
     uses: ./.github/workflows/workload-net-liveness.yml
     with:
       id: net-liveness-allow_all
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       test_schedule: gh-daily
 
@@ -314,6 +339,7 @@ jobs:
         policy_type: ['generated', 'debug', 'allow_all']
     with:
       id: secrets-${{ matrix.policy_type }}
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
       test_schedule: gh-daily
@@ -330,6 +356,7 @@ jobs:
         policy_type: ['generated', 'debug', 'allow_all']
     with:
       id: configmap-${{ matrix.policy_type }}
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       policy_type: ${{ matrix.policy_type }}
       test_schedule: gh-daily

@@ -1,0 +1,6 @@
+version: '3'
+services:
+  # Confidential Windows skr image serving the HTTP interface directly. This
+  # workload does not include the Linux proxy or gRPC sidecars.
+  skr:
+    image: $REGISTRY/skr-windows:$TAG

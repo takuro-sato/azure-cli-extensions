@@ -17,6 +17,8 @@ The ===HOSTNAME===/===EOF=== markers are kept so the legacy info_cwcow grep
 check still passes.
 """
 
+import base64
+import glob
 import json
 import os
 import platform
@@ -24,6 +26,8 @@ import re
 import socket
 import subprocess
 import sys
+import tempfile
+import time
 
 CERT_URL_PREFIX = "https://kdsintf.amd.com"
 NOT_SNP_MARKER = "It's not in SNP environment."
@@ -95,6 +99,85 @@ def collect_host_info():
     }
 
 
+def check_security_context_schema():
+    """Run the shared schema checker against the UVM reference-info payload."""
+    security_context_dirs = glob.glob("/security-context-*")
+    if len(security_context_dirs) != 1:
+        return False, "expected exactly one /security-context-* directory, found %s" % (
+            security_context_dirs,
+        )
+
+    reference_info_path = os.path.join(
+        security_context_dirs[0], "reference-info-base64"
+    )
+    checker_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "security_context_schema",
+        "check.py",
+    )
+    sign1util_path = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "sign1util.exe"
+    )
+    try:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            cose_path = os.path.join(temp_dir, "reference-info.cose")
+            payload_path = os.path.join(temp_dir, "reference-info.json")
+            with open(reference_info_path, "rt") as reference_info_file:
+                reference_info = base64.b64decode(reference_info_file.read())
+            with open(cose_path, "wb") as cose_file:
+                cose_file.write(reference_info)
+
+            print_result = subprocess.run(
+                [sign1util_path, "print", "-in", cose_path],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            if print_result.returncode != 0:
+                output = (print_result.stdout or "") + (print_result.stderr or "")
+                return False, "sign1util failed to print reference info: %s" % output
+
+            payload_marker = "payload:"
+            output_lines = print_result.stdout.splitlines()
+            try:
+                payload_index = next(
+                    index
+                    for index, line in enumerate(output_lines)
+                    if line.strip() == payload_marker
+                )
+            except StopIteration:
+                return False, "sign1util output did not contain a payload"
+
+            payload = "\n".join(output_lines[payload_index + 1 :]).strip()
+            if not payload:
+                return False, "sign1util output contained an empty payload"
+            json.loads(payload)
+            with open(payload_path, "wt") as payload_file:
+                payload_file.write(payload)
+
+            command = [sys.executable, checker_path, "--reference-payload", payload_path]
+            if os.environ.get("EXPECT_HOST_AMD_CERT"):
+                command.append("--require-host-amd-cert")
+            return_code = subprocess.run(command).returncode
+            if return_code != 0:
+                return False, "security context schema check failed"
+            return True, ""
+    except Exception as error:
+        return False, "failed to check security context schema: %s" % error
+
+
+def finish(result, errors):
+    for error in errors:
+        print("ERROR: %s" % error)
+    if not errors:
+        print("info: success")
+    print("OUTPUT: %s" % json.dumps(result))
+    sys.stdout.flush()
+
+    while True:
+        time.sleep(3600)
+
+
 def parse_report(out):
     """Parse psputilgo's --PrintReport hex dump into ``{field: hexstring}``.
 
@@ -134,41 +217,36 @@ def main():
         "report": {},
     }
     result.update(collect_host_info())
+    errors = []
 
     if rc is None:
-        # psputilgo missing or timed out — hard failure.
-        print("ERROR: %s" % out)
-        print("OUTPUT: %s" % json.dumps(result))
-        sys.exit(1)
-
-    if NOT_SNP_MARKER in out:
+        errors.append(out)
+    elif NOT_SNP_MARKER in out:
         result["snp_mode"] = False
-        print("ERROR: guest is not running in an SEV-SNP environment")
-        print("OUTPUT: %s" % json.dumps(result))
-        sys.exit(1)
-
-    if rc != 0:
+        errors.append("guest is not running in an SEV-SNP environment")
+    elif rc != 0:
         # psputilgo ran but exited non-zero without the not-SNP marker (e.g. a
         # DLL-load panic or an API error). We have NO positive evidence of SNP
         # mode, so leave snp_mode False rather than inferring it from the mere
         # absence of the marker.
-        print("ERROR: psputilgo failed to fetch attestation report (exit %d)" % rc)
-        print("OUTPUT: %s" % json.dumps(result))
-        sys.exit(1)
+        errors.append("psputilgo failed to fetch attestation report (exit %d)" % rc)
+    else:
+        # A successful report fetch only occurs inside a genuine SEV-SNP guest.
+        result["snp_mode"] = True
+        result["report_fetched"] = True
+        result["report"] = parse_report(out)
+        for line in out.splitlines():
+            line = line.strip()
+            if line.startswith(CERT_URL_PREFIX):
+                result["cert_url"] = line
+                break
 
-    # rc == 0 and the not-SNP marker is absent: the tool successfully fetched a
-    # report, which only succeeds inside a genuine SEV-SNP guest.
-    result["snp_mode"] = True
-    result["report_fetched"] = True
-    result["report"] = parse_report(out)
-    for line in out.splitlines():
-        line = line.strip()
-        if line.startswith(CERT_URL_PREFIX):
-            result["cert_url"] = line
-            break
+    schema_valid, schema_error = check_security_context_schema()
+    result["security_context_schema_valid"] = schema_valid
+    if schema_error:
+        errors.append(schema_error)
 
-    print("OUTPUT: %s" % json.dumps(result))
-    sys.exit(0)
+    finish(result, errors)
 
 
 if __name__ == "__main__":

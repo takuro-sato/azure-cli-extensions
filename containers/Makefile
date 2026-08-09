@@ -15,7 +15,7 @@ IMAGE_PLATFORM ?= linux/amd64
 PLATFORM_TAG := $(subst /,-,$(IMAGE_PLATFORM))
 
 all: build login push_arch merge_manifests
-.PHONY: all build login push push_arch merge_manifests build_networking run_networking run_stress_server_alpine build_stress_server_alpine run_stress_server_ubuntu build_stress_server_ubuntu build_stress_noserver run_stress_noserver_alpine run_stress_noserver_ubuntu build_info run_info build_ccf_verify_uvm run_ccf_verify_uvm build_skr_proxy run_skr_proxy killall build_psputil fetch_snp_dll build_attestation_cwcow push_attestation_cwcow
+.PHONY: all build login push push_arch merge_manifests build_networking run_networking run_stress_server_alpine build_stress_server_alpine run_stress_server_ubuntu build_stress_server_ubuntu build_stress_noserver run_stress_noserver_alpine run_stress_noserver_ubuntu build_info run_info build_ccf_verify_uvm run_ccf_verify_uvm build_skr_proxy run_skr_proxy killall build_psputil fetch_snp_dll build_info_cwcow push_info_cwcow build_attestation_cwcow push_attestation_cwcow build_many_layers_cwcow push_many_layers_cwcow
 
 login:
 	az acr login --name $(REGISTRY)
@@ -172,7 +172,7 @@ killall:
 	docker ps --format '{{ .ID }}' | xargs --no-run-if-empty docker stop -s KILL
 
 # --- Windows (WCOW) prebuilt image ------------------------------------------
-# The confidential-WCOW info/attestation image. The Linux buildx rules above
+# The confidential-WCOW info image. The Linux buildx rules above
 # cannot produce a Windows container image, so this is built and pushed by the
 # `build-and-push-windows` job (runs-on: windows-2025) in
 # .github/workflows/build-test-containers.yaml, NOT by the `all`/`push` targets.
@@ -184,7 +184,7 @@ killall:
 # psputilgo.exe (the Go tool loads it from the exe directory at runtime via
 # NewLazyDLL). `fetch_snp_dll` pulls it from the team ACR (OCI artifact) into
 # ./psputil/ so the Dockerfile can COPY it.
-WIN_IMAGE ?= attestation-cwcow
+WIN_IMAGE ?= info-cwcow
 SNP_DLL_REF ?= $(REGISTRY)/$(REPOSITORY)/amdsnppspapi-dll:20250830
 
 build_psputil:
@@ -195,8 +195,20 @@ build_psputil:
 fetch_snp_dll:
 	cd psputil && oras pull $(SNP_DLL_REF)
 
-build_attestation_cwcow: build_psputil fetch_snp_dll attestation_cwcow.Dockerfile attest.py
-	docker build -t $(REGISTRY)/$(REPOSITORY)/$(WIN_IMAGE):$(TAG) -f attestation_cwcow.Dockerfile .
+build_info_cwcow: build_psputil fetch_snp_dll info_cwcow.Dockerfile attest.py
+	docker build -t $(REGISTRY)/$(REPOSITORY)/$(WIN_IMAGE):$(TAG) -f info_cwcow.Dockerfile .
+
+push_info_cwcow: build_info_cwcow
+	docker push $(REGISTRY)/$(REPOSITORY)/$(WIN_IMAGE):$(TAG)
+
+build_attestation_cwcow: attestation_cwcow.Dockerfile maa_attest.py
+	docker build -t $(REGISTRY)/$(REPOSITORY)/attestation-cwcow:$(TAG) -f attestation_cwcow.Dockerfile .
 
 push_attestation_cwcow: build_attestation_cwcow
-	docker push $(REGISTRY)/$(REPOSITORY)/$(WIN_IMAGE):$(TAG)
+	docker push $(REGISTRY)/$(REPOSITORY)/attestation-cwcow:$(TAG)
+
+build_many_layers_cwcow: many_layers_cwcow.Dockerfile
+	docker build -t $(REGISTRY)/$(REPOSITORY)/many-layers-cwcow:$(TAG) -f many_layers_cwcow.Dockerfile .
+
+push_many_layers_cwcow: build_many_layers_cwcow
+	docker push $(REGISTRY)/$(REPOSITORY)/many-layers-cwcow:$(TAG)

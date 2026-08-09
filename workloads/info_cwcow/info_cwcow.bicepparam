@@ -1,8 +1,8 @@
 using './info_cwcow.bicep'
 
-// Image info — the prebuilt confidential-WCOW attestation-cwcow image lives in
+// Image info — the prebuilt confidential-WCOW info-cwcow image lives in
 // our ACR (anonymous pull enabled). Left empty so the bicep falls back to
-// cacidashboardaci.azurecr.io/prebuilt-test-containers/attestation-cwcow:latest;
+// cacidashboardaci.azurecr.io/prebuilt-test-containers/info-cwcow:latest;
 // the workflow param_sets registry/repository/tag. During branch validation
 // (before `latest` is published on main) pass a YYYYMMDD tag via the workflow's
 // TAG input/default, then flip back to latest at merge.
@@ -11,7 +11,8 @@ param repository = ''
 param tag = ''
 
 // Deployment info
-param location = 'westeurope'
+param location = 'germanynorth'
+param useVnet = false
 
 // Pre-populated permissive WCOW policy (api_version 0.11.0, mount_cims).
 // Matches the wcow_allow_all_policy.rego template emitted by

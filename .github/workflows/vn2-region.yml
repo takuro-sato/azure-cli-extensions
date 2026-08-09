@@ -27,6 +27,10 @@ on:
       - workloads/volume/**
   workflow_call:
     inputs:
+      environment:
+        type: string
+        description: Environment file to load
+        default: cacitesting.env
       id:
         type: string
         description: ID of the run
@@ -46,6 +50,10 @@ on:
         default: true
   workflow_dispatch:
     inputs:
+      environment:
+        type: string
+        description: Environment file to load
+        default: cacitesting.env
       id:
         type: string
         description: ID of the run
@@ -72,8 +80,7 @@ env:
   TEST_NAME: VN2 - Region
   RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
   DEPLOYMENT_NAME: ${{ inputs.id || 'vn2' }}-${{ inputs.location }}-${{ github.run_number }}
-  SUBSCRIPTION: ${{ vars.SUBSCRIPTION_ACI }}
-  RESOURCE_GROUP: ${{ inputs.resource_group || 'c-aci-vn2' }}
+  AKS_RESOURCE_GROUP: ${{ inputs.resource_group || 'c-aci-vn2' }}
   LOCATION: ${{ inputs.location || 'northeurope' }}
   AKS_CLUSTER_NAME: ${{ inputs.aks_cluster_name || 'vn2-aks-northeurope' }}
   CLEANUP: ${{ inputs.cleanup || 'true' }}
@@ -88,12 +95,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Load Environment
+        id: environment
+        run: ./scripts/load_environment.sh "${{ inputs.environment || 'cacitesting.env' }}" AKS_RESOURCE_GROUP AKS_CLUSTER_NAME
+
       - name: Log into Azure
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+          subscription-id: ${{ steps.environment.outputs.subscription }}
 
       # Note: GitHub Actions runner images have Kubectl and Helm pre-installed.
 
@@ -110,15 +121,15 @@ jobs:
       - name: Start the AKS
         run: |
           # do nothing if AKS is already running
-          if [ "$(az aks show --name $AKS_CLUSTER_NAME --resource-group $RESOURCE_GROUP --query 'powerState.code' -o tsv)" != "Running" ]; then
+          if [ "$(az aks show --name $AKS_CLUSTER_NAME --resource-group $AKS_RESOURCE_GROUP --query 'powerState.code' -o tsv)" != "Running" ]; then
             echo "Starting AKS cluster..."
-            az aks start --name $AKS_CLUSTER_NAME --resource-group $RESOURCE_GROUP
+            az aks start --name $AKS_CLUSTER_NAME --resource-group $AKS_RESOURCE_GROUP
           fi
 
       - name: Delete any existing deployments and uninstall VN2
         run: |
           ./scripts/tracing/trace_step.py --start 'Delete any existing deployments and uninstall VN2'
-          ./workloads/vn2/cleanup-vn2-helm.sh $RESOURCE_GROUP $AKS_CLUSTER_NAME
+          ./workloads/vn2/cleanup-vn2-helm.sh $AKS_RESOURCE_GROUP $AKS_CLUSTER_NAME
           # Waits a bit for the helm uninstall to really finish
           sleep 30
 
@@ -126,7 +137,7 @@ jobs:
         id: vn2_deploy
         run: |
           ./scripts/tracing/trace_step.py --start 'Deploy VN2 Helm Chart'
-          ./workloads/vn2/deploy-vn2-helm.sh $RESOURCE_GROUP $AKS_CLUSTER_NAME
+          ./workloads/vn2/deploy-vn2-helm.sh $AKS_RESOURCE_GROUP $AKS_CLUSTER_NAME
           echo "VN2_READY=1" >> $GITHUB_ENV
           helm list
 
@@ -140,7 +151,6 @@ jobs:
         env:
           DEPLOYMENT_NAME: info
           STEP_PREFIX: info
-          REGISTRY: cacidashboardaci.azurecr.io
           REPOSITORY: prebuilt-test-containers
           TAG: latest
         run: |
@@ -164,7 +174,7 @@ jobs:
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+          subscription-id: ${{ steps.environment.outputs.subscription }}
 
       - name: 'Test case - ccf_verify_uvm'
         if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
@@ -172,7 +182,6 @@ jobs:
           # pod names can't contain '_'
           DEPLOYMENT_NAME: ccf-verify-uvm
           STEP_PREFIX: ccf_verify_uvm
-          REGISTRY: cacidashboardaci.azurecr.io
           REPOSITORY: prebuilt-test-containers
           TAG: "latest"
         run: |
@@ -196,7 +205,7 @@ jobs:
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+          subscription-id: ${{ steps.environment.outputs.subscription }}
 
       - name: 'Test case - sample-pod.yaml'
         if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
@@ -218,7 +227,7 @@ jobs:
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+          subscription-id: ${{ steps.environment.outputs.subscription }}
 
       - name: 'Test case - stress test (4cpu, 16gb)'
         if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
@@ -226,7 +235,6 @@ jobs:
           CPU: 4
           MEMORY_IN_GB: 16
           DEPLOYMENT_NAME: stress-4cpu-16gb
-          REGISTRY: cacidashboardaci.azurecr.io
           REPOSITORY: prebuilt-test-containers/stress-tests-server-alpine
           TAG: latest
           POLICY_TYPE: debug
@@ -240,7 +248,7 @@ jobs:
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+          subscription-id: ${{ steps.environment.outputs.subscription }}
 
       - name: 'Test case - stress test (18cpu, 64gb)'
         if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' && contains(vars.VN2_BIG_CONTAINERS_REGIONS, format(',{0},', inputs.location)) }}
@@ -248,7 +256,6 @@ jobs:
           CPU: 18
           MEMORY_IN_GB: 64
           DEPLOYMENT_NAME: stress-18cpu-64gb
-          REGISTRY: cacidashboardaci.azurecr.io
           REPOSITORY: prebuilt-test-containers/stress-tests-server-alpine
           TAG: latest
           POLICY_TYPE: debug
@@ -262,23 +269,19 @@ jobs:
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+          subscription-id: ${{ steps.environment.outputs.subscription }}
 
       - name: 'Test case - managed identity'
         if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
         env:
           DEPLOYMENT_NAME: managed-identity
           STEP_PREFIX: managed-identity
-          REGISTRY: cacidashboardaci.azurecr.io
           REPOSITORY: ubuntu-with-curl
           TAG: "24.04"
         run: |
           set -exo pipefail
 
           # Managed identity lives in the dashboard resource group
-          export AKS_RESOURCE_GROUP=$RESOURCE_GROUP
-          export RESOURCE_GROUP=c-aci-dashboard
-
           WAIT_FOR_OUTPUT=true ./workloads/vn2/vn2-test-run.sh workloads/managed_identity
           ./scripts/parse_container_output.py --must-have-output --fail-on-error output.log
 
@@ -288,14 +291,13 @@ jobs:
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+          subscription-id: ${{ steps.environment.outputs.subscription }}
 
       - name: 'Test case - thim'
         if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
         env:
           DEPLOYMENT_NAME: thim
           STEP_PREFIX: thim
-          REGISTRY: cacidashboardaci.azurecr.io
           TAG: "2.14"
         run: |
           set -ex
@@ -319,7 +321,7 @@ jobs:
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+          subscription-id: ${{ steps.environment.outputs.subscription }}
 
       - name: 'Test case - skr'
         if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
@@ -327,7 +329,6 @@ jobs:
           DEPLOYMENT_NAME: skr
           STEP_PREFIX: skr
           VN2_MODE: "true"
-          REGISTRY: cacidashboardaci.azurecr.io
           TAG: "2.14"
           POLICY_TYPE: generated
           ATTESTATION_ENDPOINT: ${{ vars.ATTESTATION_ENDPOINT }}
@@ -337,9 +338,6 @@ jobs:
           ./scripts/tracing/trace_step.py --start 'Test SKR'
 
           # Managed identity lives in the dashboard resource group
-          export AKS_RESOURCE_GROUP=$RESOURCE_GROUP
-          export RESOURCE_GROUP=c-aci-dashboard
-
           # This is used as the key name - attempt to make it unique and
           # identifiable
           export DEPLOYMENT_NAME=vn2-${{ inputs.location || 'region' }}-skr-${{ github.run_number }}
@@ -363,7 +361,7 @@ jobs:
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+          subscription-id: ${{ steps.environment.outputs.subscription }}
 
       - name: 'Test case - volume (vn2)'
         if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
@@ -379,7 +377,7 @@ jobs:
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+          subscription-id: ${{ steps.environment.outputs.subscription }}
 
       - name: 'Test case - volume (non-vn2)'
         if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
@@ -395,14 +393,13 @@ jobs:
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+          subscription-id: ${{ steps.environment.outputs.subscription }}
 
       - name: 'Test case - net-liveness'
         if: ${{ !cancelled() && steps.vn2_deploy.outcome == 'success' }}
         env:
           DEPLOYMENT_NAME: net-liveness
           STEP_PREFIX: net-liveness
-          REGISTRY: cacidashboardaci.azurecr.io
           REPOSITORY: prebuilt-test-containers
           TAG: tingmao.20260402
           CONTAINER_GROUP_COUNT: "2"
@@ -442,7 +439,7 @@ jobs:
       - name: Clean up VN2 Helm installation
         run: |
           if [ "$CLEANUP" != false ]; then
-            ./workloads/vn2/cleanup-vn2-helm.sh $RESOURCE_GROUP $AKS_CLUSTER_NAME
+            ./workloads/vn2/cleanup-vn2-helm.sh $AKS_RESOURCE_GROUP $AKS_CLUSTER_NAME
           fi
 
       # Attempt to upgrade the AKS cluster, but don't fail this workflow if it fails
@@ -451,7 +448,7 @@ jobs:
         continue-on-error: true
         run: |
           if [ "$CLEANUP" != false ]; then
-            ./workloads/vn2/upgrade-aks.sh $RESOURCE_GROUP $AKS_CLUSTER_NAME
+            ./workloads/vn2/upgrade-aks.sh $AKS_RESOURCE_GROUP $AKS_CLUSTER_NAME
           fi
 
       # Also don't fail this workflow if stopping the AKS fails
@@ -461,5 +458,5 @@ jobs:
         if: success() && inputs.location != 'australiacentral2'
         run: |
           if [ "$CLEANUP" != false ]; then
-            az aks stop --name $AKS_CLUSTER_NAME --resource-group $RESOURCE_GROUP
+            az aks stop --name $AKS_CLUSTER_NAME --resource-group $AKS_RESOURCE_GROUP
           fi

@@ -11,8 +11,7 @@
 // `-NetworkType byovnet` (e.g. australiacentral2). The CG itself is a normal ACI
 // deployment — the fleet/cplat does the byovnet wiring, not this template.
 //
-// ACI Windows container groups are single-container only (multi-container is
-// Linux-only), so this is one confidential Windows container with no public IP.
+// This workload uses one confidential Windows container with no public IP.
 param location string
 param ccePolicies object
 param tag string = ''

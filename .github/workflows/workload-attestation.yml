@@ -21,6 +21,10 @@ on:
       - main
   workflow_dispatch:
     inputs:
+      environment:
+        type: string
+        description: Environment file to load
+        default: cacitesting.env
       id:
         type: string
         description: ID of the run
@@ -50,6 +54,10 @@ on:
         default: ''
   workflow_call:
     inputs:
+      environment:
+        type: string
+        description: Environment file to load
+        default: cacitesting.env
       id:
         type: string
         description: ID of the run
@@ -90,9 +98,6 @@ env:
   TEST_NAME: Attestation
   RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
   DEPLOYMENT_NAME: ${{ inputs.id || 'attestation' }}-${{ inputs.location }}-${{ github.run_number }}
-  SUBSCRIPTION: ${{ vars.SUBSCRIPTION_ACI }}
-  RESOURCE_GROUP: c-aci-dashboard
-  REGISTRY: cacidashboardaci.azurecr.io
   MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'westeurope' }}
   LOCATION: ${{ inputs.location || 'westeurope' }}
   CPU: ${{ inputs.cpu || 1 }}
@@ -112,12 +117,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Load Environment
+        id: environment
+        run: |
+          preserve=()
+          if [ -n "${{ inputs.attestation_endpoint }}" ]; then
+            preserve+=(ATTESTATION_ENDPOINT)
+          fi
+          ./scripts/load_environment.sh "${{ inputs.environment || 'cacitesting.env' }}" "${preserve[@]}"
+
       - name: Log into Azure
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+          subscription-id: ${{ steps.environment.outputs.subscription }}
 
       - name: Initialize Run
         env:

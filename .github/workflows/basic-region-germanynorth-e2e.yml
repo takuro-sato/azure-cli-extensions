@@ -1,0 +1,28 @@
+name: Region (Basic) - Germany North E2E
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  schedule:
+    - cron: '18 1-23 * * *'
+  workflow_dispatch: {}
+  pull_request:
+    paths:
+      - .github/workflows/basic-region-germanynorth-e2e.yml
+
+jobs:
+  basic-lcow-germanynorth-e2e:
+    secrets: inherit
+    uses: ./.github/workflows/basic-region.yml
+    with:
+      location: germanynorth
+      environment: cacitesting.e2e.env
+
+  basic-cwcow-germanynorth-e2e:
+    secrets: inherit
+    uses: ./.github/workflows/basic-region-cwcow.yml
+    with:
+      location: germanynorth
+      environment: cacitesting.e2e.env

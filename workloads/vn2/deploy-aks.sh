@@ -50,11 +50,14 @@ MAX_COUNT=3                       # Maximum number of nodes (for autoscaler, Dev
 
 RUNNER_IDENTITY_RESOURCE_GROUP="c-aci-dashboard"
 RUNNER_IDENTITY_NAME="cacidashboard"
+RUNNER_IDENTITY_SUBSCRIPTION="824db9f9-0ff1-49f2-ab3e-4b72dfb9dd6a"
 
-RUNNER_CLIENT_ID="$(az identity show --resource-group "$RUNNER_IDENTITY_RESOURCE_GROUP" -n "$RUNNER_IDENTITY_NAME" --query 'clientId' -o tsv)"
+RUNNER_CLIENT_ID="$(az identity show --subscription "$RUNNER_IDENTITY_SUBSCRIPTION" --resource-group "$RUNNER_IDENTITY_RESOURCE_GROUP" -n "$RUNNER_IDENTITY_NAME" --query 'clientId' -o tsv)"
 
 REGIONAL_IDENTITY_NAME="$RUNNER_IDENTITY_NAME-$LOCATION"
-# REGIONAL_IDENTITY_CLIENT_ID="$(az identity show --resource-group "$RUNNER_IDENTITY_RESOURCE_GROUP" -n "$REGIONAL_IDENTITY_NAME" --query 'clientId' -o tsv)"
+REGIONAL_IDENTITY_RESOURCE_GROUP="${RESOURCE_GROUP:-c-aci-dashboard}"
+REGIONAL_IDENTITY_SUBSCRIPTION="${SUBSCRIPTION:-${RUNNER_IDENTITY_SUBSCRIPTION}}"
+# REGIONAL_IDENTITY_CLIENT_ID="$(az identity show --subscription "$REGIONAL_IDENTITY_SUBSCRIPTION" --resource-group "$REGIONAL_IDENTITY_RESOURCE_GROUP" -n "$REGIONAL_IDENTITY_NAME" --query 'clientId' -o tsv)"
 
 . "$(dirname "$0")/isolate_kube_config.inc.sh"
 
@@ -173,7 +176,7 @@ az role assignment create \
     --scope "$SCOPE"
 
 # Allow the AKS identity to have Managed Identity Operator on the cacidashboard-${region} identity so that we can test VN2 managed identity containers
-SCOPE="/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$RUNNER_IDENTITY_RESOURCE_GROUP/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$REGIONAL_IDENTITY_NAME"
+SCOPE="/subscriptions/$REGIONAL_IDENTITY_SUBSCRIPTION/resourceGroups/$REGIONAL_IDENTITY_RESOURCE_GROUP/providers/Microsoft.ManagedIdentity/userAssignedIdentities/$REGIONAL_IDENTITY_NAME"
 echo "Assigning 'Managed Identity Operator' role to Managed Identity '$AKS_KUBELET_IDENTITY_CLIENT_ID' on '$REGIONAL_IDENTITY_NAME'..."
 az role assignment create \
     --assignee $AKS_KUBELET_IDENTITY_CLIENT_ID \

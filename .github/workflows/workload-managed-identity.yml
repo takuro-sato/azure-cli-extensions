@@ -21,6 +21,10 @@ on:
       - main
   workflow_dispatch:
     inputs:
+      environment:
+        type: string
+        description: Environment file to load
+        default: cacitesting.env
       id:
         type: string
         description: ID of the run
@@ -57,6 +61,10 @@ on:
         default: false
   workflow_call:
     inputs:
+      environment:
+        type: string
+        description: Environment file to load
+        default: cacitesting.env
       id:
         type: string
         description: ID of the run
@@ -100,9 +108,6 @@ env:
   TEST_NAME: ${{ inputs.is_big_containers_test && 'Managed Identity (BigContainers)' || 'Managed Identity' }}
   RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
   DEPLOYMENT_NAME: ${{ inputs.id || 'managed-identity' }}-${{ inputs.location }}-${{ github.run_number }}
-  SUBSCRIPTION: ${{ vars.SUBSCRIPTION_ACI }}
-  RESOURCE_GROUP: c-aci-dashboard
-  REGISTRY: cacidashboardaci.azurecr.io
   REPOSITORY: ubuntu-with-curl
   TAG: "24.04"
   MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'westeurope' }}
@@ -124,12 +129,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Load Environment
+        id: environment
+        run: ./scripts/load_environment.sh "${{ inputs.environment || 'cacitesting.env' }}"
+
       - name: Log into Azure
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+          subscription-id: ${{ steps.environment.outputs.subscription }}
 
       - name: Initialize Run
         env:
