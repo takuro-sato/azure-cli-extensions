@@ -4,15 +4,16 @@ name: Workload - Managed Identity C-WCOW
 #
 # Deploys a single confidential WCOW container group (managed_identity_cwcow)
 # with a user-assigned managed identity and asserts the container could fetch an
-# OAuth2 token from IMDS (it emits `OUTPUT: {"attempts": N, "success": true}`).
+# OAuth2 token from ACI's injected identity endpoint (it emits
+# `OUTPUT: {"attempts": N, "success": true}`).
 #
 # Same C-WCOW constraints as the other *-cwcow workflows:
 #   * No registry/repository/tag plumbing — image is a digest-pinned
 #     mcr.microsoft.com/windows/servercore image, pulled by the host at deploy
 #     time.
 #   * No image pull step (no ACR involved).
-#   * No vnet — ACI Windows groups don't support subnet injection; the managed
-#     identity reaches IMDS the same way as on Linux.
+#   * No vnet — ACI injects IDENTITY_ENDPOINT and IDENTITY_HEADER into the
+#     Windows container for managed identity token requests.
 #   * Policy type is always 'allow_all' — generated WCOW policies need confcom
 #     1.3.0+wcow and Windows Docker, unavailable on ubuntu-latest (see
 #     vm-cwcow.yml). REGISTRY is a dummy to satisfy c-aci-testing's argparse.

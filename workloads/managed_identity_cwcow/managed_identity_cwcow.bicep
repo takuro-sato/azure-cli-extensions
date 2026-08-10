@@ -1,10 +1,9 @@
 // Confidential WCOW equivalent of workloads/managed_identity.
 //
 // A single confidential Windows container with a user-assigned managed identity
-// that probes IMDS for an OAuth2 token. ACI Windows groups can't mount volumes
-// or run multiple containers, but the IMDS endpoint is reachable the same way as
-// Linux, so this is a faithful Windows port: no vnet, no registry creds (the
-// servercore image is pulled from mcr), just the identity + an IMDS probe.
+// that uses ACI's injected identity endpoint to request an OAuth2 token. ACI
+// Windows groups can't mount volumes or run multiple containers, so this uses
+// no vnet or registry credentials: the servercore image is pulled from MCR.
 //
 // Uses Windows Server Core (ships curl.exe + full PowerShell) rather than
 // nanoserver (which has neither).
@@ -16,6 +15,11 @@ param managedIDName string
 
 param cpu int = 4
 param memoryInGb int = 8
+
+resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' existing = {
+  name: managedIDName
+  scope: resourceGroup(managedIDGroup)
+}
 
 resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01' = {
   name: deployment().name
@@ -48,6 +52,12 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
               cpu: cpu
             }
           }
+          environmentVariables: [
+            {
+              name: 'MANAGED_IDENTITY_PRINCIPAL_ID'
+              value: managedIdentity.properties.principalId
+            }
+          ]
           command: [
             'powershell.exe'
             '-Command'
@@ -60,17 +70,25 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
               $tries++
               # Important: do not expose the token to stdout — the container log
               # is fetched and displayed by the pipeline.
-              curl.exe --fail -s -H "Metadata: true" "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://storage.azure.com/" -o "$env:TEMP\token.json"
-              if ($LASTEXITCODE -eq 0) { $success = $true; break }
+              try {
+                $null = Invoke-RestMethod -Uri $env:IDENTITY_ENDPOINT `
+                  -Method Get `
+                  -Headers @{ secret = $env:IDENTITY_HEADER } `
+                  -Body @{ resource = 'https://storage.azure.com/'; principalId = $env:MANAGED_IDENTITY_PRINCIPAL_ID } `
+                  -ContentType 'application/x-www-form-urlencoded' `
+                  -ErrorAction Stop
+                $success = $true
+                break
+              } catch {}
               Write-Output "Attempt $tries failed, retrying..."
               Start-Sleep -Seconds 5
             }
             if (-not $success) {
-              Write-Output ('ERROR: Failed to retrieve token from IMDS after ' + $tries + ' attempts')
+              Write-Output ('ERROR: Failed to retrieve token from the identity endpoint after ' + $tries + ' attempts')
               Write-Output ('OUTPUT: {"attempts": ' + $tries + ', "success": false}')
               Start-Sleep -Seconds 2147483
             }
-            Write-Output 'IMDS request successful'
+            Write-Output 'Identity endpoint request successful'
             Write-Output ('OUTPUT: {"attempts": ' + $tries + ', "success": true}')
             Start-Sleep -Seconds 2147483
             '''
