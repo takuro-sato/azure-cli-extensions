@@ -48,10 +48,6 @@ on:
         type: string
         description: The type of policy to use
         default: generated
-      attestation_endpoint:
-        type: string
-        description: The MAA endpoint host name, or empty to use regional default
-        default: ''
   workflow_call:
     inputs:
       environment:
@@ -81,10 +77,6 @@ on:
         type: string
         description: The type of policy to use
         default: generated
-      attestation_endpoint:
-        type: string
-        description: The MAA endpoint host name, or empty to use regional default
-        default: ''
       test_schedule:
         type: string
         description: Trace marker by scheduled runs only
@@ -105,7 +97,6 @@ env:
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: ${{ inputs.policy_type || 'generated' }}
   TAG: "2.14"
-  ATTESTATION_ENDPOINT: ${{ inputs.attestation_endpoint }}
   TEST_SCHEDULE: ${{ inputs.test_schedule }}
   RUN_FEATURES: ''
 
@@ -119,12 +110,10 @@ jobs:
 
       - name: Load Environment
         id: environment
-        run: |
-          preserve=()
-          if [ -n "${{ inputs.attestation_endpoint }}" ]; then
-            preserve+=(ATTESTATION_ENDPOINT)
-          fi
-          ./scripts/load_environment.sh "${{ inputs.environment || 'cacitesting.env' }}" "${preserve[@]}"
+        run: ./scripts/load_environment.sh "${{ inputs.environment || 'cacitesting.env' }}"
+
+      - name: Set Regional MAA Endpoint
+        run: ./scripts/set_maa_endpoint.sh
 
       - name: Log into Azure
         uses: azure/login@v2
@@ -141,21 +130,6 @@ jobs:
       - name: Pull Image
         if: ${{ env.POLICY_TYPE != 'allow_all' }}
         run: c-aci-testing images pull workloads/attestation
-
-      - name: Set Attestation Endpoint
-        if: ${{ env.ATTESTATION_ENDPOINT == '' }}
-        run: |
-          ATTESTATION_ENDPOINT=$(cat azure/MAA-endpoints.csv | grep -vE '^#|^$' | grep -E ',${{ env.LOCATION }},' | cut -d, -f3)
-          if [ -z "$ATTESTATION_ENDPOINT" ]; then
-            echo "No MAA endpoint found for location ${{ env.LOCATION }}"
-            echo "Using default (westeurope) endpoint"
-            ATTESTATION_ENDPOINT=sharedweu.weu.attest.azure.net
-          fi
-          # Strip https:// and trailing slash
-          ATTESTATION_ENDPOINT=${ATTESTATION_ENDPOINT#https://}
-          ATTESTATION_ENDPOINT=${ATTESTATION_ENDPOINT%/}
-          echo "Using MAA endpoint: $ATTESTATION_ENDPOINT"
-          echo "ATTESTATION_ENDPOINT=$ATTESTATION_ENDPOINT" >> $GITHUB_ENV
 
       - name: Set Parameters
         run: |

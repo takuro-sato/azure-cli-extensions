@@ -99,6 +99,9 @@ jobs:
         id: environment
         run: ./scripts/load_environment.sh "${{ inputs.environment || 'cacitesting.env' }}" AKS_RESOURCE_GROUP AKS_CLUSTER_NAME
 
+      - name: Set Regional MAA Endpoint
+        run: ./scripts/set_maa_endpoint.sh
+
       - name: Log into Azure
         uses: azure/login@v2
         with:
@@ -331,7 +334,6 @@ jobs:
           VN2_MODE: "true"
           TAG: "2.14"
           POLICY_TYPE: generated
-          ATTESTATION_ENDPOINT: ${{ vars.ATTESTATION_ENDPOINT }}
           HSM_ENDPOINT: ${{ vars.HSM_ENDPOINT_ACI }}
         run: |
           set -ex

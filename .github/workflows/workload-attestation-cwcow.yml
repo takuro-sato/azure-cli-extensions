@@ -32,10 +32,6 @@ on:
         type: string
         description: Attestation client image tag
         default: latest
-      attestation_endpoint:
-        type: string
-        description: The MAA endpoint host name, or empty to use regional default
-        default: ''
       cpu:
         type: number
         description: The number of CPU cores in container
@@ -65,10 +61,6 @@ on:
         type: string
         description: Attestation client image tag
         default: latest
-      attestation_endpoint:
-        type: string
-        description: The MAA endpoint host name, or empty to use regional default
-        default: ''
       cpu:
         type: number
         description: The number of CPU cores in container
@@ -102,7 +94,6 @@ env:
   MEMORY_IN_GB: ${{ inputs.memory_in_gb || 4 }}
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: 'allow_all'
-  ATTESTATION_ENDPOINT: ${{ inputs.attestation_endpoint }}
   TEST_SCHEDULE: ${{ inputs.test_schedule }}
   RUN_FEATURES: 'maa'
 
@@ -117,12 +108,10 @@ jobs:
 
       - name: Load Environment
         id: environment
-        run: |
-          preserve=()
-          if [ -n "${{ inputs.attestation_endpoint }}" ]; then
-            preserve+=(ATTESTATION_ENDPOINT)
-          fi
-          ./scripts/load_environment.sh "${{ inputs.environment || 'cacitesting.env' }}" "${preserve[@]}"
+        run: ./scripts/load_environment.sh "${{ inputs.environment || 'cacitesting.env' }}"
+
+      - name: Set Regional MAA Endpoint
+        run: ./scripts/set_maa_endpoint.sh
 
       - name: Log into Azure
         uses: azure/login@v2
@@ -135,18 +124,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: ./scripts/init_run.sh
-
-      - name: Set Attestation Endpoint
-        if: ${{ env.ATTESTATION_ENDPOINT == '' }}
-        run: |
-          ATTESTATION_ENDPOINT=$(grep -vE '^#|^$' azure/MAA-endpoints.csv | grep -E ",${LOCATION}," | cut -d, -f3)
-          if [ -z "$ATTESTATION_ENDPOINT" ]; then
-            echo "No MAA endpoint found for location $LOCATION; using West Europe"
-            ATTESTATION_ENDPOINT=sharedweu.weu.attest.azure.net
-          fi
-          ATTESTATION_ENDPOINT=${ATTESTATION_ENDPOINT#https://}
-          ATTESTATION_ENDPOINT=${ATTESTATION_ENDPOINT%/}
-          echo "ATTESTATION_ENDPOINT=$ATTESTATION_ENDPOINT" >> "$GITHUB_ENV"
 
       - name: Set Parameters
         run: |
