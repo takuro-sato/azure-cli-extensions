@@ -167,11 +167,23 @@ jobs:
       tag: ${{ inputs.tag }}
       test_schedule: gh-daily
 
+  skr-cwcow:
+    if: ${{ !cancelled() }}
+    name: skr-cwcow
+    secrets: inherit
+    needs: attestation
+    uses: ./.github/workflows/workload-skr-cwcow.yml
+    with:
+      id: skr-cwcow
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
+      location: ${{ inputs.location }}
+      test_schedule: gh-daily
+
   vnet:
     if: ${{ !cancelled() }}
     name: vnet
     secrets: inherit
-    needs: attestation
+    needs: skr-cwcow
     uses: ./.github/workflows/workload-vnet-cwcow.yml
     with:
       id: vnet-cwcow
