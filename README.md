@@ -59,6 +59,10 @@ Deploys to many regions to gather data about region health
 [![Region (Basic) - Central US EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-centraluseuap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-centraluseuap.yml)
 [![Region (Basic) - East US 2 EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-eastus2euap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-eastus2euap.yml)
 
+### Slices
+
+[![Region (Basic) - Germany North E2E](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-germanynorth-e2e.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/basic-region-germanynorth-e2e.yml)
+
 ## MAA
 
 [![Attestation - Australia Central 2](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-australiacentral2.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-australiacentral2.yml)
@@ -105,6 +109,8 @@ Deploys to many regions to gather data about region health
 
 [![Attestation - Central US EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-centraluseuap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-centraluseuap.yml)
 [![Attestation - East US 2 EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-eastus2euap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-eastus2euap.yml)
+
+[![Attestation - Germany North E2E](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-germanynorth-e2e.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/attestation-germanynorth-e2e.yml)
 
 ---
 

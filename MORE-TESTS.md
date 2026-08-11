@@ -49,6 +49,10 @@
 [![Region - Central US EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-centraluseuap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-centraluseuap.yml)
 [![Region - East US 2 EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-eastus2euap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-eastus2euap.yml)
 
+### Slices
+
+[![Region - Germany North E2E](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-germanynorth-e2e.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-germanynorth-e2e.yml)
+
 ## High Spec Containers
 
 Deploys with container with high specification (varies by region)
@@ -134,6 +138,8 @@ Deploys confidential containers with VN2
 [![VN2 - Central US EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-centraluseuap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-centraluseuap.yml)
 [![VN2 - East US 2 EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-eastus2euap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-eastus2euap.yml)
 
+[![VN2 - Germany North E2E](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-germanynorth-e2e.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/vn2-germanynorth-e2e.yml)
+
 ## Performance
 
 ### Stable
@@ -164,6 +170,10 @@ Deploys confidential containers with VN2
 
 [![Region - Central US EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-centraluseuap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-centraluseuap.yml)
 [![Region - East US 2 EUAP](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-eastus2euap.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/region-eastus2euap.yml)
+
+### Slices
+
+[![Perf - Germany North E2E](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-germanynorth-e2e.yml/badge.svg?branch=main)](https://github.com/microsoft/confidential-aci-dashboard/actions/workflows/perf-germanynorth-e2e.yml)
 
 ## Uptime
 
