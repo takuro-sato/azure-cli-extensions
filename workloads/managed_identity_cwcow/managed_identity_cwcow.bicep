@@ -76,12 +76,34 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
                   -Headers @{ secret = $env:IDENTITY_HEADER } `
                   -Body @{ resource = 'https://storage.azure.com/'; principalId = $env:MANAGED_IDENTITY_PRINCIPAL_ID } `
                   -ContentType 'application/x-www-form-urlencoded' `
+                  -TimeoutSec 10 `
                   -ErrorAction Stop
                 $success = $true
                 break
-              } catch {}
-              Write-Output "Attempt $tries failed, retrying..."
-              Start-Sleep -Seconds 5
+              } catch {
+                $statusCode = 'unavailable'
+                $responseBody = $_.ErrorDetails.Message
+                if ($_.Exception.Response) {
+                  $statusCode = [int]$_.Exception.Response.StatusCode
+                  if ([string]::IsNullOrWhiteSpace($responseBody)) {
+                    $reader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
+                    try {
+                      $responseBody = $reader.ReadToEnd()
+                    } finally {
+                      $reader.Dispose()
+                    }
+                  }
+                }
+                if ([string]::IsNullOrWhiteSpace($responseBody)) {
+                  $responseBody = $_.Exception.Message
+                }
+                Write-Output "Attempt $tries failed. HTTP status: $statusCode"
+                Write-Output "Response: $responseBody"
+              }
+              if ($tries -lt 5) {
+                Write-Output 'Retrying...'
+                Start-Sleep -Seconds 5
+              }
             }
             if (-not $success) {
               Write-Output ('ERROR: Failed to retrieve token from the identity endpoint after ' + $tries + ' attempts')
