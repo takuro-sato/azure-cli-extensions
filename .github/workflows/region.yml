@@ -178,10 +178,15 @@ jobs:
     secrets: inherit
     needs: many-layers
     uses: ./.github/workflows/workload-non-confidential.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        use_vnet: [true, false]
     with:
-      id: non-confidential-${{ matrix.policy_type }}
+      id: non-confidential${{ matrix.use_vnet && '-vnet' || '' }}
       environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
+      use_vnet: ${{ matrix.use_vnet }}
       test_schedule: gh-daily
 
   stress-tests:
