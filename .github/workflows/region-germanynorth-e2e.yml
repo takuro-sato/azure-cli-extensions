@@ -13,6 +13,20 @@ on:
       - .github/workflows/region-germanynorth-e2e.yml
 
 jobs:
+  basic-lcow-germanynorth-e2e:
+    secrets: inherit
+    uses: ./.github/workflows/basic-region.yml
+    with:
+      location: germanynorth
+      environment: cacitesting.e2e.env
+
+  basic-cwcow-germanynorth-e2e:
+    secrets: inherit
+    uses: ./.github/workflows/basic-region-cwcow.yml
+    with:
+      location: germanynorth
+      environment: cacitesting.e2e.env
+
   lcow-germanynorth-e2e:
     secrets: inherit
     uses: ./.github/workflows/region.yml
