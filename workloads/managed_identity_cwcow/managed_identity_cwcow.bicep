@@ -12,9 +12,19 @@ param tag string
 param ccePolicies object
 param managedIDGroup string = resourceGroup().name
 param managedIDName string
+param useVnet bool = false
 
 param cpu int = 4
 param memoryInGb int = 8
+
+resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' existing = {
+  name: 'aci-long-lived-vnet-${location}'
+}
+
+resource subnet 'Microsoft.Network/virtualNetworks/subnets@2021-02-01' existing = {
+  parent: virtualNetwork
+  name: 'acisubnet'
+}
 
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' existing = {
   name: managedIDName
@@ -33,6 +43,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
   properties: {
     osType: 'Windows'
     sku: 'Confidential'
+    subnetIds: useVnet ? [{ id: subnet.id }] : []
     restartPolicy: 'Never'
     confidentialComputeProperties: {
       ccePolicy: ccePolicies.managed_identity_cwcow

@@ -135,10 +135,15 @@ jobs:
     secrets: inherit
     needs: server
     uses: ./.github/workflows/workload-managed-identity-cwcow.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        use_vnet: [true, false]
     with:
-      id: managed-identity-cwcow
+      id: managed-identity-cwcow${{ matrix.use_vnet && '-vnet' || '' }}
       environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
+      use_vnet: ${{ matrix.use_vnet }}
       test_schedule: gh-daily
 
   many-layers:

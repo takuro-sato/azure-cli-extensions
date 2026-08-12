@@ -7,6 +7,7 @@ param tag=''
 
 // Deployment info
 param location='westeurope'
+param useVnet=false
 
 // Pre-populated allow-all policy (same permissive policy used by the other
 // _cwcow workloads). CI deploys with --policy-type allow_all, which regenerates
