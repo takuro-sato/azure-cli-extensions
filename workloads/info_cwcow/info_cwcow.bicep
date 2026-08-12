@@ -20,6 +20,7 @@ param ccePolicies object
 param registry string
 param repository string
 param useVnet bool = false
+param addDummyPort bool = false
 
 param cpu int = 2
 param memoryInGb int = 4
@@ -55,6 +56,14 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
               cpu: cpu
             }
           }
+          ports: addDummyPort
+            ? [
+                {
+                  port: 80
+                  protocol: 'TCP'
+                }
+              ]
+            : []
         }
       }
     ]

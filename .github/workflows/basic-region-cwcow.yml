@@ -60,4 +60,5 @@ jobs:
       environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       use_vnet: true
+      add_dummy_port: true
       test_schedule: gh-hourly

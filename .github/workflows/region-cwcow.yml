@@ -65,11 +65,31 @@ jobs:
       tag: ${{ inputs.tag }}
       test_schedule: gh-daily
 
+  info-vnet:
+    if: ${{ !cancelled() }}
+    name: info-vnet
+    secrets: inherit
+    needs: info
+    uses: ./.github/workflows/workload-info-cwcow.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        add_dummy_port: [true, false]
+    with:
+      id: info-cwcow-vnet${{ matrix.add_dummy_port && '-dummy-port' || '-no-port' }}
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
+      location: ${{ inputs.location }}
+      tag: ${{ inputs.tag }}
+      use_vnet: true
+      add_dummy_port: ${{ matrix.add_dummy_port }}
+      continue_on_error: ${{ !matrix.add_dummy_port }}
+      test_schedule: gh-daily
+
   minimal:
     if: ${{ !cancelled() }}
     name: minimal
     secrets: inherit
-    needs: info
+    needs: info-vnet
     uses: ./.github/workflows/workload-minimal-cwcow.yml
     with:
       id: minimal-cwcow

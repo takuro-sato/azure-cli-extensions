@@ -48,38 +48,9 @@ on:
         type: boolean
         description: Whether to use a virtual network for the container group
         default: false
-      tag:
-        type: string
-        description: Image tag (e.g. a YYYYMMDD tag during branch validation, or latest)
-        default: latest
-      cpu:
-        type: number
-        description: The number of CPU cores in container
-        default: 2
-      memory_in_gb:
-        type: number
-        description: The memory in container in Gb
-        default: 4
-      cleanup:
+      add_dummy_port:
         type: boolean
-        description: Whether to cleanup the container group after testing
-        default: true
-  workflow_call:
-    inputs:
-      environment:
-        type: string
-        description: Environment file to load
-        default: cacitesting.env
-      id:
-        type: string
-        description: ID of the run
-      location:
-        type: string
-        description: Where to deploy to
-        required: true
-      use_vnet:
-        type: boolean
-        description: Whether to use a virtual network for the container group
+        description: Whether to declare a dummy TCP port on the container
         default: false
       tag:
         type: string
@@ -97,6 +68,51 @@ on:
         type: boolean
         description: Whether to cleanup the container group after testing
         default: true
+      continue_on_error:
+        type: boolean
+        description: Whether workload failures should be non-blocking
+        default: false
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+        description: Environment file to load
+        default: cacitesting.env
+      id:
+        type: string
+        description: ID of the run
+      location:
+        type: string
+        description: Where to deploy to
+        required: true
+      use_vnet:
+        type: boolean
+        description: Whether to use a virtual network for the container group
+        default: false
+      add_dummy_port:
+        type: boolean
+        description: Whether to declare a dummy TCP port on the container
+        default: false
+      tag:
+        type: string
+        description: Image tag (e.g. a YYYYMMDD tag during branch validation, or latest)
+        default: latest
+      cpu:
+        type: number
+        description: The number of CPU cores in container
+        default: 2
+      memory_in_gb:
+        type: number
+        description: The memory in container in Gb
+        default: 4
+      cleanup:
+        type: boolean
+        description: Whether to cleanup the container group after testing
+        default: true
+      continue_on_error:
+        type: boolean
+        description: Whether workload failures should be non-blocking
+        default: false
       test_schedule:
         type: string
         description: Trace marker by scheduled runs only
@@ -118,15 +134,17 @@ env:
   CPU: ${{ inputs.cpu || 2 }}
   MEMORY_IN_GB: ${{ inputs.memory_in_gb || 4 }}
   USE_VNET: ${{ inputs.use_vnet || false }}
+  ADD_DUMMY_PORT: ${{ inputs.add_dummy_port || false }}
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: 'allow_all'
   TEST_SCHEDULE: ${{ inputs.test_schedule }}
-  RUN_FEATURES: ${{ inputs.use_vnet && 'vnet' || '' }}
+  RUN_FEATURES: ${{ inputs.use_vnet && 'vnet' || '' }}${{ inputs.use_vnet && inputs.add_dummy_port && ',' || '' }}${{ inputs.add_dummy_port && 'dummy_port' || '' }}
 
 jobs:
   info-cwcow:
     name: ${{ inputs.id || 'info-cwcow' }}
     runs-on: ubuntu-latest
+    continue-on-error: ${{ inputs.continue_on_error || false }}
     steps:
 
       - name: Checkout
@@ -153,6 +171,7 @@ jobs:
           c-aci-testing aci param_set workloads/info_cwcow --parameter cpu=$CPU
           c-aci-testing aci param_set workloads/info_cwcow --parameter memoryInGb=$MEMORY_IN_GB
           c-aci-testing aci param_set workloads/info_cwcow --parameter useVnet=$USE_VNET
+          c-aci-testing aci param_set workloads/info_cwcow --parameter addDummyPort=$ADD_DUMMY_PORT
           c-aci-testing aci param_set workloads/info_cwcow --parameter registry=$REGISTRY
           c-aci-testing aci param_set workloads/info_cwcow --parameter tag=$TAG
 
