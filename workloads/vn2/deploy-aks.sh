@@ -5,7 +5,7 @@ if [[ $# -ne 3 ]]; then
     exit 1
 fi
 
-RESOURCE_GROUP=$1
+AKS_RESOURCE_GROUP=$1
 CLUSTER_NAME=$2
 LOCATION=$3
 
@@ -62,22 +62,22 @@ REGIONAL_IDENTITY_SUBSCRIPTION="${SUBSCRIPTION:-${RUNNER_IDENTITY_SUBSCRIPTION}}
 . "$(dirname "$0")/isolate_kube_config.inc.sh"
 
 # 1) Check and Create Resource Group if it doesn't exist
-if az group show --name $RESOURCE_GROUP &>/dev/null; then
-    echo "Resource group '$RESOURCE_GROUP' already exists. Moving to the next step..."
+if az group show --name $AKS_RESOURCE_GROUP &>/dev/null; then
+    echo "Resource group '$AKS_RESOURCE_GROUP' already exists. Moving to the next step..."
 else
-    echo "Creating resource group '$RESOURCE_GROUP' in '$LOCATION'..."
-    az group create --name $RESOURCE_GROUP --location $LOCATION
+    echo "Creating resource group '$AKS_RESOURCE_GROUP' in '$LOCATION'..."
+    az group create --name $AKS_RESOURCE_GROUP --location $LOCATION
 fi
 
 # 2) Check if AKS Cluster exists and create if it doesn't
-if az aks show --resource-group $RESOURCE_GROUP --name $CLUSTER_NAME &>/dev/null; then
-    echo "AKS cluster '$CLUSTER_NAME' already exists in resource group '$RESOURCE_GROUP'. Skipping creation."
+if az aks show --resource-group $AKS_RESOURCE_GROUP --name $CLUSTER_NAME &>/dev/null; then
+    echo "AKS cluster '$CLUSTER_NAME' already exists in resource group '$AKS_RESOURCE_GROUP'. Skipping creation."
 else
     success=0
     for vm_sku in "${NODE_VM_SIZES_TO_TRY[@]}"; do
         echo "Creating AKS cluster with $vm_sku..."
         az aks create \
-            --resource-group $RESOURCE_GROUP \
+            --resource-group $AKS_RESOURCE_GROUP \
             --name $CLUSTER_NAME \
             --node-count $NODE_COUNT \
             --node-vm-size $vm_sku \
@@ -110,7 +110,7 @@ fi
 sleep 5
 
 # Get the resource group name of the managed cluster (MC_* is the default resource group for AKS managed resources)
-MC_RESOURCE_GROUP=$(az aks show --resource-group $RESOURCE_GROUP --name $CLUSTER_NAME --query "nodeResourceGroup" -o tsv)
+MC_RESOURCE_GROUP=$(az aks show --resource-group $AKS_RESOURCE_GROUP --name $CLUSTER_NAME --query "nodeResourceGroup" -o tsv)
 echo "Managed Cluster Resource Group: $MC_RESOURCE_GROUP"
 
 # 3) Retrieve the VNet details
@@ -133,7 +133,7 @@ fi
 
 # 5) Assign roles to the AKS kubelet identity
 echo "Fetching AKS Managed Identity..."
-AKS_KUBELET_IDENTITY_CLIENT_ID=$(az aks show --resource-group "$RESOURCE_GROUP" --name "$CLUSTER_NAME" --query "identityProfile.kubeletidentity.clientId" -o tsv)
+AKS_KUBELET_IDENTITY_CLIENT_ID=$(az aks show --resource-group "$AKS_RESOURCE_GROUP" --name "$CLUSTER_NAME" --query "identityProfile.kubeletidentity.clientId" -o tsv)
 if [[ -z "$AKS_KUBELET_IDENTITY_CLIENT_ID" ]]; then
     echo "Error: Managed Identity not found. Please check the AKS cluster and try again."
     exit 1
@@ -161,8 +161,8 @@ az role assignment create \
     --scope "$REGISTRY_ID"
 
 # Allow runner access to the AKS itself
-SCOPE="/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$RESOURCE_GROUP"
-echo "Assigning 'Contributor' role to Managed Identity '$RUNNER_CLIENT_ID' on '$RESOURCE_GROUP'..."
+SCOPE="/subscriptions/$(az account show --query id -o tsv)/resourceGroups/$AKS_RESOURCE_GROUP"
+echo "Assigning 'Contributor' role to Managed Identity '$RUNNER_CLIENT_ID' on '$AKS_RESOURCE_GROUP'..."
 az role assignment create \
     --assignee $RUNNER_CLIENT_ID \
     --role $ROLE \
@@ -184,8 +184,8 @@ az role assignment create \
     --scope "$SCOPE"
 
 echo "Getting AKS credentials..."
-echo az aks get-credentials --overwrite-existing --resource-group "$RESOURCE_GROUP" --name "$CLUSTER_NAME"
-az aks get-credentials --overwrite-existing --resource-group "$RESOURCE_GROUP" --name "$CLUSTER_NAME"
+echo az aks get-credentials --overwrite-existing --resource-group "$AKS_RESOURCE_GROUP" --name "$CLUSTER_NAME"
+az aks get-credentials --overwrite-existing --resource-group "$AKS_RESOURCE_GROUP" --name "$CLUSTER_NAME"
 if [[ $? -ne 0 ]]; then
     echo "Failed to get AKS credentials."
     exit 1
