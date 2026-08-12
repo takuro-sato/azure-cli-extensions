@@ -2,6 +2,7 @@ param location string
 param registry string
 param repository string
 param tag string
+param imageName string = 'info-cwcow-ws2025'
 
 param zone string
 param useVnet bool = false
@@ -51,7 +52,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
       {
         name: 'primary'
         properties: {
-          image: '${empty(registry) ? 'cacidashboardaci.azurecr.io' : registry}/${empty(repository) ? 'prebuilt-test-containers' : repository}/info-cwcow:${empty(tag) ? 'latest' : tag}'
+          image: '${empty(registry) ? 'cacidashboardaci.azurecr.io' : registry}/${empty(repository) ? 'prebuilt-test-containers' : repository}/${imageName}:${empty(tag) ? 'latest' : tag}'
           resources: {
             requests: {
               memoryInGB: memoryInGb

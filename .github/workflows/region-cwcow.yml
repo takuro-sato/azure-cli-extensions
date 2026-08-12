@@ -146,9 +146,9 @@ jobs:
       use_vnet: ${{ matrix.use_vnet }}
       test_schedule: gh-daily
 
-  non-confidential:
+  non-conf-ws2022:
     if: ${{ !cancelled() }}
-    name: non-confidential
+    name: non-conf-ws2022
     secrets: inherit
     needs: managed-identity
     uses: ./.github/workflows/workload-non-confidential-wcow.yml
@@ -158,19 +158,42 @@ jobs:
         use_vnet: [true, false]
         use_managed_id: [true, false]
     with:
-      id: non-confidential-wcow${{ matrix.use_vnet && '-vnet' || '' }}${{ matrix.use_managed_id && '-mi' || '' }}
+      id: non-conf-ws2022${{ matrix.use_vnet && '-vnet' || '' }}${{ matrix.use_managed_id && '-mi' || '' }}
       environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       use_vnet: ${{ matrix.use_vnet }}
       use_managed_id: ${{ matrix.use_managed_id }}
       tag: ${{ inputs.tag }}
+      windows_version: ws2022
+      test_schedule: gh-daily
+
+  non-conf-ws2025:
+    if: ${{ !cancelled() }}
+    name: non-conf-ws2025
+    secrets: inherit
+    needs: non-conf-ws2022
+    uses: ./.github/workflows/workload-non-confidential-wcow.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        use_vnet: [true, false]
+        use_managed_id: [true, false]
+    with:
+      id: non-conf-ws2025${{ matrix.use_vnet && '-vnet' || '' }}${{ matrix.use_managed_id && '-mi' || '' }}
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
+      location: ${{ inputs.location }}
+      use_vnet: ${{ matrix.use_vnet }}
+      use_managed_id: ${{ matrix.use_managed_id }}
+      tag: ${{ inputs.tag }}
+      windows_version: ws2025
+      continue_on_error: true
       test_schedule: gh-daily
 
   many-layers:
     if: ${{ !cancelled() }}
     name: many-layers
     secrets: inherit
-    needs: non-confidential
+    needs: non-conf-ws2025
     uses: ./.github/workflows/workload-many-layers-cwcow.yml
     with:
       id: many-layers-cwcow

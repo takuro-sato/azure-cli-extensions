@@ -13,8 +13,7 @@
 #
 # Used by workloads/info_cwcow.
 #
-# MUST be built FROM ltsc2025 bases (os.version 10.0.26100). Build on a
-# windows-2025 runner; Server 2022 cannot build or run these bases.
+# Build on a Windows Server 2025 host.
 
 FROM mcr.microsoft.com/windows/servercore:ltsc2025-amd64 AS installer
 RUN powershell.exe -Command \

@@ -4,6 +4,7 @@ using './non_confidential_wcow.bicep'
 param registry=''
 param repository=''
 param tag=''
+param imageName='info-cwcow-ws2025'
 
 // Deployment info
 param location=''

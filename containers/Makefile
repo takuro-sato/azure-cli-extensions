@@ -198,8 +198,14 @@ fetch_snp_dll:
 build_info_cwcow: build_psputil fetch_snp_dll info_cwcow.Dockerfile attest.py
 	docker build -t $(REGISTRY)/$(REPOSITORY)/$(WIN_IMAGE):$(TAG) -f info_cwcow.Dockerfile .
 
+build_info_wcow_ws2022: info_wcow_ws2022.Dockerfile info_wcow.py
+	docker build -t $(REGISTRY)/$(REPOSITORY)/info-wcow-ws2022:$(TAG) -f info_wcow_ws2022.Dockerfile .
+
 push_info_cwcow: build_info_cwcow
 	docker push $(REGISTRY)/$(REPOSITORY)/$(WIN_IMAGE):$(TAG)
+
+push_info_wcow_ws2022: build_info_wcow_ws2022
+	docker push $(REGISTRY)/$(REPOSITORY)/info-wcow-ws2022:$(TAG)
 
 build_attestation_cwcow: attestation_cwcow.Dockerfile maa_attest.py
 	docker build -t $(REGISTRY)/$(REPOSITORY)/attestation-cwcow:$(TAG) -f attestation_cwcow.Dockerfile .

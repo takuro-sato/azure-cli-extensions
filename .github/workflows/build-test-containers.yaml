@@ -8,6 +8,8 @@ on:
       - containers/attestation_cwcow.Dockerfile
       - containers/maa_attest.py
       - containers/info_cwcow.Dockerfile
+      - containers/info_wcow_ws2022.Dockerfile
+      - containers/info_wcow.py
       - containers/many_layers_cwcow.Dockerfile
       - containers/attest.py
       - containers/psputil/**
@@ -56,14 +58,55 @@ jobs:
           # Rebuilding the image won't change it due to caching
           cd containers && make REGISTRY=$REGISTRY REPOSITORY=$REPOSITORY TAG=latest push
 
-  # Confidential-WCOW images. Built on a Windows Server 2025
-  # runner because (a) it is a Windows container image (Linux buildx can't
-  # produce it) and (b) it is FROM ltsc2025 bases (os.version 10.0.26100) which
-  # AUC2 confidential WCOW requires -- only a Server 2025 host (build 26100) can
-  # process-isolate the servercore RUN stages. windows-latest (Server 2022 /
-  # 10.0.20348) cannot. psputilgo.exe is a native Go build COPY'd into the image
-  # (there is no ltsc2025 golang base image for an in-Dockerfile builder stage).
-  build-and-push-windows:
+  build-and-push-windows-ws2022:
+    runs-on: windows-2022
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log into Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.SUBSCRIPTION_ACI }}
+
+      - name: Login to ACR
+        run: az acr login --name ${{ env.REGISTRY }}
+
+      - name: Use short date as tag
+        shell: pwsh
+        run: |
+          $tag = Get-Date -Format 'yyyyMMdd'
+          Write-Host "TAG=$tag"
+          "TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Build and push WS2022 info image
+        shell: pwsh
+        working-directory: containers
+        env:
+          DOCKER_BUILDKIT: 0
+        run: |
+          $image = "$env:REGISTRY/$env:REPOSITORY/info-wcow-ws2022"
+          docker build -t "${image}:$env:TAG" -f info_wcow_ws2022.Dockerfile .
+          if ($LASTEXITCODE -ne 0) { throw "docker build failed" }
+          docker push "${image}:$env:TAG"
+          if ($LASTEXITCODE -ne 0) { throw "docker push failed" }
+
+      - name: Tag with latest
+        if: github.ref == 'refs/heads/main'
+        shell: pwsh
+        working-directory: containers
+        run: |
+          $image = "$env:REGISTRY/$env:REPOSITORY/info-wcow-ws2022"
+          docker tag "${image}:$env:TAG" "${image}:latest"
+          docker push "${image}:latest"
+          if ($LASTEXITCODE -ne 0) { throw "docker push (latest) failed" }
+
+  # Confidential-WCOW images require Windows Server 2025 bases. psputilgo.exe
+  # is a native Go build copied into the image because there is no ltsc2025 Go
+  # builder image.
+  build-and-push-windows-ws2025:
     runs-on: windows-2025
     steps:
       - name: Checkout repository
@@ -125,11 +168,18 @@ jobs:
           # is not available for Windows containers on the windows-2025 runner.
           DOCKER_BUILDKIT: 0
         run: |
-          $infoImage = "$env:REGISTRY/$env:REPOSITORY/info-cwcow"
+          $infoImage = "$env:REGISTRY/$env:REPOSITORY/info-cwcow-ws2025"
           docker build -t "${infoImage}:$env:TAG" -f info_cwcow.Dockerfile .
-          if ($LASTEXITCODE -ne 0) { throw "docker build failed" }
+          if ($LASTEXITCODE -ne 0) { throw "docker build failed for info-cwcow-ws2025" }
           docker push "${infoImage}:$env:TAG"
-          if ($LASTEXITCODE -ne 0) { throw "docker push (tag) failed" }
+          if ($LASTEXITCODE -ne 0) { throw "docker push failed for info-cwcow-ws2025" }
+
+          # Preserve the existing confidential WCOW image reference as a
+          # WS2025 alias.
+          $infoAlias = "$env:REGISTRY/$env:REPOSITORY/info-cwcow"
+          docker tag "${infoImage}:$env:TAG" "${infoAlias}:$env:TAG"
+          docker push "${infoAlias}:$env:TAG"
+          if ($LASTEXITCODE -ne 0) { throw "docker push failed for info-cwcow alias" }
 
           $attestationImage = "$env:REGISTRY/$env:REPOSITORY/attestation-cwcow"
           docker build -t "${attestationImage}:$env:TAG" -f attestation_cwcow.Dockerfile .
@@ -148,7 +198,7 @@ jobs:
         shell: pwsh
         working-directory: containers
         run: |
-          foreach ($name in @('info-cwcow', 'attestation-cwcow', 'many-layers-cwcow')) {
+          foreach ($name in @('info-cwcow', 'info-cwcow-ws2025', 'attestation-cwcow', 'many-layers-cwcow')) {
             $image = "$env:REGISTRY/$env:REPOSITORY/$name"
             docker tag "${image}:$env:TAG" "${image}:latest"
             docker push "${image}:latest"

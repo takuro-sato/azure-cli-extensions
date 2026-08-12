@@ -1,4 +1,4 @@
 version: '3'
 services:
   primary:
-    image: ${REGISTRY:-cacidashboardaci.azurecr.io}/${REPOSITORY:-prebuilt-test-containers}/info-cwcow:${TAG:-latest}
+    image: ${REGISTRY:-cacidashboardaci.azurecr.io}/${REPOSITORY:-prebuilt-test-containers}/${IMAGE_NAME:-info-cwcow-ws2025}:${TAG:-latest}
