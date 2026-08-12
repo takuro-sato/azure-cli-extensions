@@ -3,8 +3,12 @@
 set -e
 
 uname -a
-dmesg | grep "Kernel command line"
-dmesg | grep "Hyper-V: Host Build"
+if dmesg_output=$(dmesg 2>&1); then
+    echo "$dmesg_output" | grep "Kernel command line" || true
+    echo "$dmesg_output" | grep "Hyper-V: Host Build" || true
+else
+    echo "Skipping dmesg checks: $dmesg_output"
+fi
 echo Reference info SHA256SUM: $(base64 -d < /security-context-*/reference-info-base64 | sha256sum)
 cat /proc/cpuinfo
 
