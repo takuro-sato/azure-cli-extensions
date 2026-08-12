@@ -6,6 +6,8 @@ param tag string
 
 param zone string
 param useVnet bool
+param managedIDGroup string = resourceGroup().name
+param managedIDName string = ''
 
 param cpu int = 1
 param memoryInGb int = 4
@@ -22,6 +24,16 @@ resource subnet 'Microsoft.Network/virtualNetworks/subnets@2021-02-01' existing 
 resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01' = {
   name: deployment().name
   location: location
+  identity: !empty(managedIDName)
+    ? {
+        type: 'UserAssigned'
+        userAssignedIdentities: {
+          '${resourceId(managedIDGroup, 'Microsoft.ManagedIdentity/userAssignedIdentities', managedIDName)}': {}
+        }
+      }
+    : {
+        type: 'None'
+      }
   zones: empty(zone)
     ? null
     : [

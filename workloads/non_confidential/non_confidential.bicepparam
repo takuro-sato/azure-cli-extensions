@@ -9,3 +9,4 @@ param tag=''
 param location=''
 param zone=''
 param useVnet=false
+param managedIDName=''

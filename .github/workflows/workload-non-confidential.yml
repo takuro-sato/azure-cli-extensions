@@ -40,6 +40,10 @@ on:
         type: boolean
         description: Whether to use a virtual network for the container group
         default: false
+      use_managed_id:
+        type: boolean
+        description: Whether to use a managed identity for the container group
+        default: false
       cpu:
         type: number
         description: The number of CPU cores in container
@@ -73,6 +77,10 @@ on:
         type: boolean
         description: Whether to use a virtual network for the container group
         default: false
+      use_managed_id:
+        type: boolean
+        description: Whether to use a managed identity for the container group
+        default: false
       cpu:
         type: number
         description: The number of CPU cores in container
@@ -100,7 +108,7 @@ env:
   DEPLOYMENT_NAME: ${{ inputs.id || 'non-confidential' }}-${{ inputs.location }}-${{ github.run_number }}
   REPOSITORY: prebuilt-test-containers
   TAG: latest
-  MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'westeurope' }}
+  MANAGED_IDENTITY: ${{ inputs.use_managed_id && format('cacidashboard-{0}', inputs.location || 'westeurope') || '' }}
   LOCATION: ${{ inputs.location || 'westeurope' }}
   ZONE: ${{ inputs.zone }}
   USE_VNET: ${{ inputs.use_vnet || false }}
@@ -108,7 +116,7 @@ env:
   MEMORY_IN_GB: ${{ inputs.memory_in_gb || 4 }}
   CLEANUP: ${{ inputs.cleanup }}
   TEST_SCHEDULE: ${{ inputs.test_schedule }}
-  RUN_FEATURES: ${{ inputs.use_vnet && 'vnet' || '' }}
+  RUN_FEATURES: ${{ inputs.use_managed_id && 'managed_identity' || '' }}${{ inputs.use_managed_id && inputs.use_vnet && ',' || '' }}${{ inputs.use_vnet && 'vnet' || '' }}
 
 jobs:
   non-confidential:
