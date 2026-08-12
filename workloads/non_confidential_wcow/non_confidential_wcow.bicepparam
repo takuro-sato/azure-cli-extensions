@@ -1,4 +1,4 @@
-using './non_confidential_cwcow.bicep'
+using './non_confidential_wcow.bicep'
 
 // Image info
 param registry=''

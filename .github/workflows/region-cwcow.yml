@@ -151,14 +151,14 @@ jobs:
     name: non-confidential
     secrets: inherit
     needs: managed-identity
-    uses: ./.github/workflows/workload-non-confidential-cwcow.yml
+    uses: ./.github/workflows/workload-non-confidential-wcow.yml
     strategy:
       fail-fast: false
       matrix:
         use_vnet: [true, false]
         use_managed_id: [true, false]
     with:
-      id: non-confidential-cwcow${{ matrix.use_vnet && '-vnet' || '' }}${{ matrix.use_managed_id && '-mi' || '' }}
+      id: non-confidential-wcow${{ matrix.use_vnet && '-vnet' || '' }}${{ matrix.use_managed_id && '-mi' || '' }}
       environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       use_vnet: ${{ matrix.use_vnet }}

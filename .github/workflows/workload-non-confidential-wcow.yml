@@ -1,4 +1,4 @@
-name: Workload - Non Confidential C-WCOW
+name: Workload - Non Confidential WCOW
 
 permissions:
   id-token: write
@@ -7,15 +7,15 @@ permissions:
 on:
   pull_request:
     paths:
-      - workloads/non_confidential_cwcow/**
-      - .github/workflows/workload-non-confidential-cwcow.yml
+      - workloads/non_confidential_wcow/**
+      - .github/workflows/workload-non-confidential-wcow.yml
       - containers/attest.py
       - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
   push:
     paths:
-      - workloads/non_confidential_cwcow/**
-      - .github/workflows/workload-non-confidential-cwcow.yml
+      - workloads/non_confidential_wcow/**
+      - .github/workflows/workload-non-confidential-wcow.yml
       - containers/attest.py
       - scripts/init_run.sh
       - scripts/install-c-aci-testing.sh
@@ -113,10 +113,10 @@ env:
   KUSTO_DATABASE: ${{ secrets.KUSTO_DATABASE }}
   KUSTO_TABLE: CACITestStepTrace
   TEST_TYPE: aci-non-confidential
-  TEST_NAME: Non Confidential C-WCOW
+  TEST_NAME: Non Confidential WCOW
   RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-  WORKLOAD: workloads/non_confidential_cwcow
-  DEPLOYMENT_NAME: ${{ inputs.id || 'non-confidential-cwcow' }}-${{ inputs.location }}-${{ github.run_number }}
+  WORKLOAD: workloads/non_confidential_wcow
+  DEPLOYMENT_NAME: ${{ inputs.id || 'non-confidential-wcow' }}-${{ inputs.location }}-${{ github.run_number }}
   REPOSITORY: prebuilt-test-containers
   TAG: ${{ inputs.tag || 'latest' }}
   MANAGED_IDENTITY: ${{ inputs.use_managed_id && format('cacidashboard-{0}', inputs.location || 'westeurope') || '' }}
@@ -131,8 +131,8 @@ env:
   RUN_FEATURES: ${{ inputs.use_managed_id && 'managed_identity' || '' }}${{ inputs.use_managed_id && inputs.use_vnet && ',' || '' }}${{ inputs.use_vnet && 'vnet' || '' }}
 
 jobs:
-  non-confidential-cwcow:
-    name: ${{ inputs.id || 'non-confidential-cwcow' }}
+  non-confidential-wcow:
+    name: ${{ inputs.id || 'non-confidential-wcow' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -189,7 +189,7 @@ jobs:
 
       - name: Check log contains expected markers
         run: |
-          ./scripts/tracing/trace_step.py --start 'Check non-confidential C-WCOW log'
+          ./scripts/tracing/trace_step.py --start 'Check non-confidential WCOW log'
           ok=1
           grep -q '===HOSTNAME===' output.log || ok=0
           grep -q '===EOF===' output.log || ok=0
