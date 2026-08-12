@@ -28,6 +28,9 @@ import subprocess
 import sys
 import tempfile
 import time
+import urllib.error
+import urllib.parse
+import urllib.request
 
 CERT_URL_PREFIX = "https://kdsintf.amd.com"
 NOT_SNP_MARKER = "It's not in SNP environment."
@@ -166,6 +169,45 @@ def check_security_context_schema():
         return False, "failed to check security context schema: %s" % error
 
 
+def test_managed_identity():
+    endpoint = os.environ.get("IDENTITY_ENDPOINT", "")
+    secret = os.environ.get("IDENTITY_HEADER", "")
+    principal_id = os.environ.get("MANAGED_IDENTITY_PRINCIPAL_ID", "")
+    if not endpoint or not secret or not principal_id:
+        return False, 0, "managed identity endpoint variables were not injected"
+
+    query = urllib.parse.urlencode(
+        {
+            "resource": "https://storage.azure.com/",
+            "principalId": principal_id,
+        }
+    )
+    separator = "&" if "?" in endpoint else "?"
+    request_url = endpoint + separator + query
+    last_error = ""
+    for attempt in range(1, 6):
+        try:
+            request = urllib.request.Request(
+                request_url,
+                headers={"secret": secret},
+                method="GET",
+            )
+            with urllib.request.urlopen(request, timeout=10) as response:
+                response.read(1)
+            return True, attempt, ""
+        except urllib.error.HTTPError as error:
+            response_body = error.read().decode("utf-8", errors="replace")
+            last_error = "HTTP status: %d; Response: %s" % (
+                error.code,
+                response_body,
+            )
+        except Exception as error:
+            last_error = str(error)
+        if attempt < 5:
+            time.sleep(5)
+    return False, 5, last_error
+
+
 def finish(result, errors):
     for error in errors:
         print("ERROR: %s" % error)
@@ -219,9 +261,11 @@ def main():
     result.update(collect_host_info())
     errors = []
 
+    is_non_confidential = rc is not None and NOT_SNP_MARKER in out
+
     if rc is None:
         errors.append(out)
-    elif NOT_SNP_MARKER in out:
+    elif is_non_confidential:
         result["snp_mode"] = False
         errors.append("guest is not running in an SEV-SNP environment")
     elif rc != 0:
@@ -241,10 +285,26 @@ def main():
                 result["cert_url"] = line
                 break
 
-    schema_valid, schema_error = check_security_context_schema()
-    result["security_context_schema_valid"] = schema_valid
-    if schema_error:
-        errors.append(schema_error)
+    result["security_context_schema_skipped"] = is_non_confidential
+    if not is_non_confidential:
+        schema_valid, schema_error = check_security_context_schema()
+        result["security_context_schema_valid"] = schema_valid
+        if schema_error:
+            errors.append(schema_error)
+
+    test_identity = bool(os.environ.get("TEST_MANAGED_IDENTITY"))
+    result["managed_identity_tested"] = test_identity
+    if test_identity:
+        identity_success, attempts, identity_error = test_managed_identity()
+        result["managed_identity_success"] = identity_success
+        result["managed_identity_attempts"] = attempts
+        if identity_success:
+            print("MANAGED_IDENTITY_TEST_SUCCESS=true")
+        else:
+            errors.append(
+                "failed to retrieve a managed identity token after %d attempts: %s"
+                % (attempts, identity_error)
+            )
 
     finish(result, errors)
 

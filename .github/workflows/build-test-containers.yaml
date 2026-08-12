@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - .github/workflows/build-test-containers.yaml
+      - containers/info_check.sh
       - containers/attestation_cwcow.Dockerfile
       - containers/maa_attest.py
       - containers/info_cwcow.Dockerfile

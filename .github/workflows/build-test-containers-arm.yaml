@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - .github/workflows/build-test-containers-arm.yaml
+      - containers/info_check.sh
   workflow_dispatch:
 
 permissions:

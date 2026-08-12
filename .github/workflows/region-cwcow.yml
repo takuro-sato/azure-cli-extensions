@@ -146,11 +146,31 @@ jobs:
       use_vnet: ${{ matrix.use_vnet }}
       test_schedule: gh-daily
 
+  non-confidential:
+    if: ${{ !cancelled() }}
+    name: non-confidential
+    secrets: inherit
+    needs: managed-identity
+    uses: ./.github/workflows/workload-non-confidential-cwcow.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        use_vnet: [true, false]
+        use_managed_id: [true, false]
+    with:
+      id: non-confidential-cwcow${{ matrix.use_vnet && '-vnet' || '' }}${{ matrix.use_managed_id && '-mi' || '' }}
+      environment: ${{ inputs.environment || 'cacitesting.env' }}
+      location: ${{ inputs.location }}
+      use_vnet: ${{ matrix.use_vnet }}
+      use_managed_id: ${{ matrix.use_managed_id }}
+      tag: ${{ inputs.tag }}
+      test_schedule: gh-daily
+
   many-layers:
     if: ${{ !cancelled() }}
     name: many-layers
     secrets: inherit
-    needs: managed-identity
+    needs: non-confidential
     uses: ./.github/workflows/workload-many-layers-cwcow.yml
     with:
       id: many-layers-cwcow

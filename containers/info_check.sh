@@ -10,6 +10,29 @@ cat /proc/cpuinfo
 
 has_err=0
 
+if [ -n "$TEST_MANAGED_IDENTITY" ]; then
+    echo "Testing managed identity..."
+    tries=0
+    identity_success=false
+    while [ "$tries" -lt 5 ]; do
+        tries=$((tries + 1))
+        if timeout 10 curl --fail -s -H "Metadata: true" \
+            "http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://storage.azure.com/" \
+            -o /dev/null; then
+            identity_success=true
+            break
+        fi
+        echo "Managed identity attempt $tries failed, retrying..."
+        sleep 5
+    done
+    if [ "$identity_success" = true ]; then
+        echo "MANAGED_IDENTITY_TEST_SUCCESS=true"
+    else
+        echo "ERROR: Failed to retrieve a managed identity token after $tries attempts"
+        has_err=1
+    fi
+fi
+
 set +e
 if [ ! -e /dev/sev-guest ]; then
     echo "ERROR: /dev/sev-guest not found"

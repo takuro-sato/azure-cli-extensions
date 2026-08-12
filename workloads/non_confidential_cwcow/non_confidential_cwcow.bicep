@@ -1,15 +1,14 @@
 param location string
-
 param registry string
 param repository string
 param tag string
 
 param zone string
-param useVnet bool
+param useVnet bool = false
 param managedIDGroup string = resourceGroup().name
 param managedIDName string = ''
 
-param cpu int = 1
+param cpu int = 2
 param memoryInGb int = 4
 
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' existing = {
@@ -19,6 +18,11 @@ resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' existing 
 resource subnet 'Microsoft.Network/virtualNetworks/subnets@2021-02-01' existing = {
   parent: virtualNetwork
   name: 'acisubnet'
+}
+
+resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' existing = {
+  name: managedIDName
+  scope: resourceGroup(managedIDGroup)
 }
 
 resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01' = {
@@ -37,18 +41,17 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
   zones: empty(zone)
     ? null
     : [
-        // Despite this being a "zones" property, ACI only supports one availability zone for a container group resource.
         zone
       ]
   properties: {
-    osType: 'Linux'
+    osType: 'Windows'
     subnetIds: useVnet ? [{ id: subnet.id }] : []
     restartPolicy: 'Never'
     containers: [
       {
-        name: 'ubuntu'
+        name: 'primary'
         properties: {
-          image: '${empty(registry) ? 'cacidashboardaci.azurecr.io' : registry}/${empty(repository) ? 'prebuilt-test-containers' : repository}/info:${empty(tag) ? 'latest' : tag}'
+          image: '${empty(registry) ? 'cacidashboardaci.azurecr.io' : registry}/${empty(repository) ? 'prebuilt-test-containers' : repository}/info-cwcow:${empty(tag) ? 'latest' : tag}'
           resources: {
             requests: {
               memoryInGB: memoryInGb
@@ -59,6 +62,10 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
             {
               name: 'TEST_MANAGED_IDENTITY'
               value: !empty(managedIDName) ? '1' : ''
+            }
+            {
+              name: 'MANAGED_IDENTITY_PRINCIPAL_ID'
+              value: !empty(managedIDName) ? managedIdentity.properties.principalId : ''
             }
           ]
         }
