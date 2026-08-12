@@ -153,7 +153,7 @@ if [[ -z "$REGISTRY" ]]; then
     echo "Error: REGISTRY must identify the ACR used by VN2 workloads."
     exit 1
 fi
-REGISTRY_ID=$(az acr show --name "$REGISTRY" --query id -o tsv)
+REGISTRY_ID=$(az acr show --name "$REGISTRY" --subscription "$RUNNER_IDENTITY_SUBSCRIPTION" --query id -o tsv)
 echo "Assigning 'AcrPull' role to AKS kubelet identity on '$REGISTRY'..."
 az role assignment create \
     --assignee "$AKS_KUBELET_IDENTITY_CLIENT_ID" \
