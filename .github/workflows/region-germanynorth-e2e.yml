@@ -7,7 +7,12 @@ permissions:
 on:
   schedule:
     - cron: '36 8 * * *'
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      run_known_broken_tests:
+        type: boolean
+        description: Whether to run C-WCOW tests that are known to fail
+        default: false
   pull_request:
     paths:
       - .github/workflows/region-germanynorth-e2e.yml
@@ -40,3 +45,4 @@ jobs:
     with:
       location: germanynorth
       environment: cacitesting.e2e.env
+      run_known_broken_tests: ${{ inputs.run_known_broken_tests || false }}

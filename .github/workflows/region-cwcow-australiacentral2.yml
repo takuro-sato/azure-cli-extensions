@@ -18,6 +18,11 @@ on:
   schedule:
     - cron: '44 6 * * *'  # managed by scripts/spread_out_schedules.py
   workflow_dispatch:
+    inputs:
+      run_known_broken_tests:
+        type: boolean
+        description: Whether to run tests that are known to fail
+        default: false
 
 jobs:
   australiacentral2:
@@ -25,3 +30,4 @@ jobs:
     uses: ./.github/workflows/region-cwcow.yml
     with:
       location: australiacentral2
+      run_known_broken_tests: ${{ inputs.run_known_broken_tests || false }}
