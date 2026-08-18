@@ -63,6 +63,14 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
               cpu: cpu
             }
           }
+          ports: useVnet
+            ? [
+                {
+                  port: 80
+                  protocol: 'TCP'
+                }
+              ]
+            : []
           environmentVariables: [
             {
               name: 'MANAGED_IDENTITY_PRINCIPAL_ID'
