@@ -40,11 +40,11 @@ on:
 jobs:
   info-cwcow-nonzoned-nonvnet:
     if: ${{ !cancelled() && !contains(vars.ACI_VNET_ONLY_REGIONS, format(',{0},', inputs.location)) && !contains(vars.ACI_ONLY_ZONAL_VNET_REGIONS, format(',{0},', inputs.location)) }}
-    name: info-cwcow-allow_all
+    name: basic-info-cwcow-allow_all
     secrets: inherit
     uses: ./.github/workflows/workload-info-cwcow.yml
     with:
-      id: info-cwcow-allow_all
+      id: basic-info-cwcow-allow_all
       environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       use_vnet: false
@@ -52,11 +52,11 @@ jobs:
 
   info-cwcow-nonzoned-vnet:
     if: ${{ !cancelled() && !contains(vars.ACI_ONLY_ZONAL_VNET_REGIONS, format(',{0},', inputs.location)) }}
-    name: info-cwcow-vnet-allow_all
+    name: basic-info-cwcow-vnet-allow_all
     secrets: inherit
     uses: ./.github/workflows/workload-info-cwcow.yml
     with:
-      id: info-cwcow-vnet-allow_all
+      id: basic-info-cwcow-vnet-allow_all
       environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       use_vnet: true

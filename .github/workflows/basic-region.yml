@@ -48,11 +48,11 @@ on:
 jobs:
   info-nonzoned-nonvnet:
     if: ${{ !cancelled() && !contains(vars.ACI_VNET_ONLY_REGIONS, format(',{0},', inputs.location)) && !contains(vars.ACI_ONLY_ZONAL_VNET_REGIONS, format(',{0},', inputs.location)) }}
-    name: info-nonzoned-nonvnet
+    name: basic-info-nonzoned-nonvnet
     secrets: inherit
     uses: ./.github/workflows/workload-info.yml
     with:
-      id: info-allow_all
+      id: basic-info-allow_all
       environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       use_vnet: false
@@ -63,11 +63,11 @@ jobs:
 
   info-nonzoned-vnet:
     if: ${{ !cancelled() && !contains(vars.ACI_ONLY_ZONAL_VNET_REGIONS, format(',{0},', inputs.location)) }}
-    name: info-nonzoned-vnet
+    name: basic-info-nonzoned-vnet
     secrets: inherit
     uses: ./.github/workflows/workload-info.yml
     with:
-      id: info-vnet-allow_all
+      id: basic-info-vnet-allow_all
       environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       use_vnet: true
@@ -78,7 +78,7 @@ jobs:
 
   info-zoned-1-2:
     if: ${{ !cancelled() && contains(vars.ACI_ZONE_1_2_REGIONS, format(',{0},', inputs.location)) }}
-    name: info-zoned
+    name: basic-info-zoned
     secrets: inherit
     uses: ./.github/workflows/workload-info.yml
     strategy:
@@ -88,7 +88,7 @@ jobs:
         use_vnet: [true]
         zone: ["1", "2"]
     with:
-      id: info-zone${{ matrix.zone }}-${{ matrix.use_vnet && 'vnet-' || '' }}allow_all
+      id: basic-info-zone${{ matrix.zone }}-${{ matrix.use_vnet && 'vnet-' || '' }}allow_all
       environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       use_vnet: ${{ matrix.use_vnet }}
@@ -100,7 +100,7 @@ jobs:
 
   info-zoned:
     if: ${{ !cancelled() && contains(vars.ACI_ZONED_REGIONS, format(',{0},', inputs.location)) }}
-    name: info-zoned
+    name: basic-info-zoned
     secrets: inherit
     uses: ./.github/workflows/workload-info.yml
     strategy:
@@ -110,7 +110,7 @@ jobs:
         use_vnet: [true]
         zone: ["1", "2", "3"]
     with:
-      id: info-zone${{ matrix.zone }}-${{ matrix.use_vnet && 'vnet-' || '' }}allow_all
+      id: basic-info-zone${{ matrix.zone }}-${{ matrix.use_vnet && 'vnet-' || '' }}allow_all
       environment: ${{ inputs.environment || 'cacitesting.env' }}
       location: ${{ inputs.location }}
       use_vnet: ${{ matrix.use_vnet }}
