@@ -72,6 +72,10 @@ on:
         type: boolean
         description: Whether workload failures should be non-blocking
         default: false
+      require_host_amd_cert:
+        type: boolean
+        description: Whether the workload should fail if the host AMD certificate is missing
+        default: true
   workflow_call:
     inputs:
       environment:
@@ -113,6 +117,10 @@ on:
         type: boolean
         description: Whether workload failures should be non-blocking
         default: false
+      require_host_amd_cert:
+        type: boolean
+        description: Whether the workload should fail if the host AMD certificate is missing
+        default: true
       test_schedule:
         type: string
         description: Trace marker by scheduled runs only
@@ -137,6 +145,7 @@ env:
   ADD_DUMMY_PORT: ${{ inputs.add_dummy_port || false }}
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: 'allow_all'
+  REQUIRE_HOST_AMD_CERT: ${{ inputs.require_host_amd_cert != false && 'true' || 'false' }}
   TEST_SCHEDULE: ${{ inputs.test_schedule }}
   RUN_FEATURES: ${{ inputs.use_vnet && 'vnet' || '' }}${{ inputs.use_vnet && inputs.add_dummy_port && ',' || '' }}${{ inputs.add_dummy_port && 'dummy_port' || '' }}
 
@@ -174,6 +183,7 @@ jobs:
           c-aci-testing aci param_set workloads/info_cwcow --parameter addDummyPort=$ADD_DUMMY_PORT
           c-aci-testing aci param_set workloads/info_cwcow --parameter registry=$REGISTRY
           c-aci-testing aci param_set workloads/info_cwcow --parameter tag=$TAG
+          c-aci-testing aci param_set workloads/info_cwcow --parameter requireHostAmdCert=$REQUIRE_HOST_AMD_CERT
 
       - name: Generate Security Policy
         run: |

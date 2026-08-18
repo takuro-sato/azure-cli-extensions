@@ -14,6 +14,7 @@ param tag = ''
 param location = 'germanynorth'
 param useVnet = false
 param addDummyPort = false
+param requireHostAmdCert = true
 
 // Pre-populated permissive WCOW policy (api_version 0.11.0, mount_cims).
 // Matches the wcow_allow_all_policy.rego template emitted by

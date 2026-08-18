@@ -24,6 +24,7 @@ param addDummyPort bool = false
 
 param cpu int = 2
 param memoryInGb int = 4
+param requireHostAmdCert bool = false
 
 resource virtualNetwork 'Microsoft.Network/virtualNetworks@2019-11-01' existing = {
   name: 'aci-long-lived-vnet-${location}'
@@ -64,6 +65,12 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
                 }
               ]
             : []
+          environmentVariables: [
+            {
+              name: 'EXPECT_HOST_AMD_CERT'
+              value: requireHostAmdCert ? '1' : ''
+            }
+          ]
         }
       }
     ]
