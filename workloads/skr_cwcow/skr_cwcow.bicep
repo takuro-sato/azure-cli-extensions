@@ -31,7 +31,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2023-05-01'
   identity: {
     type: 'UserAssigned'
     userAssignedIdentities: {
-      '/subscriptions/824db9f9-0ff1-49f2-ab3e-4b72dfb9dd6a/resourceGroups/c-aci-dashboard/providers/Microsoft.ManagedIdentity/userAssignedIdentities/cacidashboard-germanynorth': {}
+      '/subscriptions/824db9f9-0ff1-49f2-ab3e-4b72dfb9dd6a/resourceGroups/c-aci-dashboard/providers/Microsoft.ManagedIdentity/userAssignedIdentities/cacidashboard-${location}': {}
     }
   }
   properties: {
