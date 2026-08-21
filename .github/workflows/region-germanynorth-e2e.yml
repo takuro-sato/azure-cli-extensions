@@ -46,3 +46,18 @@ jobs:
       location: germanynorth
       environment: cacitesting.e2e.env
       run_known_broken_tests: ${{ inputs.run_known_broken_tests || false }}
+
+  esan-germanynorth-e2e:
+    secrets: inherit
+    uses: ./.github/workflows/workload-esan.yml
+    strategy:
+      fail-fast: false
+      matrix:
+        confidential: [true, false]
+    with:
+      id: ${{ matrix.confidential && 'esan' || 'esan-nonconf' }}
+      location: germanynorth
+      environment: cacitesting.e2e.env
+      policy_type: allow_all
+      confidential: ${{ matrix.confidential }}
+

@@ -1,0 +1,187 @@
+name: Workload - Esan
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - workloads/esan/**
+      - .github/workflows/workload-esan.yml
+      - scripts/init_run.sh
+      - scripts/install-c-aci-testing.sh
+  push:
+    paths:
+      - workloads/esan/**
+      - .github/workflows/workload-esan.yml
+      - scripts/init_run.sh
+      - scripts/install-c-aci-testing.sh
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        type: string
+        description: Environment file to load
+        default: cacitesting.env
+      id:
+        type: string
+        description: ID of the run
+      location:
+        type: string
+        description: Where to deploy to
+        required: true
+      cpu:
+        type: number
+        description: The number of CPU cores in container
+        default: 1
+      memory_in_gb:
+        type: number
+        description: The memory in container in Gb
+        default: 1
+      cleanup:
+        type: boolean
+        description: Whether to cleanup the container group after testing
+        default: true
+      policy_type:
+        type: string
+        description: The type of policy to use
+        default: allow_all
+      confidential:
+        type: boolean
+        description: Confidential (C-LCOW) when true, non-confidential Linux when false
+        default: true
+  workflow_call:
+    inputs:
+      environment:
+        type: string
+        description: Environment file to load
+        default: cacitesting.env
+      id:
+        type: string
+        description: ID of the run
+      location:
+        type: string
+        description: Where to deploy to
+        required: true
+      cpu:
+        type: number
+        description: The number of CPU cores in container
+        default: 1
+      memory_in_gb:
+        type: number
+        description: The memory in container in Gb
+        default: 1
+      cleanup:
+        type: boolean
+        description: Whether to cleanup the container group after testing
+        default: true
+      policy_type:
+        type: string
+        description: The type of policy to use
+        default: allow_all
+      confidential:
+        type: boolean
+        description: Confidential (C-LCOW) when true, non-confidential Linux when false
+        default: true
+      test_schedule:
+        type: string
+        description: Trace marker by scheduled runs only
+        default: ''
+
+env:
+  KUSTO_CONNECTION_STRING: ${{ secrets.KUSTO_CONNECTION_STRING }}
+  KUSTO_DATABASE: ${{ secrets.KUSTO_DATABASE }}
+  KUSTO_TABLE: CACITestStepTrace
+  TEST_TYPE: ${{ inputs.confidential == false && 'aci-non-confidential' || 'aci' }}
+  TEST_NAME: Esan
+  RUN_LINK: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+  DEPLOYMENT_NAME: ${{ inputs.id || 'esan' }}-${{ inputs.location }}-${{ github.run_number }}
+  MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'westeurope' }}
+  LOCATION: ${{ inputs.location || 'westeurope' }}
+  CPU: ${{ inputs.cpu || 1 }}
+  MEMORY_IN_GB: ${{ inputs.memory_in_gb || 1 }}
+  CLEANUP: ${{ inputs.cleanup }}
+  POLICY_TYPE: ${{ inputs.policy_type || 'allow_all' }}
+  CONFIDENTIAL: ${{ inputs.confidential == false && 'false' || 'true' }}
+  TEST_SCHEDULE: ${{ inputs.test_schedule }}
+  RUN_FEATURES: elasticSan,vnet
+
+jobs:
+  esan:
+    name: ${{ inputs.id || 'esan' }}
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Load Environment
+        id: environment
+        run: ./scripts/load_environment.sh "${{ inputs.environment || 'cacitesting.env' }}"
+
+      - name: Log into Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_ACI }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ steps.environment.outputs.subscription }}
+
+      - name: Initialize Run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/init_run.sh
+
+      - name: Pull Image
+        if: ${{ env.CONFIDENTIAL == 'true' && env.POLICY_TYPE != 'allow_all' }}
+        run: c-aci-testing images pull workloads/esan
+
+      - name: Set Parameters
+        run: |
+          c-aci-testing aci param_set workloads/esan --parameter cpu=$CPU
+          c-aci-testing aci param_set workloads/esan --parameter memoryInGb=$MEMORY_IN_GB
+          c-aci-testing aci param_set workloads/esan --parameter confidential=$CONFIDENTIAL
+
+      - name: Generate Security Policy
+        if: ${{ env.CONFIDENTIAL == 'true' }}
+        run: |
+          ./scripts/tracing/trace_step.py --start 'Generate Policy'
+          c-aci-testing policies gen workloads/esan --deployment-name $DEPLOYMENT_NAME
+          cat workloads/esan/policy_esan.rego
+
+      - name: Deploy Container Group
+        run: |
+          ./scripts/aci_deploy_traced.sh workloads/esan
+
+      - name: Report result
+        if: always()
+        run: |
+          ./scripts/trace_run_result.sh ${{ job.status }}
+
+      - name: Wait for 5 minute
+        run: sleep 300
+
+      - name: Monitor Container Group
+        if: always()
+        continue-on-error: true
+        run: |
+          c-aci-testing aci monitor --deployment-name $DEPLOYMENT_NAME 2>&1 | tee output.log
+
+      - name: Parse container output
+        if: always()
+        run: |
+          ./scripts/parse_container_output.py --must-have-output --fail-on-error output.log
+
+      - name: Get Container States
+        if: always()
+        continue-on-error: true
+        run: |
+          sleep 60 # Ensure all states are up to date
+          ./scripts/trace_container_states.sh
+
+      - name: Remove Container Group
+        run: |
+          if [ "$CLEANUP" != false ]; then
+            c-aci-testing aci remove --deployment-name $DEPLOYMENT_NAME
+          fi

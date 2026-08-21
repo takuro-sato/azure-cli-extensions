@@ -1,0 +1,4 @@
+version: '3'
+services:
+  primary:
+    image: mcr.microsoft.com/mirror/docker/library/ubuntu:24.04
