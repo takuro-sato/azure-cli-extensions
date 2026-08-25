@@ -235,16 +235,20 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2025-09-01'
               cd /mnt/esan || echo 'cd /mnt/esan failed'
 
               if command -v fio >/dev/null 2>&1; then
-                echo '===== FIO TEST 1/2: randrw, size=128G, numjobs=4 ====='
+                echo '===== FIO TEST 1/2: randrw, size=32G, numjobs=4 (128G total) ====='
                 T1S=$(date +%s)
-                fio --randrepeat=1 --ioengine=libaio --direct=1 --gtod_reduce=1 --name=test --bs=64k --iodepth=64 --numjobs=4 --readwrite=randrw --size=128G
+                # Original perfbench command (single job, 128G total) - restore to revert:
+                # fio --randrepeat=1 --ioengine=libaio --direct=1 --gtod_reduce=1 --name=test --bs=64k --iodepth=64 --readwrite=randrw --size=128G
+                fio --randrepeat=1 --ioengine=libaio --direct=1 --gtod_reduce=1 --name=test --bs=64k --iodepth=64 --numjobs=4 --readwrite=randrw --size=32G
                 r1=$?
                 echo "FIO_RANDRW_WALL_SECONDS=$(( $(date +%s) - T1S ))"
                 rm -f /mnt/esan/test* 2>/dev/null
 
-                echo '===== FIO TEST 2/2: rw (seq), size=128G, numjobs=4 ====='
+                echo '===== FIO TEST 2/2: rw (seq), size=32G, numjobs=4 (128G total) ====='
                 T2S=$(date +%s)
-                fio --ioengine=libaio --direct=1 --name=seqrw --bs=64k --iodepth=64 --numjobs=4 --readwrite=rw --size=128G
+                # Original perfbench command (single job, 128G total) - restore to revert:
+                # fio --ioengine=libaio --direct=1 --name=seqrw --bs=64k --iodepth=64 --readwrite=rw --size=128G
+                fio --ioengine=libaio --direct=1 --name=seqrw --bs=64k --iodepth=64 --numjobs=4 --readwrite=rw --size=32G
                 r2=$?
                 echo "FIO_SEQRW_WALL_SECONDS=$(( $(date +%s) - T2S ))"
                 rm -f /mnt/esan/seqrw* 2>/dev/null
