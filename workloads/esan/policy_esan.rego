@@ -1,0 +1,33 @@
+package policy
+
+api_version := "0.12.0"
+
+mount_device := {"allowed": true}
+rw_mount_device := {"allowed": true}
+mount_blockdev := {"allowed": true}
+mount_overlay := {"allowed": true}
+create_container := {"allowed": true, "env_list": null, "allow_stdio_access": true}
+mount_cims := {"allowed": true}
+unmount_cims := {"allowed": true}
+registry_changes := {"allowed": true}
+unmount_device := {"allowed": true}
+rw_unmount_device := {"allowed": true}
+unmount_blockdev := {"allowed": true}
+unmount_overlay := {"allowed": true}
+exec_in_container := {"allowed": true, "env_list": null}
+exec_external := {"allowed": true, "env_list": null, "allow_stdio_access": true}
+shutdown_container := {"allowed": true}
+signal_container_process := {"allowed": true}
+plan9_mount := {"allowed": true}
+plan9_unmount := {"allowed": true}
+get_properties := {"allowed": true}
+dump_stacks := {"allowed": true}
+runtime_logging := {"allowed": true}
+load_fragment := {"allowed": true}
+scratch_mount := {"allowed": true}
+scratch_unmount := {"allowed": true}
+load_transparency_trust_list := {"allowed": true}
+log_provider := {"allowed": true}
+mapped_directory_mount := {"allowed": true}
+mapped_directory_unmount := {"allowed": true}
+host_network := {"allowed": true}

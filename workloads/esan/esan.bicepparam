@@ -8,7 +8,7 @@ param tag=''
 // Deployment info
 param location='germanynorth'
 param ccePolicies={
-  esan: ''
+  esan: loadFileAsBase64('policy_esan.rego')
 }
 
 // Germany North ESAN resources provisioned in the dashboard subscription

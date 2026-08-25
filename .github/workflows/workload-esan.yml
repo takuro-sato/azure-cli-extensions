@@ -144,7 +144,7 @@ jobs:
           c-aci-testing aci param_set workloads/esan --parameter confidential=$CONFIDENTIAL
 
       - name: Generate Security Policy
-        if: ${{ env.CONFIDENTIAL == 'true' }}
+        if: ${{ env.CONFIDENTIAL == 'true' && env.POLICY_TYPE != 'allow_all' }}
         run: |
           ./scripts/tracing/trace_step.py --start 'Generate Policy'
           c-aci-testing policies gen workloads/esan --deployment-name $DEPLOYMENT_NAME
