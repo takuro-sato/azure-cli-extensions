@@ -29,6 +29,11 @@ param tag string = ''
 param cpu int = 4
 param memoryInGb int = 8
 
+// Whether to run the fio perfbench inside the container. Toggle from the workflow
+// (RUN_PERFBENCH in workload-esan.yml). When false, the container still verifies the
+// ESAN mount and reports success, but skips the (long) fio jobs.
+param runPerfbench bool = true
+
 // ESAN volume, managed identity and BYO-VNet subnet are fixed cross-subscription
 // resources (see esan.bicepparam), so they are passed as full resource IDs rather than
 // resolved with resourceId() against the deployment's own subscription/resource group.
@@ -72,6 +77,12 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2025-09-01'
             {
               name: 'esanvol'
               mountPath: '/mnt/esan'
+            }
+          ]
+          environmentVariables: [
+            {
+              name: 'RUN_PERFBENCH'
+              value: string(runPerfbench)
             }
           ]
           command: [
@@ -214,12 +225,15 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2025-09-01'
               echo "ESAN_CONNECTION_SECONDS=NA  (/mnt/esan never became a real esan within the wait window)"
             fi
 
-            # ---------- FIO PERFBENCH ----------
+            # ---------- FIO PERFBENCH (optional; gated by RUN_PERFBENCH) ----------
             # Two fio jobs on the mounted ESAN ext4 filesystem (bs=64k, iodepth=64,
             # libaio, direct=1, numjobs=4 to spread IO across the 4 vCPUs for more
             # throughput). All output goes to the container log so it is visible in CI.
+            # Set RUN_PERFBENCH=false (in workload-esan.yml) to skip the fio jobs.
             fio_ok=false
-            if is_real_esan; then
+            if [ "$RUN_PERFBENCH" != "true" ]; then
+              echo "=== FIO PERFBENCH skipped (RUN_PERFBENCH=${RUN_PERFBENCH}) ==="
+            elif is_real_esan; then
               echo '=== FIO PERFBENCH (bs=64k, iodepth=64, libaio, direct=1, numjobs=4; CG cpu=4/mem=8) ==='
               echo "nproc=$(nproc)"
               echo '--- installing fio ---'
@@ -268,7 +282,15 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2025-09-01'
             # keys on the OUTPUT:/ERROR: line prefixes; the workflow runs it with
             # --fail-on-error, so an ERROR line fails the job. Success = real ESAN mount
             # AND both fio jobs completed, so the pass is visible in the CI log.
-            if is_real_esan && [ "$fio_ok" = true ]; then
+            if [ "$RUN_PERFBENCH" != "true" ]; then
+              if is_real_esan; then
+                echo 'SUCCESS: ESAN mounted (perfbench disabled)'
+                echo 'OUTPUT: {"esan_accessible": true}'
+              else
+                echo 'ERROR: /mnt/esan is not the real ESAN volume'
+                echo 'OUTPUT: {"esan_accessible": false}'
+              fi
+            elif is_real_esan && [ "$fio_ok" = true ]; then
               echo 'PERFBENCH SUCCESS: ESAN mounted and both fio jobs completed'
               echo 'OUTPUT: {"esan_accessible": true}'
             else

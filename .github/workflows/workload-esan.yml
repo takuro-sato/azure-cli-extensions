@@ -105,6 +105,15 @@ env:
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: ${{ inputs.policy_type || 'allow_all' }}
   CONFIDENTIAL: ${{ inputs.confidential == false && 'false' || 'true' }}
+  # The non-confidential leg never runs the fio perfbench (mount-verify only, fast).
+  # For the confidential leg, toggle the in-container fio perfbench on/off by editing
+  # the trailing literal below ('true'/'false'). When off, the esan test just verifies
+  # the ESAN mount and reports success.
+  RUN_PERFBENCH: ${{ inputs.confidential == false && 'false' || 'true' }}
+  # Separate ESAN volume per matrix leg so the confidential and non-confidential legs
+  # (which deploy in parallel) never write the same block volume. Both live in the same
+  # volume group, so they share the private endpoint / DNS / MI role.
+  ESAN_VOLUME_ID: ${{ inputs.confidential == false && '/subscriptions/6532c66d-e613-488d-9d2c-f7d4fbf114e7/resourceGroups/c-aci-dashboard-e2e/providers/Microsoft.ElasticSan/elasticSans/esan-germanynorth/volumeGroups/esan-germanynorth-vg/volumes/esan-germanynorth-nonconf-vol' || '/subscriptions/6532c66d-e613-488d-9d2c-f7d4fbf114e7/resourceGroups/c-aci-dashboard-e2e/providers/Microsoft.ElasticSan/elasticSans/esan-germanynorth/volumeGroups/esan-germanynorth-vg/volumes/esan-germanynorth-vol' }}
   TEST_SCHEDULE: ${{ inputs.test_schedule }}
   RUN_FEATURES: elasticSan,vnet
 
@@ -142,6 +151,8 @@ jobs:
           c-aci-testing aci param_set workloads/esan --parameter cpu=$CPU
           c-aci-testing aci param_set workloads/esan --parameter memoryInGb=$MEMORY_IN_GB
           c-aci-testing aci param_set workloads/esan --parameter confidential=$CONFIDENTIAL
+          c-aci-testing aci param_set workloads/esan --parameter elasticSanVolumeResourceId=$ESAN_VOLUME_ID
+          c-aci-testing aci param_set workloads/esan --parameter runPerfbench=$RUN_PERFBENCH
 
       - name: Generate Security Policy
         if: ${{ env.CONFIDENTIAL == 'true' && env.POLICY_TYPE != 'allow_all' }}
@@ -160,7 +171,12 @@ jobs:
           ./scripts/trace_run_result.sh ${{ job.status }}
 
       - name: Wait for fio perfbench to finish
-        run: sleep 2400
+        run: |
+          if [ "$RUN_PERFBENCH" = "true" ]; then
+            sleep 1200 # fio perfbench needs time to complete
+          else
+            sleep 300 # mount-verify only; container reports quickly
+          fi
 
       - name: Monitor Container Group
         if: always()
