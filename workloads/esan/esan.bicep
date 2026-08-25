@@ -26,8 +26,8 @@ param registry string
 param repository string
 param tag string = ''
 
-param cpu int = 1
-param memoryInGb int = 1
+param cpu int = 4
+param memoryInGb int = 8
 
 // ESAN volume, managed identity and BYO-VNet subnet are fixed cross-subscription
 // resources (see esan.bicepparam), so they are passed as full resource IDs rather than
@@ -79,9 +79,10 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2025-09-01'
             '-c'
             '''
             set +e
+            CMD_START=$(date +%s.%N)   # high-res start so a sub-second connection time is measurable
 
-            echo '=== ESAN test (native ACI ESAN volume, no sidecar, no hack) ==='
-            echo "date: $(date -u)"
+            echo '=== ESAN clcow PERFBENCH (native ACI ESAN volume, no sidecar, no hack) ==='
+            echo "date: $(date -u)  (command-start epoch=${CMD_START})"
 
             # Is /mnt/esan the genuine native-ACI ElasticSAN block volume, or just the
             # scratch disk bound in as a placeholder?
@@ -127,14 +128,16 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2025-09-01'
               return 0
             }
 
-            echo '--- waiting up to 180s for /mnt/esan to be a REAL esan device (distinct whole-device block volume; effective/topmost mount, not a bind onto scratch) ---'
-            for i in $(seq 1 36); do
+            echo '--- waiting up to 180s for /mnt/esan to be a REAL esan device (poll every 1s so the connection time is measured finely; distinct whole-device block volume; effective/topmost mount, not a bind onto scratch) ---'
+            MOUNT_READY=""
+            for i in $(seq 1 180); do
               if is_real_esan; then
-                echo "[t=$((i*5))s] /mnt/esan is a REAL esan mount"
+                MOUNT_READY=$(date +%s.%N)
+                echo "[t=${i}s] /mnt/esan is a REAL esan mount"
                 break
               fi
-              echo "[t=$((i*5))s] not-real-esan :: src=$(findmnt -nlo SOURCE /mnt/esan 2>/dev/null) :: $(df -h /mnt/esan 2>/dev/null | tail -1)"
-              sleep 5
+              echo "[t=${i}s] not-real-esan :: src=$(findmnt -nlo SOURCE /mnt/esan 2>/dev/null) :: $(df -h /mnt/esan 2>/dev/null | tail -1)"
+              sleep 1
             done
 
             echo '--- df -h /mnt/esan ---'
@@ -202,32 +205,74 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2025-09-01'
             echo '--- ls -la /mnt/esan ---'
             ls -la /mnt/esan
 
-            echo '--- write+read persistence test ---'
-            if echo "hello esan. time: $(date -u)" >> /mnt/esan/esan-verify.txt; then
-              echo 'write OK'
-              write_ok=true
+            echo '--- CONNECTION TIME (container command start -> ESAN mount ready) ---'
+            if [ -n "$MOUNT_READY" ]; then
+              CONNECTION_SECONDS=$(awk "BEGIN{printf \"%.2f\", ${MOUNT_READY} - ${CMD_START}}")
+              echo "ESAN_CONNECTION_SECONDS=${CONNECTION_SECONDS}"
             else
-              echo 'write FAILED'
-              write_ok=false
+              CONNECTION_SECONDS=NA
+              echo "ESAN_CONNECTION_SECONDS=NA  (/mnt/esan never became a real esan within the wait window)"
             fi
 
-            echo '--- current file contents (cumulative across runs if persisted) ---'
-            cat /mnt/esan/esan-verify.txt 2>/dev/null
+            # ---------- FIO PERFBENCH ----------
+            # Two fio jobs on the mounted ESAN ext4 filesystem (bs=64k, iodepth=64,
+            # libaio, direct=1, numjobs=4 to spread IO across the 4 vCPUs for more
+            # throughput). All output goes to the container log so it is visible in CI.
+            fio_ok=false
+            if is_real_esan; then
+              echo '=== FIO PERFBENCH (bs=64k, iodepth=64, libaio, direct=1, numjobs=4; CG cpu=4/mem=8) ==='
+              echo "nproc=$(nproc)"
+              echo '--- installing fio ---'
+              export DEBIAN_FRONTEND=noninteractive
+              apt-get update >/dev/null 2>&1
+              apt-get install -y fio >/dev/null 2>&1
+              if command -v fio >/dev/null 2>&1; then
+                echo "fio installed OK: $(fio --version)"
+              else
+                echo 'fio install failed on first try; retrying...'
+                apt-get update; apt-get install -y fio
+              fi
+              cd /mnt/esan || echo 'cd /mnt/esan failed'
+
+              if command -v fio >/dev/null 2>&1; then
+                echo '===== FIO TEST 1/2: randrw, size=128G, numjobs=4 ====='
+                T1S=$(date +%s)
+                fio --randrepeat=1 --ioengine=libaio --direct=1 --gtod_reduce=1 --name=test --bs=64k --iodepth=64 --numjobs=4 --readwrite=randrw --size=128G
+                r1=$?
+                echo "FIO_RANDRW_WALL_SECONDS=$(( $(date +%s) - T1S ))"
+                rm -f /mnt/esan/test* 2>/dev/null
+
+                echo '===== FIO TEST 2/2: rw (seq), size=128G, numjobs=4 ====='
+                T2S=$(date +%s)
+                fio --ioengine=libaio --direct=1 --name=seqrw --bs=64k --iodepth=64 --numjobs=4 --readwrite=rw --size=128G
+                r2=$?
+                echo "FIO_SEQRW_WALL_SECONDS=$(( $(date +%s) - T2S ))"
+                rm -f /mnt/esan/seqrw* 2>/dev/null
+                echo '=== FIO PERFBENCH done ==='
+                if [ "$r1" = 0 ] && [ "$r2" = 0 ]; then fio_ok=true; fi
+              else
+                echo 'ERROR: fio not installed; perf tests skipped'
+              fi
+            else
+              echo 'ERROR: /mnt/esan is not a real ESAN mount; perf numbers would be meaningless'
+            fi
+
+            echo '--- SUMMARY ---'
+            echo "ESAN_CONNECTION_SECONDS=${CONNECTION_SECONDS}"
 
             # Machine-readable result for the pipeline. scripts/parse_container_output.py
-            # keys on the OUTPUT:/ERROR: line prefixes (same contract as the
-            # managed_identity workload); the workflow runs it with --fail-on-error, so an
-            # ERROR line fails the job. The test passes only when /mnt/esan is the real
-            # ESAN volume AND the persistence write succeeded. All of the human-readable
-            # diagnostics above are still printed in both the pass and fail cases.
-            if is_real_esan && [ "$write_ok" = true ]; then
+            # keys on the OUTPUT:/ERROR: line prefixes; the workflow runs it with
+            # --fail-on-error, so an ERROR line fails the job. Success = real ESAN mount
+            # AND both fio jobs completed, so the pass is visible in the CI log.
+            if is_real_esan && [ "$fio_ok" = true ]; then
+              echo 'PERFBENCH SUCCESS: ESAN mounted and both fio jobs completed'
               echo 'OUTPUT: {"esan_accessible": true}'
             else
-              echo 'ERROR: /mnt/esan is not the real ESAN volume or is not writable; data is not persisted to ESAN'
+              echo 'ERROR: ESAN perfbench failed (mount not real or fio did not complete)'
               echo 'OUTPUT: {"esan_accessible": false}'
             fi
 
-            echo '=== ESAN check done; keeping container alive ==='
+            echo '=== ESAN perfbench done; keeping container alive ==='
             while true; do
               echo "primary alive: $(date -u)"
               sleep 30

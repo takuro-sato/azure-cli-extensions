@@ -100,8 +100,8 @@ env:
   DEPLOYMENT_NAME: ${{ inputs.id || 'esan' }}-${{ inputs.location }}-${{ github.run_number }}
   MANAGED_IDENTITY: cacidashboard-${{ inputs.location || 'westeurope' }}
   LOCATION: ${{ inputs.location || 'westeurope' }}
-  CPU: ${{ inputs.cpu || 1 }}
-  MEMORY_IN_GB: ${{ inputs.memory_in_gb || 1 }}
+  CPU: ${{ inputs.cpu || 4 }}
+  MEMORY_IN_GB: ${{ inputs.memory_in_gb || 8 }}
   CLEANUP: ${{ inputs.cleanup }}
   POLICY_TYPE: ${{ inputs.policy_type || 'allow_all' }}
   CONFIDENTIAL: ${{ inputs.confidential == false && 'false' || 'true' }}
