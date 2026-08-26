@@ -82,7 +82,7 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2025-09-01'
           environmentVariables: [
             {
               name: 'RUN_PERFBENCH'
-              value: string(runPerfbench)
+              value: toLower(string(runPerfbench))
             }
           ]
           command: [
