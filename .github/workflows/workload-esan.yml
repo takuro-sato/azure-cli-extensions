@@ -35,11 +35,11 @@ on:
       cpu:
         type: number
         description: The number of CPU cores in container
-        default: 4
+        default: 2
       memory_in_gb:
         type: number
         description: The memory in container in Gb
-        default: 8
+        default: 4
       cleanup:
         type: boolean
         description: Whether to cleanup the container group after testing
@@ -68,11 +68,11 @@ on:
       cpu:
         type: number
         description: The number of CPU cores in container
-        default: 4
+        default: 2
       memory_in_gb:
         type: number
         description: The memory in container in Gb
-        default: 8
+        default: 4
       cleanup:
         type: boolean
         description: Whether to cleanup the container group after testing

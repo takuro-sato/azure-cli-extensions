@@ -26,8 +26,8 @@ param registry string
 param repository string
 param tag string = ''
 
-param cpu int = 4
-param memoryInGb int = 8
+param cpu int = 2
+param memoryInGb int = 4
 
 // Whether to run the fio perfbench inside the container. Toggle from the workflow
 // (RUN_PERFBENCH in workload-esan.yml). When false, the container still verifies the
@@ -227,14 +227,14 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2025-09-01'
 
             # ---------- FIO PERFBENCH (optional; gated by RUN_PERFBENCH) ----------
             # Two fio jobs on the mounted ESAN ext4 filesystem (bs=64k, iodepth=64,
-            # libaio, direct=1, numjobs=4 to spread IO across the 4 vCPUs for more
+            # libaio, direct=1, numjobs=4 to spread IO across the vCPUs for more
             # throughput). All output goes to the container log so it is visible in CI.
             # Set RUN_PERFBENCH=false (in workload-esan.yml) to skip the fio jobs.
             fio_ok=false
             if [ "$RUN_PERFBENCH" != "true" ]; then
               echo "=== FIO PERFBENCH skipped (RUN_PERFBENCH=${RUN_PERFBENCH}) ==="
             elif is_real_esan; then
-              echo '=== FIO PERFBENCH (bs=64k, iodepth=64, libaio, direct=1, numjobs=4; CG cpu=4/mem=8) ==='
+              echo '=== FIO PERFBENCH (bs=64k, iodepth=64, libaio, direct=1, numjobs=4; CG cpu=2/mem=4) ==='
               echo "nproc=$(nproc)"
               echo '--- installing fio ---'
               export DEBIAN_FRONTEND=noninteractive
