@@ -173,7 +173,7 @@ jobs:
       - name: Wait for fio perfbench to finish
         run: |
           if [ "$RUN_PERFBENCH" = "true" ]; then
-            sleep 1200 # fio perfbench needs time to complete
+            sleep 2400 # single-job 128G fio perfbench needs time to complete
           else
             sleep 300 # mount-verify only; container reports quickly
           fi
