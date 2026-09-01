@@ -95,6 +95,53 @@ resource containerGroup 'Microsoft.ContainerInstance/containerGroups@2025-09-01'
             echo '=== ESAN clcow PERFBENCH (native ACI ESAN volume, no sidecar, no hack) ==='
             echo "date: $(date -u)  (command-start epoch=${CMD_START})"
 
+            # ---------- NETWORK / BYO-VNET DIAG ----------
+            # Print the pod's network identity so we can confirm it actually landed on the
+            # customer BYO-VNet -- i.e. it has a NIC on the customer subnet (e.g. 10.x) with a
+            # default route into that subnet -- rather than only the UVM inner NAT bridge
+            # (192.168.0.0/24 via 192.168.0.2), which cannot reach the ESAN private endpoint.
+            # On devstamp the non-confidential byovnet pool has been seen to come up NAT-only
+            # (byovnet CNI not applied); this block makes that visible from the workload.
+            echo '=== NETWORK / BYO-VNET DIAG ==='
+            echo "hostname: $(hostname)  netns self=$(readlink /proc/self/ns/net) pid1=$(readlink /proc/1/ns/net)"
+            if ! command -v ip >/dev/null 2>&1; then
+              echo '(installing iproute2/dnsutils/iputils-ping for diag...)'
+              export DEBIAN_FRONTEND=noninteractive
+              apt-get update -qq >/dev/null 2>&1
+              apt-get install -y -qq iproute2 iputils-ping dnsutils >/dev/null 2>&1
+            fi
+            echo '--- ip -br link ---'; (ip -br link || echo '(ip unavailable)')
+            echo '--- ip -br addr (current vnet/ip) ---'; (ip -br addr || echo '(ip unavailable)')
+            echo '--- ip route (main) ---'; (ip route || true)
+            echo '--- ip rule ---'; (ip rule 2>/dev/null || true)
+            echo '--- ip route show table 101 (PBR / second NIC) ---'; (ip route show table 101 2>&1 || true)
+            echo '--- /etc/resolv.conf ---'; (cat /etc/resolv.conf 2>&1 || true)
+            WS='168.63.129.16'
+            echo "--- ip route get $WS (wireserver) ---"; (ip route get "$WS" 2>&1 || true)
+            # Per-NIC egress + DNS scope (source-bound) -- the same check used in the devstamp
+            # NIC probe. A customer-VNet NIC can reach the subnet/wireserver and resolves Azure
+            # private-endpoint names to their private IP; the NAT bridge egresses infra scope.
+            ip -4 -o addr show 2>/dev/null | while read -r n dev fam cidr rest; do
+              a=${cidr%%/*}
+              [ "$dev" = "lo" ] && continue
+              echo "=== NIC $dev src=$a ==="
+              echo "- ip route get $WS from $a:"; (ip route get "$WS" from "$a" 2>&1 | head -2 || true)
+              echo "- ping WS $WS from $a:"; (ping -c1 -W2 -I "$a" "$WS" 2>&1 | tail -2 || true)
+              if command -v dig >/dev/null 2>&1; then
+                echo "- dig -b $a @$WS mcr.microsoft.com:"; dig +short +time=3 +tries=1 -b "$a" @"$WS" mcr.microsoft.com 2>&1 | head -3
+              fi
+            done
+            # Verdict: is there a NIC on a customer subnet (not the 192.168 NAT bridge and not
+            # the 169.254 host-gateway link)? That is the authoritative "on the BYO-VNet" signal.
+            CUST_NIC=$(ip -4 -o addr show 2>/dev/null | awk '$2!="lo"{print $4}' | cut -d/ -f1 \
+                        | grep -vE '^(192\.168\.|169\.254\.|127\.)' | head -1)
+            if [ -n "$CUST_NIC" ]; then
+              echo "NET VERDICT: on a customer BYO-VNet subnet (NIC ip=${CUST_NIC})"
+            else
+              echo 'NET VERDICT: NAT-ONLY (only the 192.168 inner bridge; no customer-subnet NIC) -- pod is NOT on the BYO-VNet; ESAN private endpoint will be unreachable'
+            fi
+            echo '=== NETWORK / BYO-VNET DIAG done ==='
+
             # Is /mnt/esan the genuine native-ACI ElasticSAN block volume, or just the
             # scratch disk bound in as a placeholder?
             #
