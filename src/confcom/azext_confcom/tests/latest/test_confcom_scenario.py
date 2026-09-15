@@ -6,6 +6,7 @@
 import json
 import os
 import unittest
+from unittest.mock import patch
 
 import azext_confcom.config as config
 from azext_confcom.security_policy import (OutputType, UserContainerImage,
@@ -616,6 +617,7 @@ class CustomJsonParsing(unittest.TestCase):
             )
 
     def test_infrastructure_svn(self):
+        minimum_svn = "2"
         custom_json = """
         {
             "version": "1.0",
@@ -629,11 +631,23 @@ class CustomJsonParsing(unittest.TestCase):
             ]
         }
         """
-        with load_policy_from_json(custom_json) as aci_policy:
-            aci_policy.populate_policy_content_for_all_images()
-            output = aci_policy.get_serialized_output(OutputType.PRETTY_PRINT)
-
-            self.assertTrue('"0.5.0"' in output)
+        with patch("azext_confcom.security_policy.validate_image_platform"), \
+             load_policy_from_json(
+                 custom_json, infrastructure_svn=minimum_svn
+             ) as aci_policy:
+            infrastructure_fragment = next(
+                fragment
+                for fragment in aci_policy.get_fragments()
+                if fragment[
+                    config.POLICY_FIELD_CONTAINERS_ELEMENTS_REGO_FRAGMENTS_FEED
+                ] == "mcr.microsoft.com/aci/aci-cc-infra-fragment"
+            )
+            self.assertEqual(
+                minimum_svn,
+                infrastructure_fragment[
+                    config.POLICY_FIELD_CONTAINERS_ELEMENTS_REGO_FRAGMENTS_MINIMUM_SVN
+                ],
+            )
 
     def test_environment_variables_parsing(self):
         custom_json = """
@@ -968,5 +982,3 @@ class CustomJsonParsingIncorrect(unittest.TestCase):
                     )
                 )[0].get(config.POLICY_FIELD_CONTAINERS_ELEMENTS_COMMANDS)
             )
-
-
